@@ -111,7 +111,7 @@ internal sealed class NetworkManager
         var list = new List<LocationNetworks>();
         Utility.ForEachLocation(location =>
         {
-            if (location.objects.Values.Any(o => o.QualifiedItemId is "(BC)" + Ids.ComputerCore or "(BC)" + Ids.NetworkPort))
+            if (location.objects.Values.Any(o => o.QualifiedItemId is "(BC)" + Ids.ComputerCore or "(BC)" + Ids.NetworkPort or "(BC)" + Ids.IslandUplink))
                 list.Add(For(location));
             return true;
         });
@@ -212,6 +212,11 @@ internal sealed class NetworkManager
                 }
             }
         }
+
+        // Island Uplinks: every network with an Uplink joins every other one (Ginger Island ↔ home farm).
+        var uplinked = locations.SelectMany(l => l.Graph.Networks.Where(n => n.OfKind(BlockKind.Uplink).Any())).Select(n => n.Id).ToList();
+        for (int i = 1; i < uplinked.Count; i++)
+            edges.Add((uplinked[0], uplinked[i]));
 
         links = new LinkGroups(nodes.Values, edges);
         return links;

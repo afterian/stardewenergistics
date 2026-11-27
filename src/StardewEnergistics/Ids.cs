@@ -77,6 +77,8 @@ namespace StardewEnergistics
             public const string LinkState = ModDataPrefix + "LinkState";
             /// <summary>On a Lightning Rod or Solar Panel: "1" when a Power Feed is attached.</summary>
             public const string PowerFeed = ModDataPrefix + "PowerFeed";
+            /// <summary>On an Advanced Crafting Rack: keep-in-stock rules, "count qualifiedId" separated by ';'.</summary>
+            public const string StockRules = ModDataPrefix + "StockRules";
             /// <summary>On a Computer Core: the network's autocraft jobs (JSON).</summary>
             public const string Jobs = ModDataPrefix + "Jobs";
             /// <summary>On a machine: ID of the autocraft job it is working for.</summary>

@@ -1,10 +1,16 @@
 {
   "Name": "Stardew Energistics",
   "Author": "afterian",
-  "Version": "0.0.1",
+  "Version": "0.6.0",
   "Description": "Networked storage and automation for Stardew Valley, inspired by Applied Energistics 2.",
   "UniqueID": "afterian.StardewEnergistics",
   "EntryDll": "StardewEnergistics.dll",
   "MinimumApiVersion": "4.5.2",
-  "UpdateKeys": []
+  "UpdateKeys": [],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
 }

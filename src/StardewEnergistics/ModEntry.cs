@@ -51,6 +51,7 @@ namespace StardewEnergistics
             terminalNet.Register();
             var crafting = new CraftingService(helper, Monitor, networks, disks, power);
             var feeds = new PowerFeedService(helper, Monitor, networks, power);
+            helper.Events.GameLoop.DayStarted += (_, _) => crafting.OnDayStarted();
             var terminal = new TerminalController(helper, Monitor, networks, disks, power, textures, terminalNet, crafting);
             terminal.Register();
 
@@ -77,12 +78,20 @@ namespace StardewEnergistics
             helper.Events.GameLoop.DayEnding += (_, _) =>
             {
                 links.OnDayEnding();
+                crafting.OnDayEnding();
                 shipping.OnDayEnding();
             };
 
             new WireInput(helper, config, wires, renderer).Register();
             new BlockInteraction(helper, networks, disks, power, terminal, textures).Register();
             new DebugCommands(helper, Monitor, wires, networks, disks, power).Register();
+
+            new Multiplayer.VersionCheck(helper, Monitor, ModManifest).Register();
+            helper.Events.GameLoop.GameLaunched += (_, _) => Integrations.ConfigMenu.Register(helper, ModManifest, config, () =>
+            {
+                power.Table = config.ToPowerTable();
+                progression.GatesEnabled = config.TierGates;
+            });
 
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
             helper.Events.GameLoop.DayStarted += OnDayStarted;

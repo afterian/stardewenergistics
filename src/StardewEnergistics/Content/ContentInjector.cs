@@ -51,6 +51,10 @@ internal sealed class ContentInjector
         new(Ids.IridiumDisk, "IridiumDisk", "iridium-disk.png", false, 4000, TierId.T5LinkedBuildings, $"{Ids.GoldDisk} 1 {IridiumBar} 3 {Ids.IridiumProcessor} 1"),
         new(Ids.WirelessTerminal, "WirelessTerminal", "wireless-terminal.png", false, 3000, TierId.T5LinkedBuildings, $"{Big(Ids.NetworkTerminal)} 1 {Ids.IridiumProcessor} 1 {BatteryPack} 1"),
         new(Ids.PowerFeed, "PowerFeed", "power-feed.png", false, 800, TierId.T5LinkedBuildings, $"{Ids.GoldProcessor} 1 {IridiumBar} 2"),
+        // T6
+        new(Ids.AdvancedCraftingRack, "AdvancedCraftingRack", "advanced-crafting-rack.png", true, 5000, TierId.T6WholeFarm, $"{Big(Ids.CraftingRack)} 1 {Ids.IridiumProcessor} 2 {QiGem} 5"),
+        new(Ids.PrismaticDisk, "PrismaticDisk", "prismatic-disk.png", false, 10000, TierId.T6WholeFarm, $"{Ids.IridiumDisk} 1 {PrismaticShard} 1 {QiGem} 10"),
+        new(Ids.IslandUplink, "IslandUplink", "island-uplink.png", true, 8000, TierId.T6WholeFarm, $"{Ids.IridiumProcessor} 2 {PrismaticShard} 1 {RadioactiveBar} 5"),
     };
 
     /// <summary>Crafting recipes taught when a tier unlocks.</summary>
@@ -61,7 +65,7 @@ internal sealed class ContentInjector
     /// <summary>Mail ID of Maru's letter for a tier.</summary>
     public static string MailId(TierId tier) => $"{Ids.ModId}_Maru_T{(int)tier}";
 
-    public static readonly TierId[] TiersWithMail = { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation, TierId.T4Autocrafting, TierId.T5LinkedBuildings };
+    public static readonly TierId[] TiersWithMail = { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation, TierId.T4Autocrafting, TierId.T5LinkedBuildings, TierId.T6WholeFarm };
 
     public void Register()
     {
