@@ -3,6 +3,7 @@ using StardewEnergistics.Core.Geometry;
 using StardewEnergistics.Core.Wires;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Tools;
 
@@ -25,15 +26,19 @@ internal sealed class WireInput
     private readonly WireLayerStore store;
     private readonly WireRenderer renderer;
 
-    private SButton? dragButton;
-    private TilePos? lastDragTile;
+    /// <summary>Input state per split-screen player.</summary>
+    private sealed class State
+    {
+        public SButton? DragButton;
+        public TilePos? LastDragTile;
+        public SButton? WrenchButton;
+        public TilePos WrenchTile;
+        public int WrenchHeldTicks;
+        public bool WrenchRunDone;
+        public bool NetworkViewToggled;
+    }
 
-    private SButton? wrenchButton;
-    private TilePos wrenchTile;
-    private int wrenchHeldTicks;
-    private bool wrenchRunDone;
-
-    private bool networkViewToggled;
+    private readonly PerScreen<State> state = new(() => new State());
 
     public WireInput(IModHelper helper, ModConfig config, WireLayerStore store, WireRenderer renderer)
     {
@@ -66,10 +71,11 @@ internal sealed class WireInput
 
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
+        var st = state.Value;
         if (config.NetworkViewKey.JustPressed() && Context.IsWorldReady)
         {
-            networkViewToggled = !networkViewToggled;
-            Game1.addHUDMessage(new HUDMessage(helper.Translation.Get(networkViewToggled ? "networkView.on" : "networkView.off")) { noIcon = true });
+            st.NetworkViewToggled = !st.NetworkViewToggled;
+            Game1.addHUDMessage(new HUDMessage(helper.Translation.Get(st.NetworkViewToggled ? "networkView.on" : "networkView.off")) { noIcon = true });
             return;
         }
 
@@ -87,13 +93,13 @@ internal sealed class WireInput
             helper.Input.Suppress(e.Button);
             if (TryLay(location, tile, kind))
             {
-                dragButton = e.Button;
-                lastDragTile = tile;
+                st.DragButton = e.Button;
+                st.LastDragTile = tile;
             }
             else
             {
-                dragButton = e.Button; // still allow dragging onto the next tile
-                lastDragTile = tile;
+                st.DragButton = e.Button; // still allow dragging onto the next tile
+                st.LastDragTile = tile;
             }
             return;
         }
@@ -115,10 +121,10 @@ internal sealed class WireInput
             else if (useTool)
             {
                 helper.Input.Suppress(e.Button);
-                wrenchButton = e.Button;
-                wrenchTile = tile;
-                wrenchHeldTicks = 0;
-                wrenchRunDone = false;
+                st.WrenchButton = e.Button;
+                st.WrenchTile = tile;
+                st.WrenchHeldTicks = 0;
+                st.WrenchRunDone = false;
             }
             return;
         }
@@ -141,18 +147,19 @@ internal sealed class WireInput
 
     private void OnButtonReleased(object? sender, ButtonReleasedEventArgs e)
     {
-        if (e.Button == dragButton)
+        var st = state.Value;
+        if (e.Button == st.DragButton)
         {
-            dragButton = null;
-            lastDragTile = null;
+            st.DragButton = null;
+            st.LastDragTile = null;
         }
 
-        if (e.Button == wrenchButton)
+        if (e.Button == st.WrenchButton)
         {
-            wrenchButton = null;
-            if (!wrenchRunDone && Context.IsWorldReady)
+            st.WrenchButton = null;
+            if (!st.WrenchRunDone && Context.IsWorldReady)
             {
-                var covered = store.Find(Game1.currentLocation)?.ToggleCovered(wrenchTile);
+                var covered = store.Find(Game1.currentLocation)?.ToggleCovered(st.WrenchTile);
                 if (covered != null)
                     Game1.playSound(covered.Value ? "dirtyHit" : "pickUpItem");
             }
@@ -163,43 +170,44 @@ internal sealed class WireInput
     {
         if (!Context.IsWorldReady)
             return;
+        var st = state.Value;
 
-        renderer.NetworkView = networkViewToggled || HoldingWrench();
+        renderer.NetworkView = st.NetworkViewToggled || HoldingWrench();
 
         // Drag to lay a line.
-        if (dragButton is { } drag && HeldWireKind() is { } kind && Context.IsPlayerFree)
+        if (st.DragButton is { } drag && HeldWireKind() is { } kind && Context.IsPlayerFree)
         {
             if (!helper.Input.IsDown(drag))
             {
-                dragButton = null;
+                st.DragButton = null;
             }
             else
             {
                 var tile = ToTile(helper.Input.GetCursorPosition().GrabTile);
-                if (tile != lastDragTile)
+                if (tile != st.LastDragTile)
                 {
-                    lastDragTile = tile;
+                    st.LastDragTile = tile;
                     TryLay(Game1.currentLocation, tile, kind);
                 }
             }
         }
 
         // Hold the wrench to change a whole run.
-        if (wrenchButton is { } wrench && !wrenchRunDone)
+        if (st.WrenchButton is { } wrench && !st.WrenchRunDone)
         {
             if (!helper.Input.IsDown(wrench))
             {
-                wrenchButton = null;
+                st.WrenchButton = null;
                 return;
             }
-            if (++wrenchHeldTicks >= config.WrenchHoldTicks)
+            if (++st.WrenchHeldTicks >= config.WrenchHoldTicks)
             {
-                wrenchRunDone = true;
+                st.WrenchRunDone = true;
                 var layer = store.Find(Game1.currentLocation);
-                var wire = layer?.Get(wrenchTile);
+                var wire = layer?.Get(st.WrenchTile);
                 if (layer != null && wire != null)
                 {
-                    int changed = layer.SetRunCovered(wrenchTile, !wire.Covered);
+                    int changed = layer.SetRunCovered(st.WrenchTile, !wire.Covered);
                     Game1.playSound("dirtyHit");
                     Game1.addHUDMessage(new HUDMessage(helper.Translation.Get("wire.run", new { count = changed })) { noIcon = true });
                 }

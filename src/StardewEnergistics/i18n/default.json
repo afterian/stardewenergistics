@@ -66,6 +66,7 @@
   "terminal.search": "Search",
   "terminal.noNetwork": "This terminal isn't connected to a working network.",
   "terminal.full": "Network storage is full.",
+  "terminal.remoteSoon": "Online farmhands can't use the Terminal yet. Split-screen players can.",
   "terminal.cantStore": "This item can't go on a disk yet. Keep it in a linked chest.",
 
   // Maru's letters

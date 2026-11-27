@@ -6,6 +6,7 @@ using StardewEnergistics.Power;
 using StardewEnergistics.Storage;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Inventories;
 using StardewValley.Menus;
@@ -30,7 +31,13 @@ internal sealed class TerminalController
     private readonly DiskStore disks;
     private readonly PowerService power;
 
-    private OpenSession? session;
+    private readonly PerScreen<OpenSession?> openSession = new();
+
+    private OpenSession? session
+    {
+        get => openSession.Value;
+        set => openSession.Value = value;
+    }
 
     public TerminalController(IModHelper helper, IMonitor monitor, NetworkManager networks, DiskStore disks, PowerService power)
     {
@@ -52,9 +59,10 @@ internal sealed class TerminalController
 
     public void Open(GameLocation location, Vector2 tile)
     {
-        if (!Context.IsMainPlayer)
+        // Split-screen farmhands share the host's memory and can use the Terminal directly.
+        if (!Context.IsMainPlayer && !Context.IsSplitScreen)
         {
-            Game1.showRedMessage("Terminals for farmhands arrive with multiplayer support later in M2.");
+            Game1.showRedMessage(T("terminal.remoteSoon"));
             return;
         }
 
