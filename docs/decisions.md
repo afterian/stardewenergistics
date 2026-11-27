@@ -19,6 +19,8 @@ Confirmed decisions log. The full design is in `docs/design-plan.md`; status and
 - Multiplayer: host-authoritative, one shared farm network.
 - Testing: Windows PC + two Steam Decks auto-updating from a private GitHub release before Nexus.
 - GitHub repo `afterian/stardewenergistics`; mod UniqueID `afterian.StardewEnergistics`, author `afterian` (2026-11-27).
+- Build (Proposed, 2026-11-27): mod and Core target `net6.0` (the game's runtime); the test project targets `net8.0` so the current .NET 8 SDK runs it. Install the **.NET 8 SDK** on the PC; it builds net6.0 mods too.
+- Sprites (Proposed, 2026-11-27): each art file is its own game asset `Mods/afterian.StardewEnergistics/Sprites/<name>`; item IDs are `afterian.StardewEnergistics_<Name>` (see `src/StardewEnergistics/Ids.cs`).
 - Art: produced in parallel by another tool from `docs/art-asset-list.md` (36 files).
 
 ## Open

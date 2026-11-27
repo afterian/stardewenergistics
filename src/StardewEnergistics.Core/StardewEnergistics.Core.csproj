@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Game-independent rules: wire graph, storage maths, power, machine input choice,
+    recipe planning, tier gates, save model, art catalogue.
+    NO Stardew, MonoGame, xTile or SMAPI references: a test enforces this so the
+    logic runs in CI and a plain shell.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>StardewEnergistics.Core</AssemblyName>
+    <RootNamespace>StardewEnergistics.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="StardewEnergistics.Tests" />
+  </ItemGroup>
+
+</Project>

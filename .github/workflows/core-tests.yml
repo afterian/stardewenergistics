@@ -1,0 +1,20 @@
+name: Core tests
+
+# Runs the game-independent logic tests and art export checks. No game needed.
+# (The SMAPI mod project itself needs the game installed, so it is built on the PC.)
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            6.0.x
+            8.0.x
+      - name: Test
+        run: dotnet test tests/StardewEnergistics.Tests/StardewEnergistics.Tests.csproj --logger "console;verbosity=normal"

@@ -8,10 +8,24 @@
     <LangVersion>latest</LangVersion>
     <!-- ModBuildConfig finds the game, references SMAPI, and copies the built mod into the game's Mods folder. -->
     <EnableModZip>true</EnableModZip>
+    <EnableHarmony>true</EnableHarmony>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Game-independent logic; its DLL is bundled into the mod folder. -->
+    <ProjectReference Include="..\StardewEnergistics.Core\StardewEnergistics.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Final art: every PNG in artwork/exports/ is copied to assets/sprites/ in the built mod.
+      Drop a PNG there and rebuild; no code change. Missing files use generated placeholders.
+    -->
+    <None Include="..\..\artwork\exports\*.png" Link="assets\sprites\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
 
 </Project>

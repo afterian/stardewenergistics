@@ -1,6 +1,6 @@
 # Stardew Energistics — Handoff for implementation
 
-Date: 2026-11-27. Status: **design approved, no mod code written yet.** The next chat picks up at milestone **M0 (Setup)** and orchestrates the build.
+Date: 2026-11-27. Status: **M0 in progress.** Hello-world mod (`src/StardewEnergistics/`) plus the M0 scaffold: `StardewEnergistics.Core` with the §3 contracts of `docs/implementation-plan.md`, the 36-entry art catalogue, art export checks, xUnit tests and CI. Waiting on the user's PC setup (SMAPI, .NET SDK) for the first in-game load. Next: M1 Core (wire layer, save model), then lane A runs ahead into M2 (graph, storage, power).
 
 ## What this project is
 
@@ -34,7 +34,7 @@ Living (online, editable) copies of the plan and art list: https://claude.ai/art
 
 ## Open items
 
-- [ ] **GitHub repo** `owner/repo` — the user is creating it in this folder. Needed for `deploy/` setup and `manifest.json` UniqueID/author.
+- [x] **GitHub repo** `afterian/stardewenergistics`; filled into `deploy/README.md` and `manifest.json`.
 - [ ] **Terminal reach before T5:** plan says a Terminal sees only its own building until Network Ports exist. User may prefer all buildings from the start. Ask before M5.
 - [ ] **Coal value:** the user edited "1 Coal = 10 power" to "1 Coal = 1 power". Confirm intent in the first power playtest.
 - [ ] Exact installed game / SMAPI versions on the PC and Decks (record in `docs/decisions.md`).
