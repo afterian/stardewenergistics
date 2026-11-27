@@ -11,7 +11,7 @@ A Stardew Valley SMAPI (C#) mod inspired by Minecraft's Applied Energistics 2. T
 1. `docs/HANDOFF.md` — this file: status, decisions, next steps.
 2. `docs/design-plan.md` — the full approved design (mechanics, tiers, 26-item catalog, architecture, roadmap). **Source of truth.**
 3. `docs/implementation-plan.md` — code-level plan: solution layout, Core contracts, parallel lanes A–G, spikes, milestone tasks, how code depends on art.
-4. `docs/art-asset-list.md` — 36 art files with sizes, frames, descriptions. Art is made in parallel with another tool.
+4. `docs/art-asset-list.md` — 36 art files with sizes, frames, descriptions. Art is made in parallel with another tool. Final art so far (Maru purple-and-oak style, `docs/artwork-pipeline.md`): Computer Core, Network Terminal, Copper Wire tiles (normal + Network View) and Heavy Cable tiles; the other 31 still use placeholders. The Terminal shows its "on" frame while its network is powered.
 5. `docs/steam-deck-setup.md` — step-by-step PC runner + Steam Deck setup; `deploy/README.md` lists the scripts.
 6. `research/MODDING_AND_ASSET_SPECS.md` — earlier research on sprite sizes and data assets. Note: it suggests a Content Patcher prototype; the approved plan is a single C# SMAPI mod that injects its own content.
 

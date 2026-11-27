@@ -1,0 +1,10 @@
+{
+  "same_family_rgba_seam_checks": 768,
+  "edge_registration": true,
+  "mixed_width_alignment": true,
+  "glow_alpha_matches": true,
+  "heavy_cable_is_neutral_grayscale": true,
+  "frames_per_strip": 16,
+  "width": 256,
+  "height": 16
+}
