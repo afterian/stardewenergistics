@@ -38,6 +38,13 @@ internal sealed class TextureRegistry
     /// <summary>The loaded texture for an art file (real or placeholder).</summary>
     public Texture2D Get(string fileName) => helper.GameContent.Load<Texture2D>(AssetCatalog.Get(fileName).GameAssetName);
 
+    /// <summary>Optional transparent layers must not draw solid placeholders.</summary>
+    public Texture2D? GetOptional(string fileName)
+    {
+        string relative = Path.Combine(SpritesFolder, fileName);
+        return File.Exists(Path.Combine(helper.DirectoryPath, relative)) ? Get(fileName) : null;
+    }
+
     private void OnAssetRequested(object? sender, AssetRequestedEventArgs e)
     {
         if (!e.NameWithoutLocale.StartsWith(AssetCatalog.AssetRoot + "/"))

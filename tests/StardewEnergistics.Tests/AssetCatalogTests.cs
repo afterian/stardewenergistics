@@ -6,10 +6,10 @@ namespace StardewEnergistics.Tests;
 public class AssetCatalogTests
 {
     [Fact]
-    public void HasAll36AssetsNumberedOneTo36()
+    public void HasAll38AssetsNumberedOneTo38()
     {
-        Assert.Equal(36, AssetCatalog.All.Count);
-        Assert.Equal(Enumerable.Range(1, 36), AssetCatalog.All.Select(a => a.Number).OrderBy(n => n));
+        Assert.Equal(38, AssetCatalog.All.Count);
+        Assert.Equal(Enumerable.Range(1, 38), AssetCatalog.All.Select(a => a.Number).OrderBy(n => n));
     }
 
     [Fact]

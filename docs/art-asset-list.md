@@ -2,7 +2,7 @@
 
 Approved 2026-11-27. Living copy: https://claude.ai/artifact/48iRmHg7rUvvhcSvZQv4DP
 
-Complete list of the 36 asset files the mod needs, ready to hand to an art tool. Everything must read as native Stardew Valley pixel art, not Minecraft or AE2. Put editable originals in `artwork/source/` and final PNGs in `artwork/exports/` using the file names below.
+Complete list of the 38 asset files the mod needs, ready to hand to an art tool. Everything must read as native Stardew Valley pixel art, not Minecraft or AE2. Put editable originals in `artwork/source/` and final PNGs in `artwork/exports/` using the file names below.
 
 ## Style guide
 
@@ -73,7 +73,10 @@ Frame number = sum of connections: N = 1, E = 2, S = 4, W = 8 (frame 0 = stub, 5
 | 22 | `wire-tiles-glow.png` | same 16 | Same wire with a soft teal glow, shown only in Network View. |
 | 35 | `heavy-cable-tiles.png` | 0–15 in number order | Thick rounded cable ~6 px wide, light-grey rubber jacket, darker outline, top highlight, a small metal band per tile. Drawn in light greys so code can tint it any of Stardew's 20 chest colours; must look good tinted red, blue, green or yellow. No glow version needed. |
 
-Covered wire is simply not drawn, so it needs no art.
+| 37 | `copper-data-signal.png` | 8 phases × masks 0–15 | Transparent amber signal. |
+| 38 | `heavy-data-signal.png` | 8 phases × masks 0–15 | Transparent teal signal, separate from the paintable jacket. |
+
+Base strips remain 256 × 16; signal strips are 2048 × 16, phase-major with phase 7 steady. Unpainted Heavy Cable defaults to Maru violet; painted jacket and lights are drawn separately. Covered wires remain hidden outside Network View.
 
 ## Attachment overlays (16 × 16)
 

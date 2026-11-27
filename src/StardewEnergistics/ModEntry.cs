@@ -55,7 +55,7 @@ namespace StardewEnergistics
             var terminal = new TerminalController(helper, Monitor, networks, disks, power, textures, terminalNet, crafting);
             terminal.Register();
 
-            var renderer = new WireRenderer(wires, textures, Monitor);
+            var renderer = new WireRenderer(wires, textures, networks, power, config, Monitor);
             renderer.Patch(harmony);
             DiskStackPatch.Apply(harmony);
             DiskUpgradePatch.Apply(harmony, disks);
