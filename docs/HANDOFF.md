@@ -1,6 +1,6 @@
 # Stardew Energistics — Handoff for implementation
 
-Date: 2026-11-27. Status: **M0 in progress.** Hello-world mod (`src/StardewEnergistics/`) plus the M0 scaffold: `StardewEnergistics.Core` with the §3 contracts of `docs/implementation-plan.md`, the 36-entry art catalogue, art export checks, xUnit tests and CI. Waiting on the user's PC setup (SMAPI, .NET SDK) for the first in-game load. Next: M1 Core (wire layer, save model), then lane A runs ahead into M2 (graph, storage, power).
+Date: 2026-11-27. Status: **M0 in progress.** Hello-world mod (`src/StardewEnergistics/`) plus the M0 scaffold: `StardewEnergistics.Core` with the §3 contracts of `docs/implementation-plan.md`, the 36-entry art catalogue, art export checks, xUnit tests and CI. Waiting on the user's PC setup (SMAPI, .NET SDK) for the first in-game load. Core done ahead of the game side: M1 wire layer + wire save model, and M2 network graph, disk storage and power ledger (88 tests). Next on the game side: M1 lane B/C (content injection, placeholders, wire placement and rendering) once the mod builds on the PC.
 
 ## What this project is
 
