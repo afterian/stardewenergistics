@@ -27,5 +27,5 @@ public sealed class ModConfig
     /// <summary>Terminal sees all buildings before Network Ports exist (open question; default own building only).</summary>
     public bool TerminalReachAllBeforePorts { get; set; } = false;
 
-    internal PowerTable PowerTable() => PowerTable.Default with { BatteryPower = BatteryPower, CoalPower = CoalPower, HardwoodPower = HardwoodPower };
+    internal PowerTable ToPowerTable() => PowerTable.Default with { BatteryPower = BatteryPower, CoalPower = CoalPower, HardwoodPower = HardwoodPower };
 }
