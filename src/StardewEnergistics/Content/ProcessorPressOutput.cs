@@ -31,7 +31,9 @@ public static class ProcessorPressOutput
         if (player == null || inputItem == null || !ExtrasByBar.TryGetValue(inputItem.QualifiedItemId, out var extras))
             return null;
 
-        var missing = extras.Where(x => player.Items.CountId(x.Id) < x.Count).ToList();
+        // A Machine Link loads extras from network items through autoLoadFrom, like a hopper.
+        var source = SObject.autoLoadFrom ?? player.Items;
+        var missing = extras.Where(x => source.CountId(x.Id) < x.Count).ToList();
         if (missing.Count > 0)
         {
             if (!probe)
@@ -46,7 +48,7 @@ public static class ProcessorPressOutput
         if (!probe)
         {
             foreach (var (id, count) in extras)
-                player.Items.ReduceId(id, count);
+                source.ReduceId(id, count);
             if (outputData.ItemId == "(O)" + Ids.CopperProcessor)
                 player.stats.Increment(Ids.StatCopperProcessors);
         }

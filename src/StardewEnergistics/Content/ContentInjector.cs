@@ -39,6 +39,10 @@ internal sealed class ContentInjector
         // T3
         new(Ids.GoldProcessor, "GoldProcessor", "gold-processor.png", false, 250, TierId.T3Automation, ""),
         new(Ids.HeavyCable, "HeavyCable", "heavy-cable-tiles.png", false, 15, TierId.T3Automation, $"{Ids.CopperWire} 2 {IronBar} 1 {Cloth} 1", Yield: 10, SpriteIndex: 15),
+        new(Ids.IronDisk, "IronDisk", "iron-disk.png", false, 400, TierId.T3Automation, $"{Ids.CopperDisk} 1 {IronBar} 3 {Ids.CopperProcessor} 1"),
+        new(Ids.GoldDisk, "GoldDisk", "gold-disk.png", false, 1200, TierId.T3Automation, $"{Ids.IronDisk} 1 {GoldBar} 3 {Ids.GoldProcessor} 1"),
+        new(Ids.MachineLink, "MachineLink", "machine-link.png", false, 300, TierId.T3Automation, $"{Ids.GoldProcessor} 1 {IronBar} 2"),
+        new(Ids.ShippingLink, "ShippingLink", "shipping-link.png", false, 400, TierId.T3Automation, $"{Ids.MachineLink} 1 {GoldBar} 1"),
         // T5
         new(Ids.IridiumProcessor, "IridiumProcessor", "iridium-processor.png", false, 1000, TierId.T5LinkedBuildings, ""),
     };
@@ -51,7 +55,7 @@ internal sealed class ContentInjector
     /// <summary>Mail ID of Maru's letter for a tier.</summary>
     public static string MailId(TierId tier) => $"{Ids.ModId}_Maru_T{(int)tier}";
 
-    public static readonly TierId[] TiersWithMail = { TierId.T1Components, TierId.T2SimpleStorage };
+    public static readonly TierId[] TiersWithMail = { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation };
 
     public void Register()
     {

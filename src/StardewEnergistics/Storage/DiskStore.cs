@@ -58,6 +58,14 @@ internal sealed class DiskStore
         return contents;
     }
 
+    /// <summary>Moves a disk's contents to a higher tier (keeping every item).</summary>
+    public void Upgrade(string id, Item newDisk)
+    {
+        var tier = TierByItem[newDisk.QualifiedItemId];
+        if (disks.TryGetValue(id, out var contents))
+            contents.Upgrade(tier, DiskSpec.For(tier));
+    }
+
     /// <summary>A disk item for stored contents (used when taking a disk out of a rack).</summary>
     public Item CreateItem(DiskContents contents)
     {

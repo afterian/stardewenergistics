@@ -16,7 +16,7 @@ internal sealed record StoredRow(ItemKey? Key, Item Display, long Count, Chest? 
 /// One network's storage: disks in its Storage Racks (rack order), then chests with a Chest Link.
 /// Items go to disks first when they can; anything else goes to linked chests.
 /// </summary>
-internal sealed class NetworkStorage
+internal sealed class NetworkStorage : IStockView
 {
     private NetworkStorage(StorageIndex disks, IReadOnlyList<Chest> chests)
     {
@@ -50,6 +50,23 @@ internal sealed class NetworkStorage
     /// <summary>Total count of an item across disks and linked chests.</summary>
     public long Count(ItemKey key) =>
         Disks.Count(key) + Chests.Sum(c => c.Items.Where(i => StardewItemKeys.TryGetKey(i, out var k) && k == key).Sum(i => (long)i.Stack));
+
+    /// <summary>Keyed items summed over disks and linked chests (for machine input choice and crafting).</summary>
+    public IEnumerable<(ItemKey Key, long Count)> All()
+    {
+        var totals = new Dictionary<ItemKey, long>();
+        foreach (var (key, count) in Disks.All())
+            totals[key] = count;
+        foreach (var chest in Chests)
+        {
+            foreach (var item in chest.Items)
+            {
+                if (StardewItemKeys.TryGetKey(item, out var key))
+                    totals[key] = totals.TryGetValue(key, out long n) ? n + item.Stack : item.Stack;
+            }
+        }
+        return totals.Select(kv => (kv.Key, kv.Value));
+    }
 
     /// <summary>Stores an item stack. Returns what didn't fit (null if everything was stored).</summary>
     public Item? Put(Item item)

@@ -114,3 +114,32 @@ public class MachineRuleTests
     public void ScheduleWindows(bool always, int from, int to, int time, bool active) =>
         Assert.Equal(active, new Schedule(always, from, to).IsActive(time));
 }
+
+public class LinkSettingsCodecTests
+{
+    [Fact]
+    public void SettingsRoundTrip()
+    {
+        var s = new StardewEnergistics.Core.Machines.LinkSettings(
+            new[] { new StardewEnergistics.Core.Machines.InputRule(new StardewEnergistics.Core.Storage.ItemKey("(O)454")), new StardewEnergistics.Core.Machines.InputRule(new StardewEnergistics.Core.Storage.ItemKey("(O)268", 2), false) },
+            new[] { new StardewEnergistics.Core.Machines.KeepBackRule(new StardewEnergistics.Core.Storage.ItemKey("(O)304"), 20) },
+            StardewEnergistics.Core.Machines.OutputMode.LeaveInMachine,
+            new StardewEnergistics.Core.Machines.Schedule(false, 2200, 800),
+            true);
+
+        var back = StardewEnergistics.Core.Persistence.LinkSettingsCodec.Decode(StardewEnergistics.Core.Persistence.LinkSettingsCodec.Encode(s));
+
+        Assert.Equal(s.Inputs, back.Inputs);
+        Assert.Equal(s.KeepBack, back.KeepBack);
+        Assert.Equal(s.Output, back.Output);
+        Assert.Equal(s.Schedule, back.Schedule);
+        Assert.True(back.Configured);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("{not json")]
+    public void BadSettingsGiveANewLink(string? json) =>
+        Assert.False(StardewEnergistics.Core.Persistence.LinkSettingsCodec.Decode(json).Configured);
+}

@@ -1,6 +1,7 @@
 using HarmonyLib;
 using StardewEnergistics.Blocks;
 using StardewEnergistics.Content;
+using StardewEnergistics.Machines;
 using StardewEnergistics.Multiplayer;
 using StardewEnergistics.Networks;
 using StardewEnergistics.Patches;
@@ -53,9 +54,26 @@ namespace StardewEnergistics
             var renderer = new WireRenderer(wires, textures, Monitor);
             renderer.Patch(harmony);
             DiskStackPatch.Apply(harmony);
+            DiskUpgradePatch.Apply(harmony, disks);
+
+            var links = new MachineLinkService(Monitor, networks, disks, power);
+            var shipping = new ShippingLinkService(helper, Monitor, networks, disks, power);
+            helper.Events.GameLoop.TimeChanged += (_, _) => links.OnTimeChanged();
+            helper.ConsoleCommands.Add("se_perf", "Run all Machine Links now and show how long it took.", (_, _) =>
+            {
+                if (!Context.IsWorldReady)
+                    return;
+                links.OnTimeChanged();
+                Monitor.Log($"Machine Links: {links.LastMachines} machines in {links.LastMs:0.00} ms.", LogLevel.Info);
+            });
+            helper.Events.GameLoop.DayEnding += (_, _) =>
+            {
+                links.OnDayEnding();
+                shipping.OnDayEnding();
+            };
 
             new WireInput(helper, config, wires, renderer).Register();
-            new BlockInteraction(helper, networks, disks, power, terminal).Register();
+            new BlockInteraction(helper, networks, disks, power, terminal, textures).Register();
             new DebugCommands(helper, Monitor, wires, networks, disks, power).Register();
 
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
