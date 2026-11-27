@@ -18,6 +18,7 @@ Confirmed decisions log. The full design is in `docs/design-plan.md`; status and
 - Gated progression via Maru's letters by friendship hearts (T1–T6 in the plan).
 - Multiplayer: host-authoritative, one shared farm network.
 - Testing: Windows PC + two Steam Decks auto-updating from a private GitHub release before Nexus.
+- Deck builds (Proposed, 2026-11-27): built on the user's PC as a GitHub self-hosted runner on every push to `main` (game files can't go on GitHub's machines), published to release `test-latest`; Deck launcher installs it on every game start and launches through SMAPI. Mod version stamped `x.y.z-build.N` so multiplayer players can compare builds.
 - GitHub repo `afterian/stardewenergistics`; mod UniqueID `afterian.StardewEnergistics`, author `afterian` (2026-11-27).
 - Build (Proposed, 2026-11-27): mod and Core target `net6.0` (the game's runtime); the test project targets `net8.0` so the current .NET 8 SDK runs it. Install the **.NET 8 SDK** on the PC; it builds net6.0 mods too.
 - Sprites (Proposed, 2026-11-27): each art file is its own game asset `Mods/afterian.StardewEnergistics/Sprites/<name>`; item IDs are `afterian.StardewEnergistics_<Name>` (see `src/StardewEnergistics/Ids.cs`).

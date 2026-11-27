@@ -1,47 +1,19 @@
 # Test deploys to the Steam Decks
 
-Each Deck checks GitHub every time Stardew starts and installs the newest test build. You publish a build from your PC with one double-click.
+**Full step-by-step setup guide: [docs/steam-deck-setup.md](../docs/steam-deck-setup.md).**
+
+Each Deck checks GitHub every time Stardew starts and installs the newest test build. Builds are made automatically on your PC whenever `main` changes.
 
 ```
-PC: double-click deploy/publish-test.bat  ->  GitHub release "test-latest"  ->  Deck: start the game
+push to main -> PC (self-hosted runner) builds -> GitHub release "test-latest" -> Deck: start the game
 ```
 
-## One-time setup on your PC
+| File | What it does |
+|---|---|
+| `../.github/workflows/deck-build.yml` | Builds on the PC (runner label `stardew`) on every push to `main` or by hand ("Run workflow", any branch). Stamps the version as `x.y.z-build.N`. |
+| `ci/publish-release.ps1` | Used by the workflow: uploads the zip to release `test-latest` without a gap where the Decks see no zip. |
+| `deck/install.sh` | One-time Deck setup: checks the token, saves `~/stardew-energistics/config`, downloads the launcher. Re-run it to change the token. |
+| `deck/launch.sh` | Steam launch option `~/stardew-energistics/launch.sh %command%`. Installs a newer build (keeps `config.json`), updates itself, then starts the game through SMAPI. Offline-safe. Log: `~/stardew-energistics/update.log`. |
+| `publish-test.bat` / `.ps1` | Manual fallback: build and upload from the PC with the GitHub CLI. |
 
-1. Install the [GitHub CLI](https://cli.github.com) and run `gh auth login` once.
-2. Make a read-only token for the Decks: GitHub > Settings > Developer settings > Fine-grained tokens > Generate.
-   - Repository access: only this repo.
-   - Permissions: Contents = Read-only. Nothing else.
-   - Skip this if the repo is public.
-
-## One-time setup on each Steam Deck
-
-1. Install SMAPI on the Deck (native Linux version): https://stardewvalleywiki.com/Modding:Installing_SMAPI_on_Steam_Deck
-2. Switch to Desktop Mode and open Konsole.
-3. Paste this, replacing `TOKEN` with the read-only token (tip: open this page in the Deck's browser and copy it):
-
-   ```
-   curl -fsSL -H "Authorization: Bearer TOKEN" -H "Accept: application/vnd.github.raw" https://api.github.com/repos/afterian/stardewenergistics/contents/deploy/deck/install.sh | bash -s -- afterian/stardewenergistics TOKEN
-   ```
-
-4. In Steam: Stardew Valley > Properties > Launch Options, paste:
-
-   ```
-   ~/stardew-energistics/launch.sh %command%
-   ```
-
-5. Go back to Game Mode and play. That's it.
-
-## Every test round
-
-1. On the PC: double-click `deploy/publish-test.bat`.
-2. On each Deck: start Stardew. The new build installs before the game opens.
-
-Both Decks must start the game after the same publish so they run the same version for multiplayer.
-
-## If something looks wrong
-
-- `~/stardew-energistics/update.log` on the Deck says what the updater did.
-- No wifi or GitHub down: the game still starts with the last installed build.
-- The mod's `config.json` is kept across updates.
-- To stop auto-updating, clear the Launch Options line.
+Secrets: the Deck token lives only in `~/stardew-energistics/config` on each Deck. Nothing secret is in the repo or the workflow (it uses GitHub's built-in token).
