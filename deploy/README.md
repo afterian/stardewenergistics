@@ -1,19 +1,20 @@
 # Test deploys to the Steam Decks
 
-**Full step-by-step setup guide: [docs/steam-deck-setup.md](../docs/steam-deck-setup.md).**
-
-Each Deck checks GitHub every time Stardew starts and installs the newest test build. Builds are made automatically on your PC whenever `main` changes.
+**Step-by-step setup guide: [docs/steam-deck-setup.md](../docs/steam-deck-setup.md).**
 
 ```
-push to main -> PC (self-hosted runner) builds -> GitHub release "test-latest" -> Deck: start the game
+new commit on main -> PC watcher builds it -> GitHub release "test-latest" -> Deck: start the game
 ```
+
+The PC only reaches out to GitHub (it checks every minute). Nothing on GitHub can trigger it. No admin rights, no service, no GitHub Actions runner.
 
 | File | What it does |
 |---|---|
-| `../.github/workflows/deck-build.yml` | Builds on the PC (runner label `stardew`) on every push to `main` or by hand ("Run workflow", any branch). Stamps the version as `x.y.z-build.N`. |
-| `ci/publish-release.ps1` | Used by the workflow: uploads the zip to release `test-latest` without a gap where the Decks see no zip. |
-| `deck/install.sh` | One-time Deck setup: checks the token, saves `~/stardew-energistics/config`, downloads the launcher. Re-run it to change the token. |
-| `deck/launch.sh` | Steam launch option `~/stardew-energistics/launch.sh %command%`. Installs a newer build (keeps `config.json`), updates itself, then starts the game through SMAPI. Offline-safe. Log: `~/stardew-energistics/update.log`. |
-| `publish-test.bat` / `.ps1` | Manual fallback: build and upload from the PC with the GitHub CLI. |
+| `setup-pc.bat` -> `pc/setup-pc.ps1` | One-time PC setup: installs Git/.NET 8/GitHub CLI via winget, signs in to GitHub, finds the game, makes the hidden watcher task (runs at Windows sign-in), publishes the first build. Re-runnable. |
+| `pc/watch.ps1` | The watcher. Keeps its own copy of the repo in `%LOCALAPPDATA%\StardewEnergistics\build`, builds each new `main` commit once. Log: `%LOCALAPPDATA%\StardewEnergistics\watcher.log`. |
+| `pc/build-and-publish.ps1`, `pc/common.ps1` | Builds (version `x.y.z-build.N`, N = commit count), uploads the zip without a gap, attaches `last-build-log.txt`, and sets a `pc-build` tick or cross on the commit. |
+| `publish-test.bat` | Build whatever is in the project folder now (any branch) and send it to the Decks. |
+| `deck/install.sh` | One-time Deck setup: checks GitHub access (asks for the token if the repo is private), installs SMAPI if needed, installs the launcher. Re-runnable. |
+| `deck/launch.sh` | Steam launch option `~/stardew-energistics/launch.sh %command%`. Installs a newer build (keeps `config.json`), updates itself, starts the game through SMAPI. Offline-safe. Log: `~/stardew-energistics/update.log`. |
 
-Secrets: the Deck token lives only in `~/stardew-energistics/config` on each Deck. Nothing secret is in the repo or the workflow (it uses GitHub's built-in token).
+Secrets: the PC uses the GitHub CLI's sign-in. The Deck token, needed only while the repo is private, lives only in `~/stardew-energistics/config` on each Deck.

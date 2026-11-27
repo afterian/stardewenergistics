@@ -1,166 +1,135 @@
 # Steam Deck setup: auto-updating test builds
 
-Once this is set up, testing a change looks like this:
+Once this is set up, testing a change works like this:
 
 ```
-Claude pushes to main  ->  your PC builds the mod (about a minute)  ->  release "test-latest" on GitHub
-                                                                          |
-                         Steam Deck: start Stardew  <-  launcher installs the newest build first
+change pushed to main -> your PC builds the mod (a minute or two) -> GitHub release "test-latest"
+                                                                       |
+                        Steam Deck: start Stardew  <-  the newest build installs first
 ```
 
-You never copy files by hand. Start the game on a Deck and it has the newest build.
+Setup is one double-click on the PC and one pasted command on each Deck.
 
-Why the PC does the building: a SMAPI mod can only be compiled against the game's own files, and those can't be put on GitHub's servers. So your PC acts as GitHub's build machine (a "self-hosted runner"). It must be switched on and awake for new builds to appear. If it is off, the build waits (up to a day) and runs when the PC comes back.
+**How it works, and why it's safe:** a SMAPI mod can only be built against the game's own files, and those can't go on GitHub's servers. So your PC does the building. A small hidden "watcher" starts when you sign in to Windows. Every minute it asks GitHub "is there a new commit on `main`?". If there is, it builds that commit and uploads the zip to the release. Only your PC reaches out. Nothing on GitHub, and nobody else, can start anything on your PC. It only builds `main`, which only you (and Claude through pull requests you merge) can change. That's the same code you'd build and play yourself anyway. It needs no administrator rights and installs no service.
 
-There are three one-time parts: the PC (part 1), a token for the Decks (part 2), and each Deck (part 3). Part 4 is the everyday loop.
+Why not build on GitHub's own servers? That would need the game's DLLs (or "reference" copies made from them) stored on GitHub. Those are ConcernedApe's copyrighted files, so that's not something to upload, even to a private repo. Most SMAPI mods build locally for the same reason.
+
+The PC must be **on and signed in** for new builds to appear. If it's off, the Decks keep the last build, and the watcher catches up when you sign in.
 
 ---
 
-## Part 1. Your PC builds the mod for GitHub (once, about 10 minutes)
+## Private or public repo?
 
-You need the **.NET 8 SDK** (https://dotnet.microsoft.com/download/dotnet/8.0, "SDK", Windows x64) and Stardew Valley installed on the PC. SMAPI on the PC is only needed to play on the PC.
+Both work the same way. The scripts detect which one you have, and the watcher is equally safe either way.
 
-### 1a. Find your game folder
+| | Private (now) | Public |
+|---|---|---|
+| PC setup | Same | Same |
+| Decks | Need a read-only token (part 2, a few minutes, once a year) | No token: skip part 2 |
+| Who sees the code and test builds | Only you | Everyone |
 
-1. In Steam, right-click **Stardew Valley** > **Manage** > **Browse local files**.
-2. Click the address bar of the window that opens and copy the path, for example `E:\SteamLibrary\steamapps\common\Stardew Valley`.
-
-### 1b. Tell GitHub where the game is
-
-1. Open https://github.com/afterian/stardewenergistics/settings/variables/actions
-2. Click **New repository variable**.
-3. Name: `STARDEW_GAME_PATH`. Value: the path you copied. Click **Add variable**.
-
-### 1c. Install the runner
-
-1. Open https://github.com/afterian/stardewenergistics/settings/actions/runners/new
-2. Pick **Windows** and **x64**.
-3. Open the Start menu, type `PowerShell`, right-click **Windows PowerShell** > **Run as administrator**.
-4. Run the commands from the GitHub page **one block at a time**, top to bottom. The first one is `mkdir actions-runner; cd actions-runner`. Do this in `C:\`, not inside the project folder (type `cd C:\` first).
-5. The `./config.cmd ...` step asks questions. Answer:
-   - Runner group: press **Enter**
-   - Runner name: press **Enter**
-   - **Additional labels: type `stardew`** and press Enter (this one matters)
-   - Work folder: press **Enter**
-   - Run as service? type **Y**
-   - Service account: press **Enter**
-6. Skip the last `./run.cmd` line on the GitHub page; the service already runs and starts with Windows.
-7. Refresh https://github.com/afterian/stardewenergistics/settings/actions/runners. Your PC should show as **Idle** (green).
-
-### 1d. First build
-
-1. Open https://github.com/afterian/stardewenergistics/actions/workflows/deck-build.yml
-2. Click **Run workflow** > branch **main** > **Run workflow**.
-3. After a minute or two it should turn green, and https://github.com/afterian/stardewenergistics/releases/tag/test-latest has `StardewEnergistics-test.zip`.
-
-If it fails, click the red run, then the failed step, and send Claude a screenshot or the text.
+So making it public only saves the token step on the Decks. Make it public when you want people to see the mod, not for the setup.
 
 ---
 
-## Part 2. A read-only token for the Decks (once)
+## Part 1. PC (once, about 5 minutes)
 
-The repo is private, so the Decks need a key that can only read it.
+1. Get the latest project files: in `E:\Projects\stardewenergistics`, pull `main` (GitHub Desktop: **Fetch origin**, then **Pull**; or `git pull` in a terminal).
+2. In File Explorer, open the `deploy` folder and double-click **`setup-pc.bat`**.
+3. A window works through 5 steps. It:
+   - installs Git, the .NET 8 SDK and the GitHub CLI if they're missing (click **Yes** if Windows asks)
+   - opens your browser once to sign in to GitHub: copy the 8-letter code from the window, paste it in the browser, click **Authorize**
+   - finds Stardew Valley by itself (if it can't, it asks you to paste the game folder: in Steam right-click Stardew Valley > **Manage** > **Browse local files** and copy the address bar)
+   - sets up the watcher
+   - builds and publishes the first build
+4. When it says **PC setup done**, press a key to close it.
+
+To check it worked, look at https://github.com/afterian/stardewenergistics/releases/tag/test-latest, which should have `StardewEnergistics-test.zip`. Each commit on `main` also gets a green tick ("pc-build") once it's published, or a red cross if the build failed. The build log is attached to the release as `last-build-log.txt`, so Claude can read the errors without your PC.
+
+Running the setup again is safe. Do it if you move the game to another drive.
+
+---
+
+## Part 2. Deck token (private repo only, once)
+
+The Decks need a key that can only read this one repo.
 
 1. Open https://github.com/settings/personal-access-tokens/new
-2. Token name: `Steam Decks`. Expiration: **Custom**, a date about a year from now (GitHub's limit).
+2. Token name: `Steam Decks`. Expiration: **Custom**, about a year from now (the longest GitHub allows).
 3. Repository access: **Only select repositories** > `afterian/stardewenergistics`.
-4. Permissions > Repository permissions > **Contents: Read-only**. Leave everything else alone.
-5. Click **Generate token** and copy it (starts with `github_pat_`). Keep it somewhere private, like a password manager. Both Decks use the same token. Don't paste it into the repo, chats or issues.
+4. Repository permissions > **Contents** > **Read-only**. Leave everything else alone.
+5. **Generate token**, and copy it. It starts with `github_pat_`.
 
-When it expires the Decks keep playing the last build, and `update.log` says "token is wrong or expired". Make a new token and redo step 3c on each Deck.
+Getting it onto the Deck without typing it: send it to yourself in **Steam chat** from the PC. On the Deck, in Desktop Mode, open Steam > Friends & Chat, and copy it from there. Delete the message afterwards. Both Decks use the same token.
+
+When it expires, the Decks keep the last build and `update.log` says "token is wrong or expired". Make a new one and run the Deck command again.
 
 ---
 
-## Part 3. Each Steam Deck (once per Deck, about 10 minutes)
+## Part 3. Each Steam Deck (once, about 5 minutes)
 
-Do all of part 3 in **Desktop Mode**: press the **Steam** button > **Power** > **Switch to Desktop**. To type, press **Steam + X** for the on-screen keyboard. A mouse and keyboard over USB-C or Bluetooth make this much easier.
+1. **Switch to Desktop Mode:** press the **Steam** button > **Power** > **Switch to Desktop**. (On-screen keyboard: **Steam + X**. A USB or Bluetooth keyboard helps.)
+2. **Make sure the game is the Linux version:** in Steam, right-click Stardew Valley > **Properties** > **Compatibility**. "Force the use of a specific Steam Play compatibility tool" must be **off**. Start the game once and quit, so its folders exist.
+3. **Open Konsole** (app launcher, bottom-left > System > Konsole). Paste the line for your repo (paste is **Ctrl + Shift + V**) and press Enter.
 
-### 3a. Make sure the game runs as the Linux version
-
-In Steam, right-click **Stardew Valley** > **Properties** > **Compatibility**. "Force the use of a specific Steam Play compatibility tool" must be **unchecked**. (If it was checked, uncheck it and let Steam download the Linux version.) Start the game once and quit, so its folders exist.
-
-### 3b. Install SMAPI
-
-1. Open a web browser (Firefox: install it from the **Discover** app if there isn't one) and go to https://smapi.io. Click the big download button for the newest SMAPI. It lands in **Downloads**.
-2. Open the **Dolphin** file manager > **Downloads**, right-click the SMAPI zip > **Extract** > **Extract archive here**.
-3. Open **Konsole** (the terminal; find it in the app launcher, bottom left) and paste this, then press Enter (paste in Konsole is **Ctrl + Shift + V**):
+   Private repo. It asks for the token. Nothing shows while you paste it, that's normal:
 
    ```
-   bash ~/Downloads/SMAPI*/"install on Linux.sh"
+   read -rsp "Paste the token, then Enter: " T; echo; curl -fsSL -H "Authorization: Bearer $T" -H "Accept: application/vnd.github.raw" https://api.github.com/repos/afterian/stardewenergistics/contents/deploy/deck/install.sh | bash -s -- "$T"
    ```
 
-4. When it asks, choose **1** (install). If it asks for the game path, it's usually `/home/deck/.local/share/Steam/steamapps/common/Stardew Valley` (or on the SD card under `/run/media/...`).
-5. If the installer tells you to set Steam launch options, you can skip that. Step 3d sets one line that does both jobs.
-
-### 3c. Install the auto-updater
-
-1. Still in Konsole, paste this and press Enter:
+   Public repo:
 
    ```
-   read -rsp "Paste the token, then press Enter: " T; echo; curl -fsSL -H "Authorization: Bearer $T" -H "Accept: application/vnd.github.raw" https://api.github.com/repos/afterian/stardewenergistics/contents/deploy/deck/install.sh | bash -s -- afterian/stardewenergistics "$T"
+   curl -fsSL https://raw.githubusercontent.com/afterian/stardewenergistics/main/deploy/deck/install.sh | bash
    ```
 
-2. Paste the token from part 2 (nothing shows while you paste; that's normal) and press Enter.
-3. It should say "OK, the Deck can see afterian/stardewenergistics" and "Found the game and SMAPI". The token is saved only on this Deck, in `~/stardew-energistics/config`, readable only by you.
-
-### 3d. Set the launch options
-
-1. In Steam, right-click **Stardew Valley** > **Properties** > **General** > **Launch Options**.
-2. Replace whatever is there with exactly:
+   It checks GitHub, finds the game, installs SMAPI if it's missing, and installs the auto-updater. If the SMAPI installer asks anything, choose to install. At the end press Enter. Tip: open this guide in the Deck's browser and copy the line from there.
+4. **Set the launch options:** in Steam, right-click Stardew Valley > **Properties** > **General** > **Launch Options**. Replace what's there with exactly:
 
    ```
    ~/stardew-energistics/launch.sh %command%
    ```
 
-3. Close the window. Switch back with the **Return to Gaming Mode** icon on the desktop.
+   (The script can't do this step. Steam overwrites its settings file while it's running.)
+5. Double-click **Return to Gaming Mode** on the desktop and start Stardew. The first start takes a few extra seconds. You should see the SMAPI console, then "Stardew Energistics is running!" after loading a save.
 
-### 3e. Check it
-
-Start Stardew in Game Mode. The first start takes a few seconds longer while it downloads the mod. You should see the SMAPI console and, after loading a save, the message "Stardew Energistics is running!".
+**If the automatic SMAPI install fails:** in Desktop Mode open https://smapi.io in a browser and download SMAPI. In the Dolphin file manager, right-click the zip in Downloads > **Extract** > **Extract archive here**. Then in Konsole run `bash ~/Downloads/SMAPI*/"install on Linux.sh"` and choose install. Then run the Deck command from step 3 again.
 
 ---
 
-## Part 4. The everyday loop
+## Part 4. Everyday
 
-1. Claude (or you) pushes a change to `main`. Your PC builds it and publishes it. Check https://github.com/afterian/stardewenergistics/actions if you want to watch.
-2. On each Deck: fully quit Stardew (Steam button > **Exit game**) and start it again. The new build installs before the game opens.
-3. Test.
+1. A change lands on `main`. Your PC builds it by itself.
+2. On each Deck: quit Stardew completely (Steam button > **Exit game**) and start it again. The new build installs first.
 
-**Testing a branch before it's merged:** open https://github.com/afterian/stardewenergistics/actions/workflows/deck-build.yml > **Run workflow** > pick the branch > **Run workflow**. The Decks get that branch's build next launch. The next push to `main` replaces it.
-
-**Which build am I on?** The SMAPI console lists `Stardew Energistics 0.0.1-build.N`. N goes up with every build. For multiplayer, every player must show the same N, so restart both Decks after the same build.
-
-**The PC as a player:** the runner doesn't touch the PC's own Mods folder. To play the latest build on the PC, pull the latest `main` and build in Visual Studio (that copies it into the PC's Mods folder), or unzip `StardewEnergistics-test.zip` from the release into the PC's `Mods` folder.
-
-**No PC available?** `deploy/publish-test.bat` still builds and uploads by hand (needs the GitHub CLI signed in).
+- **Test a branch before merging:** check out the branch in your project folder and double-click `deploy\publish-test.bat`. It builds exactly what's in the folder and sends it to the Decks. The next new commit on `main` replaces it.
+- **Same build for multiplayer:** the SMAPI console shows `Stardew Energistics 0.0.1-build.N`. Every player needs the same N.
+- **Playing on the PC:** the watcher doesn't touch the PC's own Mods folder. Build in Visual Studio (that copies the mod into Mods), or unzip `StardewEnergistics-test.zip` from https://github.com/afterian/stardewenergistics/releases/tag/test-latest into the game's `Mods` folder.
 
 ---
 
 ## If something looks wrong
 
-On the Deck, the launcher writes what it did to `~/stardew-energistics/update.log`. To read it, in Desktop Mode open Konsole and run:
-
-```
-tail -n 20 ~/stardew-energistics/update.log
-```
+On a Deck, in Desktop Mode, open Konsole and run `tail -n 20 ~/stardew-energistics/update.log`.
 
 | Log says | What to do |
 |---|---|
-| `up to date (0.0.1-build.N)` | Nothing; you have the newest build. If you expected a newer one, check the Actions page: maybe the PC was off or the build failed. |
-| `installed 0.0.1-build.N` | Worked. |
-| `token is wrong or expired (401)` | Make a new token (part 2), redo step 3c. |
-| `release 'test-latest' not found (404)` | Nothing has been published yet (do step 1d), or the token can't see the repo. |
+| `installed 0.0.1-build.N` / `up to date` | All good. Expected a newer build? The PC may be off or signed out, or the build failed (red cross on the commit on GitHub). |
+| `token is wrong or expired (401)` | New token (part 2), then run the Deck command again. |
+| `release 'test-latest' not found (404)` | Nothing built yet (part 1), or the token can't see the repo. |
 | `could not reach GitHub` | No wifi. The game starts with the last build. |
-| `SMAPI not found in the game folder` | Redo step 3b. Game updates sometimes need SMAPI reinstalled. |
-| `game folder not found` | Start the game once without launch options, then try again. |
+| `SMAPI not found in the game folder` | Run the Deck command again. It reinstalls SMAPI (game updates sometimes remove it). |
 
-- The mod's `config.json` is kept across updates.
-- The launcher also updates itself from `main`; changes take effect the launch after.
-- To pause updates (keep the current build), add a line `AUTO_UPDATE=0` to `~/stardew-energistics/config`. To stop using the launcher, clear the Launch Options line.
-- To remove everything: clear the Launch Options, delete `~/stardew-energistics` and the game's `Mods/StardewEnergistics` folder.
-- Game won't start at all: clear the Launch Options and start it. If it starts, the problem is in the launcher; send Claude `update.log`.
+- The mod's `config.json` is kept across updates. The launcher also updates itself.
+- Pause updates: add the line `AUTO_UPDATE=0` to `~/stardew-energistics/config`.
+- Game won't start at all: clear the Launch Options and try. If it starts, send Claude `update.log`.
+- Remove everything: clear the Launch Options, delete `~/stardew-energistics` and the game's `Mods/StardewEnergistics`.
+- PC watcher log: `%LOCALAPPDATA%\StardewEnergistics\watcher.log` (paste that into the File Explorer address bar).
+- Stop the PC watcher: Start menu > **Task Scheduler** > Task Scheduler Library > "Stardew Energistics build watcher" > **Disable**.
 
 ## Security notes
 
-- The runner only runs this repo's own workflow, and only while the repo is **private**. Don't make the repo public while the runner is attached (anyone could then run code on your PC through a pull request). Remove it first: Settings > Actions > Runners > your PC > Remove.
-- The Deck token can only read this one repo. It lives only in `~/stardew-energistics/config` on each Deck, never in the repo (the `config` file name is also in `.gitignore`).
+- Nothing on GitHub can trigger the PC. The watcher only reaches out, and only builds `main`.
+- It uses your normal GitHub sign-in from the GitHub CLI, stored by Windows. No token is written into the repo or any file in it.
+- The Deck token can only read this repo. It's stored only on each Deck, in `~/stardew-energistics/config`, readable only by the Deck user.
