@@ -26,6 +26,7 @@ Confirmed decisions log. The full design is in `docs/design-plan.md`; status and
 - M3 rules (Proposed, 2026-11-27, change on request): a Machine Link runs every 10 game minutes and once overnight; one Link drives every identical machine touching its machine (up to 500); inputs are used in list order, lower qualities first, keep-back counts all qualities; output goes to storage, or stays in the machine when storage is full. Shipping Links ship everything above keep-back each night and attach only to a Mini-Shipping Bin until M5. Crafting a bigger disk from a smaller one keeps its contents.
 - M4 rules (Proposed, 2026-11-27, change on request): autocraft uses crafting recipes any farmer knows plus simple Furnace rules; the requested item is always crafted, its parts come from stock first; lowest quality ingredients are used first; Furnace steps use Furnaces with a Machine Link (and Furnaces touching them) even if the Link isn't set up; jobs advance every 10 game minutes, one job per Crafting Rack, and are stored on the Computer Core; ingredients are not reserved.
 - Art: produced in parallel by another tool from `docs/art-asset-list.md` (36 files).
+- Art style (2026-11-27): Maru purple-and-oak approved (amethyst cases, plum outlines, honey-oak supports, green CRTs). First final batch: `computer-core.png`, `network-terminal.png`, `wire-tiles.png`, `wire-tiles-glow.png`, `heavy-cable-tiles.png`. See `docs/artwork-pipeline.md`.
 
 ## Open
 

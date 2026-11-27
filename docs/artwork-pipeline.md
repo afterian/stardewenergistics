@@ -1,0 +1,20 @@
+# Stardew Energistics art: create, review, publish
+
+## Direction
+
+The purple-and-oak Maru style is approved. Use rounded amethyst cases, plum outlines instead of black, warm honey-oak supports, and cool green CRTs or small status accents. The [approved concept](../artwork/concepts/maru-bedroom-revision/maru-purple-and-oak.png) is a reference, not a source sheet. Use the [asset list](art-asset-list.md) for exact names, frame order, and dimensions. [Pixel tools](../tools/pixel/README.md) has commands and examples.
+
+## Create and validate
+
+1. Work in the Stardew Energistics project on E:. Keep editable masters, palettes, and accepted concept inputs in `artwork/source/`, working explorations in `artwork/concepts/`, and comparison sheets in `artwork/review/`. Do not commit copyrighted game reference images, Steam files, credentials, logs, or disposable tests.
+2. Draw at 1× where possible. For a generated sheet, keep cells aligned and crops repeatable; register the grid, isolate the silhouette, map to the palette, then clean up by hand at native scale. Sample relevant areas of the game for hue, saturation, and value rather than remapping from a full screenshot. Do not replace black with one universal color: keep separate dark ramps for wood, metal, glass, and wire.
+3. Preserve registration across states. Native dimensions are 16×32 for placeable machine frames and 16×16 for inventory and wire frames. The machines share a consistent baseline. Use RGBA PNG, hard pixels, no profile, and no pasted backgrounds. Pack states left to right with no padding. Leave sprites at 1× in `artwork/exports/`; put all enlarged sheets elsewhere.
+4. Run `pixel_pipeline.py check` (see the tool README) and check strip frame order. On a checkout containing the art validator, run `dotnet test tests/StardewEnergistics.Tests/StardewEnergistics.Tests.csproj --filter FullyQualifiedName~ArtExportTests`. Missing art can fall back to a placeholder, so passing the test alone does not prove the batch shipped. Inspect 1× detail and 4× nearest-neighbor on a farm or shed backdrop. Review dark/light surfaces, all states, and strip seams. For a runtime pass use a disposable farm and compare at the same zoom against vanilla objects.
+5. Wire files contain masks 0–15 (N=1, E=2, S=4, W=8). Endpoints meet at the tile edge center. Check that unset edges are clear, matching edges have no gaps, and a mixed joint steps down cleanly. `wire-tiles-glow.png` is the full Copper Wire replacement sprite in Network View, not an additive-only glow. Heavy Cable uses the same grayscale strip in both views and gets its paint tint at runtime.
+
+## Publish an approved batch
+
+1. Use an up-to-date branch based on the current mod code without disturbing another contributor's working files. Stage exact source, native exports and documentation for the batch, not the whole local checkout. Review the diff; do not move the game from D: or place project files on C:.
+2. Local package verification: build the mod in Release from the checkout with the art packaging rule, disabling automatic mod deployment if testing a package only. The build copies `artwork/exports/*.png` to `assets/sprites/`. Open the produced mod ZIP and verify each expected file path, native dimensions, and hashes against the source exports. If using a custom ZIP path, choose one on E: and keep build output and logs with the project. A PNG-only review ZIP is not a mod build.
+3. Submit the verified batch to the private repository for review. Publish only when the release is authorized. If the PC watcher is installed and following `main`, verify the watcher built the intended commit and that the rolling `test-latest` release contains that exact mod package. Otherwise use the project’s designated release procedure after approval. Do not assume that a local export or a merge means the Decks were updated.
+4. Confirm the build in SMAPI on a test save, and record the commit, release version, files and screenshots in the handoff. Report local art, mod-package verification, and live game verification separately.

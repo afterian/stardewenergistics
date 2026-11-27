@@ -26,6 +26,7 @@ internal sealed class PowerService
         this.helper = helper;
         this.monitor = monitor;
         this.networks = networks;
+        helper.Events.World.ObjectListChanged += OnObjectListChanged;
     }
 
     public PowerTable Table { get; set; } = PowerTable.Default;
@@ -88,7 +89,35 @@ internal sealed class PowerService
 
                 monitor.Log($"{where}: power use {use}, powered={day.Powered}, {day.After.Available} left.", LogLevel.Trace);
             }
+            ShowTerminals(loc);
         }
+    }
+
+    /// <summary>Shows each Network Terminal's "on" frame when its network is powered, "off" otherwise (host).</summary>
+    public void ShowTerminals(LocationNetworks loc)
+    {
+        if (!Context.IsMainPlayer)
+            return;
+        foreach (var n in loc.Graph.Networks)
+        {
+            bool on = IsPowered(loc, n);
+            foreach (var terminal in loc.ObjectsOf(n, BlockKind.Terminal))
+                RackSlots.ShowFrame(terminal, on ? 1 : 0);
+        }
+    }
+
+    /// <summary>A placed Terminal lights up at once; a picked-up one goes back to its "off" icon.</summary>
+    private void OnObjectListChanged(object? sender, StardewModdingAPI.Events.ObjectListChangedEventArgs e)
+    {
+        if (!Context.IsMainPlayer)
+            return;
+        foreach (var removed in e.Removed)
+        {
+            if (BlockIds.KindOf(removed.Value) == BlockKind.Terminal)
+                RackSlots.ShowFrame(removed.Value, 0);
+        }
+        if (e.Added.Any(a => BlockIds.KindOf(a.Value) == BlockKind.Terminal))
+            ShowTerminals(networks.For(e.Location));
     }
 
     /// <summary>Writes battery charge and fuel back onto the racks and generators, removing spent batteries.</summary>
