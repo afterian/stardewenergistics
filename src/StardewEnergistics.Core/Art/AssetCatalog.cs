@@ -1,7 +1,7 @@
 namespace StardewEnergistics.Core.Art;
 
 /// <summary>
-/// All 36 art files, copied from docs/art-asset-list.md. Code depends only on these names,
+/// All production art files, copied from docs/art-asset-list.md. Code depends only on these names,
 /// frame sizes and frame counts. Change this file and the art list together.
 /// </summary>
 public static class AssetCatalog
@@ -39,6 +39,9 @@ public static class AssetCatalog
         new AssetSpec(21, "wire-tiles.png", AssetKind.WireTiles, 16, 16, 16, 1),
         new AssetSpec(22, "wire-tiles-glow.png", AssetKind.WireTiles, 16, 16, 16, 1),
         new AssetSpec(35, "heavy-cable-tiles.png", AssetKind.WireTiles, 16, 16, 16, 1),
+
+        new AssetSpec(37, "copper-data-signal.png", AssetKind.WireTiles, 16, 16, 128, 1),
+        new AssetSpec(38, "heavy-data-signal.png", AssetKind.WireTiles, 16, 16, 128, 1),
 
         // Attachment overlays, 16x16
         new AssetSpec(23, "chest-link.png", AssetKind.Attachment, 16, 16, 1, 2),
