@@ -1,6 +1,6 @@
 # Stardew Energistics — Handoff for implementation
 
-Date: 2026-11-27. Status: **M0 in progress.** Hello-world mod (`src/StardewEnergistics/`) plus the M0 scaffold: `StardewEnergistics.Core` with the §3 contracts of `docs/implementation-plan.md`, the 36-entry art catalogue, art export checks, xUnit tests and CI. Waiting on the user's PC setup (SMAPI, .NET SDK) for the first in-game load. Core done ahead of the game side: M1 wire layer + wire save model, and M2 network graph, disk storage and power ledger (88 tests). M1 game side is written and builds on the PC (Stardew 1.6.15, SMAPI 4.5.2, .NET SDK 8.0.428); next is the user's run of `docs/testing/m1.md`, then M2 game side.
+Date: 2026-11-27. Status: **M0 in progress.** Hello-world mod (`src/StardewEnergistics/`) plus the M0 scaffold: `StardewEnergistics.Core` with the §3 contracts of `docs/implementation-plan.md`, the 36-entry art catalogue, art export checks, xUnit tests and CI. Waiting on the user's PC setup (SMAPI, .NET SDK) for the first in-game load. Core done ahead of the game side: M1 wire layer + wire save model, and M2 network graph, disk storage and power ledger (88 tests). M1 and a first pass of M2 game side are written and build on the PC (Stardew 1.6.15, SMAPI 4.5.2, .NET SDK 8.0.428); in-game checks: `docs/testing/m1.md`, `docs/testing/m2.md`. M2 still to do: custom Terminal menu (search, scroll, quality rows), farmhand messages (lane F), whole-item/flavoured storage (S4), BlockRenderer state frames (S2; racks currently switch ParentSheetIndex).
 
 ## What this project is
 
