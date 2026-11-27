@@ -1,0 +1,26 @@
+{
+  "colors": {
+    "outline": "#39294e",
+    "edge": "#513768",
+    "case": "#765498",
+    "lit": "#9c7cc1",
+    "glint": "#b4a0cf",
+    "screenOff": "#3f4255",
+    "screenReflection": "#565575",
+    "dormant": "#615278",
+    "screenOn": "#385948",
+    "low": "#4c5b46",
+    "scan": "#80b65f",
+    "dimscan": "#738656",
+    "lime": "#bccd80",
+    "teal": "#73aeae",
+    "blue": "#7c94c1",
+    "darkWood": "#753a40",
+    "amberWood": "#b86638",
+    "oak": "#d48846",
+    "oakLit": "#edab60",
+    "warning": "#d7a053",
+    "metal": "#857690",
+    "key": "#ac9ab8"
+  }
+}

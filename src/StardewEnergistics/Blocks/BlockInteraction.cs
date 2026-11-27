@@ -118,6 +118,7 @@ internal sealed class BlockInteraction
                 break;
             case BlockKind.Terminal:
                 helper.Input.Suppress(e.Button);
+                power.ShowTerminals(networks.For(location));
                 terminal.Open(location, tile);
                 break;
             case BlockKind.CraftingRack:
@@ -316,6 +317,7 @@ internal sealed class BlockInteraction
             {
                 core.modData.Remove(Ids.Data.Powered);
                 RackSlots.ShowFrame(core, power.IsPowered(loc, n) ? 1 : 0);
+                power.ShowTerminals(loc);
             }
         }
     }
