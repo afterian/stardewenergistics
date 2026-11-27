@@ -30,6 +30,7 @@ Confirmed decisions log. The full design is in `docs/design-plan.md`; status and
 - M6 rules (Proposed, 2026-11-27, change on request): keep-in-stock rules live on the Advanced Crafting Rack and start jobs at the end of each day (only for recipes that can be fully made); the Advanced rack also cooks and uses linked Furnaces in every building; every network with an Island Uplink joins every other one.
 - Art: produced in parallel by another tool from `docs/art-asset-list.md` (36 files).
 - Art style (2026-11-27): Maru purple-and-oak approved (amethyst cases, plum outlines, honey-oak supports, green CRTs). First final batch: `computer-core.png`, `network-terminal.png`, `wire-tiles.png`, `wire-tiles-glow.png`, `heavy-cable-tiles.png`. See `docs/artwork-pipeline.md`.
+- Art complete (2026-11-27): all 38 assets final. Added #37 `copper-data-signal.png` and #38 `heavy-data-signal.png` (8 phases × 16 masks, drawn on powered wire). Unpainted Heavy Cable is tinted Maru plum.
 
 ## Open
 

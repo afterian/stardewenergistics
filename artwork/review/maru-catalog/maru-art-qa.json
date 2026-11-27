@@ -1,0 +1,268 @@
+{
+  "1": {
+    "name": "copper-processor.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "1f785886e11bf9136957811c2b4dac21b83e5d82f88d0fc3859ff6801772bba9"
+  },
+  "2": {
+    "name": "gold-processor.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "d2ee69e496de2b3d16090398452eb0e3d9d1bcf26688bc316a5ce2fcfc673cd5"
+  },
+  "3": {
+    "name": "iridium-processor.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "f4e4c20a576d6a71d432ae3f4b8e277fc4fd0ebdc523b4379bb984c33f58d283"
+  },
+  "4": {
+    "name": "copper-wire-spool.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "d70e34f9754b24b6558eeaa29d9469d7674609e1ae64d2962f7f6f2d9f84eb35"
+  },
+  "5": {
+    "name": "copper-disk.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "13b2cc67698d53754ccc1042fe0f5b1ad9b759b37eb34797b144d7bdabaffe92"
+  },
+  "6": {
+    "name": "iron-disk.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "462e8d91d2b6412e9a6bdc39dc33c3601ed55671bc44d8bc1edcf44f263071c3"
+  },
+  "7": {
+    "name": "gold-disk.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "f4917ceae297ac6a190c3935f7cd02893e41e0bb52e02ca6f228a736d3e1d4e7"
+  },
+  "8": {
+    "name": "iridium-disk.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "47ec89557863f90e5ff67b5669c51d50f1c3e19d1467738d4b876eb8ce508c5b"
+  },
+  "9": {
+    "name": "prismatic-disk.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "93f04526d960dbb11eca24b6874ee7a1259902adc115f0e5f09c358bcb1d819a"
+  },
+  "10": {
+    "name": "wireless-terminal.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "1af1127ecb45ce887bc6303ee7ef7213b27718307a3e266620c3254f333e76c1"
+  },
+  "11": {
+    "name": "processor-press.png",
+    "w": 16,
+    "h": 32,
+    "frames": 3,
+    "sha256": "a349d5a59502951cab994f660e3184716c0ee2e727faa42a8cfd4a8b5499fec5"
+  },
+  "12": {
+    "name": "computer-core.png",
+    "w": 16,
+    "h": 32,
+    "frames": 4,
+    "sha256": "644065be23d801774065b1fb5f3b0e431efd2aac3e61d44219d0ad73de6e74a7"
+  },
+  "13": {
+    "name": "storage-rack.png",
+    "w": 16,
+    "h": 32,
+    "frames": 5,
+    "sha256": "057667dc98cf07eac0f1683bb1a4f9c51dd7bcb059a24228a3d5baa136157dff"
+  },
+  "14": {
+    "name": "power-rack.png",
+    "w": 16,
+    "h": 32,
+    "frames": 5,
+    "sha256": "8a954ba0a328537c8b8dcd4999806b090bd1cd9c12186324ace60d45ae0f1c99"
+  },
+  "15": {
+    "name": "crafting-rack.png",
+    "w": 16,
+    "h": 32,
+    "frames": 3,
+    "sha256": "45c5ee086e99603d32261b0d1cb1709e4fef637ffb3f1b0b6d68f81b6fb33880"
+  },
+  "16": {
+    "name": "advanced-crafting-rack.png",
+    "w": 16,
+    "h": 32,
+    "frames": 3,
+    "sha256": "81a5f0e950b09ceb2477460706bdfc3459c307efef8918942e8a434dc95e8f96"
+  },
+  "17": {
+    "name": "network-terminal.png",
+    "w": 16,
+    "h": 32,
+    "frames": 2,
+    "sha256": "eebbade4bfb3f073c0a7710e008925a65ff6f254eef4f6a208ca23b10e983cc5"
+  },
+  "18": {
+    "name": "coal-generator.png",
+    "w": 16,
+    "h": 32,
+    "frames": 3,
+    "sha256": "1746f14cd1b1851561b2c714d5b68093598deabb8aa31360ae31361671529414"
+  },
+  "19": {
+    "name": "network-port.png",
+    "w": 16,
+    "h": 32,
+    "frames": 2,
+    "sha256": "45cd009f2e7b6b3c68a5c65d77a5f9bc7cfeb2e48a40b525f6f771d53fdf55ec"
+  },
+  "20": {
+    "name": "island-uplink.png",
+    "w": 16,
+    "h": 32,
+    "frames": 3,
+    "sha256": "88f2eecb584f99cbafe4962ebf6b0ce3d64352caa4b5724a9b9a6ad5179f9514"
+  },
+  "21": {
+    "name": "wire-tiles.png",
+    "w": 16,
+    "h": 16,
+    "frames": 16,
+    "sha256": "fac8a6fd49ec9d040afc95f8c66f6c7c45e10635ab81152ae97f16624cd4b698"
+  },
+  "22": {
+    "name": "wire-tiles-glow.png",
+    "w": 16,
+    "h": 16,
+    "frames": 16,
+    "sha256": "94de4af7d1a36008f1a742feb8451ca010e326053ccbace58587f57d1835d4c0"
+  },
+  "23": {
+    "name": "chest-link.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "f66520bbc55e52445e1987439f079dfb564ae533a8b81d7cabec1ba60d9e03c3"
+  },
+  "24": {
+    "name": "machine-link.png",
+    "w": 16,
+    "h": 16,
+    "frames": 4,
+    "sha256": "9ce8d9d7a4aae63f6a54740fa839e070e7103810b8dbec77b21c189059283df8"
+  },
+  "25": {
+    "name": "shipping-link.png",
+    "w": 16,
+    "h": 16,
+    "frames": 2,
+    "sha256": "08bcaf039e63a4190c4413bedc5aab2fffb4a29ab0da6ca2900ca11961b677e4"
+  },
+  "26": {
+    "name": "power-feed.png",
+    "w": 16,
+    "h": 16,
+    "frames": 2,
+    "sha256": "9eab714e80731eac31477262e4607811976dcf90baef7eaecbec071af6642aaa"
+  },
+  "27": {
+    "name": "terminal-frame.png",
+    "w": 48,
+    "h": 48,
+    "frames": 1,
+    "sha256": "a0dd0bc16567d2054dbe375d2fc94a5738f8b087f352ceffc3ed39534261006a"
+  },
+  "28": {
+    "name": "tab-icons.png",
+    "w": 16,
+    "h": 16,
+    "frames": 3,
+    "sha256": "8c9cbdd443c29c8458e96261489ec2bda156871b1fb5b15824ad3ecca12efe41"
+  },
+  "29": {
+    "name": "settings-icons.png",
+    "w": 9,
+    "h": 9,
+    "frames": 7,
+    "sha256": "bf2dac6b6c6b69ad93e4c01036d214d46ea1af53757c56657f529a641cf34caa"
+  },
+  "30": {
+    "name": "power-meter.png",
+    "w": 48,
+    "h": 8,
+    "frames": 2,
+    "sha256": "d008c1c9e71b93f71f9ecc3e456c603f31a6ec79a79ae9849da391d7a462b054"
+  },
+  "31": {
+    "name": "storage-meter.png",
+    "w": 48,
+    "h": 8,
+    "frames": 2,
+    "sha256": "24f5d9772f99d1a46f0f5e0652278f57a9b46613357959e7bb9a18a0db2f56bd"
+  },
+  "32": {
+    "name": "network-view-markers.png",
+    "w": 9,
+    "h": 9,
+    "frames": 5,
+    "sha256": "2bdee8fbfa9ce9b797c7f3f92b9d6105c49acbeff966865240b46da11b9ed3c2"
+  },
+  "33": {
+    "name": "mod-icon.png",
+    "w": 64,
+    "h": 64,
+    "frames": 1,
+    "sha256": "622cc14e245f9fb6098014bf3de3a3e2bdae0e5b8d618f069b037c0f4b03e633"
+  },
+  "34": {
+    "name": "nexus-banner.png",
+    "w": 480,
+    "h": 120,
+    "frames": 1,
+    "sha256": "3d150acd3ba8c8bc5e1583301f10a16232e5247ee843bb6dddcdd99279a0dc6f"
+  },
+  "35": {
+    "name": "heavy-cable-tiles.png",
+    "w": 16,
+    "h": 16,
+    "frames": 16,
+    "sha256": "33bdd20a3cb19a3c4458c7985cae4086cbd2afd941f3ced29c52e0c0404a209f"
+  },
+  "36": {
+    "name": "network-wrench.png",
+    "w": 16,
+    "h": 16,
+    "frames": 1,
+    "sha256": "05e23f004cc1640343a32c17ac4783b733ff29a60b20699f2c385c0891efd7bd"
+  },
+  "37": {
+    "name": "copper-data-signal.png",
+    "w": 16,
+    "h": 16,
+    "frames": 128,
+    "sha256": "f4ab8ef63967e6ee8b27d6f8cf0deb4108c6b9ec2d0bdde40a8608868e59b5d0"
+  },
+  "38": {
+    "name": "heavy-data-signal.png",
+    "w": 16,
+    "h": 16,
+    "frames": 128,
+    "sha256": "f95b01a93862facf902d668bded9a9327f14101b4a5dd9aee835b45823727a08"
+  }
+}

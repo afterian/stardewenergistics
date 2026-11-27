@@ -57,6 +57,7 @@ namespace StardewEnergistics
 
             var renderer = new WireRenderer(wires, textures, networks, power, config, Monitor);
             renderer.Patch(harmony);
+            new OverlayRenderer(textures, networks, power, disks, renderer, Monitor).Patch(harmony);
             DiskStackPatch.Apply(harmony);
             DiskUpgradePatch.Apply(harmony, disks);
 
