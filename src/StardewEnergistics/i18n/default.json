@@ -66,6 +66,11 @@
   "terminal.search": "Search",
   "terminal.noNetwork": "This terminal isn't connected to a working network.",
   "terminal.full": "Network storage is full.",
+    "terminal.remoteCraft": "Crafting from the Terminal is host and split-screen only for now.",
+  "terminal.empty": "Nothing stored yet. Click items in your inventory to store them.",
+  "terminal.noMatch": "Nothing matches your search.",
+  "terminal.meter.power": "Power {{power}} ({{days}} days)",
+  "terminal.meter.disks": "{{disks}} disks, {{kinds}} kinds, {{items}}/{{maxItems}} items",
   "terminal.cantStore": "This item can't go on a disk yet. Keep it in a linked chest.",
 
   // Maru's letters

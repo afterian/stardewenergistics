@@ -1,6 +1,7 @@
 using HarmonyLib;
 using StardewEnergistics.Blocks;
 using StardewEnergistics.Content;
+using StardewEnergistics.Multiplayer;
 using StardewEnergistics.Networks;
 using StardewEnergistics.Patches;
 using StardewEnergistics.Power;
@@ -21,6 +22,7 @@ namespace StardewEnergistics
         private SaveCoordinator save = null!;
         private PowerService power = null!;
         private ProgressionService progression = null!;
+        private WireSync wireSync = null!;
 
         public override void Entry(IModHelper helper)
         {
@@ -36,11 +38,16 @@ namespace StardewEnergistics
             var disks = new DiskStore(Monitor);
             save = new SaveCoordinator(helper, wires, disks);
 
+            wireSync = new WireSync(helper, Monitor, wires, ModManifest.UniqueID);
+            wireSync.Register();
+
             var networks = new NetworkManager(wires);
             networks.Register(helper);
             power = new PowerService(helper, Monitor, networks) { Table = config.ToPowerTable() };
             progression = new ProgressionService(Monitor, networks, power) { GatesEnabled = config.TierGates };
-            var terminal = new TerminalController(helper, Monitor, networks, disks, power);
+            var terminalNet = new TerminalNet(helper, Monitor, networks, disks, power, ModManifest.UniqueID);
+            terminalNet.Register();
+            var terminal = new TerminalController(helper, Monitor, networks, disks, power, textures, terminalNet);
             terminal.Register();
 
             var renderer = new WireRenderer(wires, textures, Monitor);
@@ -62,6 +69,7 @@ namespace StardewEnergistics
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
         {
             save.Load();
+            wireSync.RequestFullSync();
             Monitor.Log($"Save loaded for {Game1.player.Name}; Stardew Energistics is running.", LogLevel.Info);
             Game1.addHUDMessage(new HUDMessage("Stardew Energistics is running!", HUDMessage.newQuest_type));
         }

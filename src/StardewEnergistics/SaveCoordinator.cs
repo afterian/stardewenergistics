@@ -23,7 +23,11 @@ internal sealed class SaveCoordinator
 
     public void Load()
     {
-        // Farmhands get state from the host (multiplayer sync is later M2 work), so they start empty.
+        // A split-screen farmhand shares the host's memory: nothing to load.
+        if (!Context.IsMainPlayer && Context.IsSplitScreen)
+            return;
+
+        // A remote farmhand starts empty; the host sends the wire layer when it joins.
         SaveModel? model = Context.IsMainPlayer ? helper.Data.ReadSaveData<SaveModel>(SaveKey) : null;
         if (model != null)
             model = SaveMigrator.Migrate(model);
@@ -41,8 +45,11 @@ internal sealed class SaveCoordinator
         helper.Data.WriteSaveData(SaveKey, model);
     }
 
+    /// <summary>Called on return to title. Only the first screen owns the shared state.</summary>
     public void Clear()
     {
+        if (Context.ScreenId != 0)
+            return;
         wires.Clear();
         disks.Clear();
     }

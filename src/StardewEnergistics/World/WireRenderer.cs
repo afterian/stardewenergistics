@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewEnergistics.Content;
 using StardewEnergistics.Core.Wires;
 using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.TerrainFeatures;
@@ -32,8 +33,14 @@ internal sealed class WireRenderer
         this.monitor = monitor;
     }
 
-    /// <summary>Set by the Network View key or by holding the wrench.</summary>
-    public bool NetworkView { get; set; }
+    private readonly PerScreen<bool> networkView = new();
+
+    /// <summary>Set by the Network View key or by holding the wrench (per split-screen player).</summary>
+    public bool NetworkView
+    {
+        get => networkView.Value;
+        set => networkView.Value = value;
+    }
 
     public void Patch(Harmony harmony)
     {

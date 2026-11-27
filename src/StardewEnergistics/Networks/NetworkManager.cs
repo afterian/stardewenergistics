@@ -46,9 +46,11 @@ internal sealed class NetworkManager
     private readonly WireLayerStore wires;
     private readonly NetworkGraphBuilder builder = new(ConnectionRule.OwnTile);
     private readonly Dictionary<string, LocationNetworks> cache = new();
-    private readonly HashSet<string> hookedLayers = new();
-
-    public NetworkManager(WireLayerStore wires) => this.wires = wires;
+    public NetworkManager(WireLayerStore wires)
+    {
+        this.wires = wires;
+        wires.TileChanged += (key, _) => cache.Remove(key);
+    }
 
     public void Register(IModHelper helper)
     {
@@ -57,11 +59,7 @@ internal sealed class NetworkManager
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => Clear();
     }
 
-    public void Clear()
-    {
-        cache.Clear();
-        hookedLayers.Clear();
-    }
+    public void Clear() => cache.Clear();
 
     public void Invalidate(GameLocation location) => cache.Remove(WireLayerStore.KeyOf(location));
 
@@ -72,8 +70,6 @@ internal sealed class NetworkManager
             return cached;
 
         var layer = wires.For(location);
-        if (hookedLayers.Add(key))
-            layer.Changed += _ => cache.Remove(key);
 
         var blocks = new List<BlockNode>();
         var objects = new Dictionary<string, SObject>();
