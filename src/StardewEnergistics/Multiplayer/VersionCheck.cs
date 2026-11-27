@@ -24,13 +24,13 @@ internal sealed class VersionCheck
     {
         if (e.Peer.IsSplitScreen || !e.Peer.HasSmapi)
             return;
-        string name = Game1.getFarmerMaybeOffline(e.Peer.PlayerID)?.Name ?? e.Peer.PlayerID.ToString();
+        string name = Game1.GetPlayer(e.Peer.PlayerID)?.Name ?? e.Peer.PlayerID.ToString();
         var mod = e.Peer.GetMod(manifest.UniqueID);
-        string? text = mod == null
-            ? helper.Translation.Get("mp.missing", new { name })
-            : !mod.Version.Equals(manifest.Version)
-                ? helper.Translation.Get("mp.versionMismatch", new { name, theirs = mod.Version.ToString(), ours = manifest.Version.ToString() })
-                : null;
+        string? text = null;
+        if (mod == null)
+            text = helper.Translation.Get("mp.missing", new { name }).ToString();
+        else if (!mod.Version.Equals(manifest.Version))
+            text = helper.Translation.Get("mp.versionMismatch", new { name, theirs = mod.Version.ToString(), ours = manifest.Version.ToString() }).ToString();
         if (text == null)
             return;
         monitor.Log(text, LogLevel.Warn);

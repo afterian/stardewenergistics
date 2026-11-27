@@ -56,7 +56,7 @@ public class StockRuleCodecTests
         var back = StockRuleCodec.Decode(StockRuleCodec.Encode(rules));
         Assert.Equal(2, back.Count);
         Assert.Contains(new StockRule(new ItemKey("(O)465"), 50), back);
-        Assert.Empty(StockRuleCodec.With(back, new ItemKey("(O)465"), 0).Where(r => r.Item.QualifiedId == "(O)465"));
+        Assert.DoesNotContain(StockRuleCodec.With(back, new ItemKey("(O)465"), 0), r => r.Item.QualifiedId == "(O)465");
     }
 
     [Theory]
