@@ -10,9 +10,10 @@ A Stardew Valley SMAPI (C#) mod inspired by Minecraft's Applied Energistics 2. T
 
 1. `docs/HANDOFF.md` — this file: status, decisions, next steps.
 2. `docs/design-plan.md` — the full approved design (mechanics, tiers, 26-item catalog, architecture, roadmap). **Source of truth.**
-3. `docs/art-asset-list.md` — 36 art files with sizes, frames, descriptions. Art is made in parallel with another tool.
-4. `deploy/README.md` — Steam Deck test pipeline (scripts already written).
-5. `research/MODDING_AND_ASSET_SPECS.md` — earlier research on sprite sizes and data assets. Note: it suggests a Content Patcher prototype; the approved plan is a single C# SMAPI mod that injects its own content.
+3. `docs/implementation-plan.md` — code-level plan: solution layout, Core contracts, parallel lanes A–G, spikes, milestone tasks, how code depends on art.
+4. `docs/art-asset-list.md` — 36 art files with sizes, frames, descriptions. Art is made in parallel with another tool.
+5. `deploy/README.md` — Steam Deck test pipeline (scripts already written).
+6. `research/MODDING_AND_ASSET_SPECS.md` — earlier research on sprite sizes and data assets. Note: it suggests a Content Patcher prototype; the approved plan is a single C# SMAPI mod that injects its own content.
 
 Living (online, editable) copies of the plan and art list: https://claude.ai/artifact/XZ6h7hFyLrDj7a15X1MQ1d and https://claude.ai/artifact/48iRmHg7rUvvhcSvZQv4DP. If they differ from the files here, ask the user which wins.
 
@@ -60,6 +61,8 @@ docs/, research/, artwork/         (exist)
 Use namespaced string IDs, e.g. `StardewEnergistics.ComputerCore`. Keep Core free of Stardew references so tests run in CI or a plain shell.
 
 ## Next steps (M0 → M1)
+
+The detailed task breakdown per milestone and lane is in `docs/implementation-plan.md` §7.
 
 1. Confirm the GitHub repo exists and is cloned at the project folder; get `owner/repo`.
 2. Walk the user through PC setup: .NET 6 SDK, Visual Studio 2022 Community or Rider, SMAPI, Git, GitHub CLI (`gh auth login`). Record versions in `docs/decisions.md`.

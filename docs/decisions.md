@@ -18,11 +18,12 @@ Confirmed decisions log. The full design is in `docs/design-plan.md`; status and
 - Gated progression via Maru's letters by friendship hearts (T1–T6 in the plan).
 - Multiplayer: host-authoritative, one shared farm network.
 - Testing: Windows PC + two Steam Decks auto-updating from a private GitHub release before Nexus.
+- GitHub repo `afterian/stardewenergistics`; mod UniqueID `afterian.StardewEnergistics`, author `afterian` (2026-11-27).
 - Art: produced in parallel by another tool from `docs/art-asset-list.md` (36 files).
 
 ## Open
 
-- GitHub `owner/repo` and mod UniqueID/author.
+- Wire connection rule: wire on the block's own tile only (current reading of the user's reply) vs also the 4 neighbouring tiles. Confirm before M2.
 - Terminal reach before Network Ports (own building only vs all buildings).
 - Coal Generator value (1 Coal = 1 power vs 10).
 - Installed game and SMAPI versions on PC and Decks.
