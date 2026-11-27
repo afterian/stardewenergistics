@@ -161,7 +161,7 @@ internal sealed class TerminalNet
             return false;
         loc = networks.For(location);
         net = loc.NetworkAt(new Vector2(req.X, req.Y));
-        if (net == null || !net.Working)
+        if (net == null || !loc.IsActive(net))
             return false;
         storage = NetworkStorage.For(loc, net, disks);
         return true;

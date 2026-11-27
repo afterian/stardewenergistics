@@ -45,7 +45,10 @@ internal sealed class PowerService
     public bool IsPowered(LocationNetworks loc, Network n)
     {
         if (n.Core == null)
-            return false;
+        {
+            // Outdoor wire joined by a Network Port runs on its group's primary network.
+            return loc.Manager.Home(loc, n) is { } home && home.Net.Core != null && IsPowered(home.Loc, home.Net);
+        }
         var core = loc.ObjectOf(n.Core);
         if (core.modData.TryGetValue(Ids.Data.Powered, out string? flag))
             return flag == "1";
@@ -87,6 +90,20 @@ internal sealed class PowerService
                 monitor.Log($"{where}: power use {use}, powered={day.Powered}, {day.After.Available} left.", LogLevel.Trace);
             }
             ShowTerminals(loc);
+        }
+    }
+
+    /// <summary>After adding power mid-day, let the network re-check whether it has enough.</summary>
+    public void Recheck(LocationNetworks loc, Network n)
+    {
+        if (loc.Manager.Home(loc, n) is not { } home || home.Net.Core == null)
+            return;
+        var core = home.Loc.ObjectOf(home.Net.Core);
+        if (core.modData.TryGetValue(Ids.Data.Powered, out string? flag) && flag == "0")
+        {
+            core.modData.Remove(Ids.Data.Powered);
+            RackSlots.ShowFrame(core, IsPowered(home.Loc, home.Net) ? 1 : 0);
+            ShowTerminals(home.Loc);
         }
     }
 

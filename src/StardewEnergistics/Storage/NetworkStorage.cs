@@ -28,9 +28,27 @@ internal sealed class NetworkStorage : IStockView
 
     public IReadOnlyList<Chest> Chests { get; }
 
+    /// <summary>Storage of a network and every network a Network Port joins it to.</summary>
     public static NetworkStorage For(LocationNetworks loc, Network network, DiskStore store)
     {
         var contents = new List<DiskContents>();
+        var chests = new List<Chest>();
+        foreach (var (mloc, mn) in loc.Manager.Members(loc, network))
+            Collect(mloc, mn, store, contents, chests);
+        return new NetworkStorage(new StorageIndex(contents), chests);
+    }
+
+    /// <summary>Storage of one network only, ignoring Port links.</summary>
+    public static NetworkStorage ForOne(LocationNetworks loc, Network network, DiskStore store)
+    {
+        var contents = new List<DiskContents>();
+        var chests = new List<Chest>();
+        Collect(loc, network, store, contents, chests);
+        return new NetworkStorage(new StorageIndex(contents), chests);
+    }
+
+    private static void Collect(LocationNetworks loc, Network network, DiskStore store, List<DiskContents> contents, List<Chest> chests)
+    {
         foreach (var rack in loc.ObjectsOf(network, BlockKind.StorageRack))
         {
             foreach (string id in RackSlots.Get(rack, Ids.Data.RackDisks))
@@ -41,8 +59,7 @@ internal sealed class NetworkStorage : IStockView
             }
         }
 
-        var chests = loc.ObjectsOf(network, BlockKind.ChestLink).OfType<Chest>().ToList();
-        return new NetworkStorage(new StorageIndex(contents), chests);
+        chests.AddRange(loc.ObjectsOf(network, BlockKind.ChestLink).OfType<Chest>());
     }
 
     public int KindsStored => Disks.All().Select(a => a.Key.QualifiedId).Distinct().Count();

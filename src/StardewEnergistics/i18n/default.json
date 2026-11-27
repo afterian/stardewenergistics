@@ -139,5 +139,26 @@
   "auto.done": "Autocraft done: {{n}} {{item}}.",
   "auto.furnace": "a free linked Furnace",
   "auto.queued": "{{n}} {{item}}: queued",
-  "rack.crafting": "Crafting Rack. Jobs: {{jobs}}"
+  "rack.crafting": "Crafting Rack. Jobs: {{jobs}}",
+
+  // M5 linked buildings
+  "item.NetworkPort.name": "Network Port",
+  "item.NetworkPort.description": "Place outside, right beside a building, on wire. Run wire or Heavy Cable to the farmhouse's Port and the building's network joins the farmhouse network.",
+  "item.IridiumDisk.name": "Iridium Disk",
+  "item.IridiumDisk.description": "Holds 63 kinds of items, up to 128,000 in all. Crafting it from a Gold Disk keeps everything on it.",
+  "item.WirelessTerminal.name": "Wireless Terminal",
+  "item.WirelessTerminal.description": "Use it anywhere on the farm or in a linked building to open your network's Terminal.",
+  "item.PowerFeed.name": "Power Feed",
+  "item.PowerFeed.description": "Use on a Lightning Rod or Solar Panel with wire under it. Its Battery Packs go straight into your Power Racks.",
+  "mail.T5.title": "Linked buildings",
+  "mail.T5.text": "@!^^Your farm's getting big! Put a Network Port right outside each building, on wire, and run cable to a Port beside the farmhouse. Every building joins up and any Terminal sees it all.^^There's a Wireless Terminal for your pocket too, and a Power Feed for Lightning Rods and Solar Panels.^^   -Maru",
+  "port.linked": "Network Port joined to {{building}}.",
+  "port.noBuilding": "Place the Network Port right beside a building.",
+  "port.outdoorsOnly": "Network Ports go outside, beside a building.",
+  "feed.added": "Power Feed attached. Battery Packs from this will charge your Power Racks.",
+  "feed.notTarget": "Power Feeds go on a Lightning Rod or Solar Panel.",
+  "feed.removed": "Power Feed removed.",
+  "feed.charged": "Power Feed: {{count}} Battery Pack(s) went into your Power Racks.",
+  "wireless.none": "No network reaches here. Use it on the farm or in a linked building.",
+  "terminal.building.all": "All buildings"
 }
