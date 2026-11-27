@@ -18,10 +18,10 @@ PC: double-click deploy/publish-test.bat  ->  GitHub release "test-latest"  ->  
 
 1. Install SMAPI on the Deck (native Linux version): https://stardewvalleywiki.com/Modding:Installing_SMAPI_on_Steam_Deck
 2. Switch to Desktop Mode and open Konsole.
-3. Paste this, replacing `OWNER/REPO` and `TOKEN` (tip: open this page in the Deck's browser and copy it):
+3. Paste this, replacing `TOKEN` with the read-only token (tip: open this page in the Deck's browser and copy it):
 
    ```
-   curl -fsSL -H "Authorization: Bearer TOKEN" -H "Accept: application/vnd.github.raw" https://api.github.com/repos/OWNER/REPO/contents/deploy/deck/install.sh | bash -s -- OWNER/REPO TOKEN
+   curl -fsSL -H "Authorization: Bearer TOKEN" -H "Accept: application/vnd.github.raw" https://api.github.com/repos/afterian/stardewenergistics/contents/deploy/deck/install.sh | bash -s -- afterian/stardewenergistics TOKEN
    ```
 
 4. In Steam: Stardew Valley > Properties > Launch Options, paste:

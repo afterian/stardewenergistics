@@ -1,0 +1,76 @@
+{
+  // Items (M1)
+  "item.ProcessorPress.name": "Processor Press",
+  "item.ProcessorPress.description": "Presses bars and quartz into processors overnight.",
+  "item.CopperProcessor.name": "Copper Processor",
+  "item.CopperProcessor.description": "A basic chip for network parts. Made in a Processor Press.",
+  "item.GoldProcessor.name": "Gold Processor",
+  "item.GoldProcessor.description": "A better chip with an etched gold circuit. Made in a Processor Press.",
+  "item.IridiumProcessor.name": "Iridium Processor",
+  "item.IridiumProcessor.description": "A top-tier chip that hums faintly. Takes the Processor Press two days.",
+  "item.CopperWire.name": "Copper Wire",
+  "item.CopperWire.description": "Lay it on the floor. Anything touching the wire joins the network.",
+  "item.HeavyCable.name": "Heavy Cable",
+  "item.HeavyCable.description": "Thick cable for long and outdoor runs. Paint it with the Network Wrench.",
+  "item.NetworkWrench.name": "Network Wrench",
+  "item.NetworkWrench.description": "Tap wire to hide or show it; hold to do a whole run. Use on Heavy Cable to change its colour. Holding it shows Network View.",
+
+  // Machine messages
+  "press.needs": "The Processor Press also needs: {{items}}.",
+  "press.invalid": "The Processor Press takes a Copper, Gold or Iridium Bar.",
+
+  // HUD / console
+  "wire.covered": "Wire hidden.",
+  "wire.uncovered": "Wire shown.",
+  "wire.run": "{{count}} wire tiles changed.",
+  "networkView.on": "Network View on.",
+  "networkView.off": "Network View off.",
+  // Items (M2)
+  "item.ComputerCore.name": "Computer Core",
+  "item.ComputerCore.description": "The brain of a network. One per building. Put racks beside it and run wire from it.",
+  "item.StorageRack.name": "Storage Rack",
+  "item.StorageRack.description": "Holds 4 disks. Place it beside the Computer Core or another rack. Click with a disk to insert; click with empty hands to take one out.",
+  "item.PowerRack.name": "Power Rack",
+  "item.PowerRack.description": "Holds 4 Battery Packs. One Battery Pack runs a small network for about two weeks. Place beside the Core.",
+  "item.CoalGenerator.name": "Coal Generator",
+  "item.CoalGenerator.description": "Burns Coal or Hardwood for power when the batteries are empty. Click with fuel to load it. Put it on the wire.",
+  "item.NetworkTerminal.name": "Network Terminal",
+  "item.NetworkTerminal.description": "Crafting table and storage screen for the whole network. Put it on the wire.",
+  "item.ChestLink.name": "Chest Link",
+  "item.ChestLink.description": "Use on a chest to add it to network storage. Lay wire under the chest. The wrench takes it off again.",
+  "item.CopperDisk.name": "Copper Disk",
+  "item.CopperDisk.description": "Network storage: 20 kinds, 2,000 items. Goes in a Storage Rack.",
+
+  // Network messages
+  "disk.contents": "{{name}}: {{kinds}}/{{maxKinds}} kinds, {{items}}/{{maxItems}} items",
+  "rack.full": "This rack is full.",
+  "rack.empty": "This rack is empty.",
+  "power.rack": "Power Rack: {{count}}/4 Battery Packs, {{charge}} power left.",
+  "power.generator": "Coal Generator: {{fuel}} power of fuel loaded.",
+  "power.low": "The {{location}} network has {{days}} day(s) of power left.",
+  "power.out": "The {{location}} network is out of power. Machines and crafting are paused.",
+  "chestLink.added": "Chest linked to the network.",
+  "chestLink.removed": "Chest Link removed.",
+  "chestLink.already": "This chest is already linked.",
+  "network.problem.TwoCores": "Two Computer Cores on one network. Remove one.",
+  "network.problem.NoCore": "Not connected to a Computer Core.",
+  "network.problem.RackNotTouchingCore": "Racks must touch the Computer Core or another rack.",
+  "network.status": "Network: {{blocks}} blocks, {{disks}} disks, {{kinds}} kinds, {{items}} items stored. {{power}}",
+  "network.powered": "Powered.",
+  "network.unpowered": "No power: machines and crafting are paused.",
+
+  // Terminal
+  "terminal.title": "Network Terminal",
+  "terminal.tab.storage": "Storage",
+  "terminal.tab.craft": "Craft",
+  "terminal.search": "Search",
+  "terminal.noNetwork": "This terminal isn't connected to a working network.",
+  "terminal.full": "Network storage is full.",
+  "terminal.cantStore": "This item can't go on a disk yet. Keep it in a linked chest.",
+
+  // Maru's letters
+  "mail.T1.title": "Processor Press",
+  "mail.T1.text": "Hi @!^^I've been tinkering with a little press that squeezes bars and quartz into chips. I call them processors. You can also make copper wire with them in mind.^^Here's how to build both. Let me know what you make!^^   -Maru",
+  "mail.T2.title": "Farm computer",
+  "mail.T2.text": "@!^^You've made a lot of processors! Want to put them to work?^^Build a Computer Core, put a Storage Rack and a Power Rack beside it, and run wire to a Terminal and your chests. Disks hold your items, and the Terminal can craft from everything on the network.^^Battery Packs keep it running for about two weeks each.^^   -Maru"
+}
