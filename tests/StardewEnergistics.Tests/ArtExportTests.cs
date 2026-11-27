@@ -74,7 +74,7 @@ public class ArtExportTests
     {
         using var dir = new TempDir();
         var checks = ArtExportValidator.Check(dir.Path);
-        Assert.Equal(36, checks.Count);
+        Assert.Equal(38, checks.Count);
         Assert.All(checks, c => Assert.Equal(ArtCheckStatus.Placeholder, c.Status));
     }
 
