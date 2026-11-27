@@ -9,6 +9,9 @@ using StardewValley.Objects;
 
 namespace StardewEnergistics.Storage;
 
+/// <summary>One Terminal row: a keyed item (summed over storage) or one specific chest item.</summary>
+internal sealed record StoredRow(ItemKey? Key, Item Display, long Count, Chest? Chest);
+
 /// <summary>
 /// One network's storage: disks in its Storage Racks (rack order), then chests with a Chest Link.
 /// Items go to disks first when they can; anything else goes to linked chests.
@@ -67,6 +70,74 @@ internal sealed class NetworkStorage
             item = left;
         }
         return item;
+    }
+
+    /// <summary>
+    /// Everything stored, for the Terminal: keyed items are summed over disks and linked chests;
+    /// other chest items (tools, preserves…) are listed one by one.
+    /// </summary>
+    public List<StoredRow> Rows()
+    {
+        var keyed = new Dictionary<ItemKey, long>();
+        foreach (var (key, count) in Disks.All())
+            keyed[key] = count;
+
+        var rows = new List<StoredRow>();
+        foreach (var chest in Chests)
+        {
+            foreach (var item in chest.Items)
+            {
+                if (item == null)
+                    continue;
+                if (StardewItemKeys.TryGetKey(item, out var key))
+                    keyed[key] = keyed.TryGetValue(key, out long n) ? n + item.Stack : item.Stack;
+                else
+                    rows.Add(new StoredRow(null, item, item.Stack, chest));
+            }
+        }
+
+        rows.InsertRange(0, keyed.Select(kv => new StoredRow(kv.Key, StardewItemKeys.Create(kv.Key, 1), kv.Value, null)));
+        return rows;
+    }
+
+    /// <summary>Takes up to <paramref name="n"/> of a keyed item (disks first, then chests).</summary>
+    public Item? Take(ItemKey key, int n)
+    {
+        int got = Disks.Extract(key, n).Extracted;
+        foreach (var chest in Chests)
+        {
+            for (int i = 0; i < chest.Items.Count && got < n; i++)
+            {
+                var item = chest.Items[i];
+                if (item == null || !StardewItemKeys.TryGetKey(item, out var k) || k != key)
+                    continue;
+                int take = System.Math.Min(n - got, item.Stack);
+                got += take;
+                item.Stack -= take;
+                if (item.Stack <= 0)
+                    chest.Items[i] = null;
+            }
+            chest.clearNulls();
+        }
+        return got > 0 ? StardewItemKeys.Create(key, got) : null;
+    }
+
+    /// <summary>Takes up to <paramref name="n"/> of one specific (unkeyed) item from a chest.</summary>
+    public Item? TakeFromChest(Chest chest, Item item, int n)
+    {
+        int index = chest.Items.IndexOf(item);
+        if (index < 0)
+            return null;
+        if (n >= item.Stack)
+        {
+            chest.Items[index] = null;
+            chest.clearNulls();
+            return item;
+        }
+        var part = item.getOne();
+        part.Stack = n;
+        item.Stack -= n;
+        return part;
     }
 
     /// <summary>

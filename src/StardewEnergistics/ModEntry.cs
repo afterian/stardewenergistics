@@ -45,7 +45,9 @@ namespace StardewEnergistics
             networks.Register(helper);
             power = new PowerService(helper, Monitor, networks) { Table = config.ToPowerTable() };
             progression = new ProgressionService(Monitor, networks, power) { GatesEnabled = config.TierGates };
-            var terminal = new TerminalController(helper, Monitor, networks, disks, power);
+            var terminalNet = new TerminalNet(helper, Monitor, networks, disks, power, ModManifest.UniqueID);
+            terminalNet.Register();
+            var terminal = new TerminalController(helper, Monitor, networks, disks, power, textures, terminalNet);
             terminal.Register();
 
             var renderer = new WireRenderer(wires, textures, Monitor);
