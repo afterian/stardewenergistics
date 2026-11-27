@@ -1,5 +1,7 @@
 # Stardew Energistics
 
+**[Steam Deck installer](deploy/deck/Install-Stardew-Energistics.desktop)**: on the Deck in Desktop Mode, open this link and tap the **Download raw file** button (arrow icon, top right of the file), then double-click the file in Downloads. Full steps: [Steam Deck setup](docs/steam-deck-setup.md).
+
 A Stardew Valley SMAPI mod inspired by Applied Energistics 2: wire your farm into computer networks for storage, machine automation and crafting. Design approved 2026-11-27; implementation starts at milestone M0.
 
 - [Handoff](docs/HANDOFF.md): status, decisions, next steps. **Start here.**
