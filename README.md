@@ -4,6 +4,7 @@ A Stardew Valley SMAPI mod inspired by Applied Energistics 2: wire your farm int
 
 - [Handoff](docs/HANDOFF.md): status, decisions, next steps. **Start here.**
 - [Design plan](docs/design-plan.md): full approved design.
+- [Implementation plan](docs/implementation-plan.md): code layout, milestones and parallel workstreams.
 - [Art asset list](docs/art-asset-list.md): 36 sprites with sizes and descriptions.
 - [Decisions](docs/decisions.md): confirmed choices and open questions.
 - [Steam Deck test deploys](deploy/README.md): publish from the PC, Decks auto-update on launch.
