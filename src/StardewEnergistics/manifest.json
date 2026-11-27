@@ -2,9 +2,9 @@
   "Name": "Stardew Energistics",
   "Author": "afterian",
   "Version": "0.0.1",
-  "Description": "Networked storage and automation for Stardew Valley, inspired by Applied Energistics 2. (Hello-world build.)",
+  "Description": "Networked storage and automation for Stardew Valley, inspired by Applied Energistics 2.",
   "UniqueID": "afterian.StardewEnergistics",
   "EntryDll": "StardewEnergistics.dll",
-  "MinimumApiVersion": "4.0.0",
+  "MinimumApiVersion": "4.5.2",
   "UpdateKeys": []
 }

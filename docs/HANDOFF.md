@@ -1,6 +1,6 @@
 # Stardew Energistics — Handoff for implementation
 
-Date: 2026-11-27. Status: **M0 in progress.** Hello-world mod (`src/StardewEnergistics/`) plus the M0 scaffold: `StardewEnergistics.Core` with the §3 contracts of `docs/implementation-plan.md`, the 36-entry art catalogue, art export checks, xUnit tests and CI. Waiting on the user's PC setup (SMAPI, .NET SDK) for the first in-game load. Core done ahead of the game side: M1 wire layer + wire save model, and M2 network graph, disk storage and power ledger (88 tests). Next on the game side: M1 lane B/C (content injection, placeholders, wire placement and rendering) once the mod builds on the PC.
+Date: 2026-11-27. Status: **M0 in progress.** Hello-world mod (`src/StardewEnergistics/`) plus the M0 scaffold: `StardewEnergistics.Core` with the §3 contracts of `docs/implementation-plan.md`, the 36-entry art catalogue, art export checks, xUnit tests and CI. Waiting on the user's PC setup (SMAPI, .NET SDK) for the first in-game load. Core done ahead of the game side: M1 wire layer + wire save model, and M2 network graph, disk storage and power ledger (88 tests). M1 and a first pass of M2 game side are written and build on the PC (Stardew 1.6.15, SMAPI 4.5.2, .NET SDK 8.0.428); in-game checks: `docs/testing/m1.md`, `docs/testing/m2.md`. M2 still to do: custom Terminal menu (search, scroll, quality rows), farmhand messages (lane F), whole-item/flavoured storage (S4), BlockRenderer state frames (S2; racks currently switch ParentSheetIndex).
 
 ## What this project is
 
@@ -37,7 +37,7 @@ Living (online, editable) copies of the plan and art list: https://claude.ai/art
 - [x] **GitHub repo** `afterian/stardewenergistics`; filled into `deploy/README.md` and `manifest.json`.
 - [ ] **Terminal reach before T5:** plan says a Terminal sees only its own building until Network Ports exist. User may prefer all buildings from the start. Ask before M5.
 - [ ] **Coal value:** the user edited "1 Coal = 10 power" to "1 Coal = 1 power". Confirm intent in the first power playtest.
-- [ ] Exact installed game / SMAPI versions on the PC and Decks (record in `docs/decisions.md`).
+- [ ] Installed versions: PC has Stardew 1.6.15, SMAPI 4.5.2, .NET SDK 8.0.428. Decks still to record.
 
 ## Environment
 

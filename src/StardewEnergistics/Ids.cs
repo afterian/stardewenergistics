@@ -49,5 +49,29 @@ namespace StardewEnergistics
 
         /// <summary>Key prefix for values this mod stores in an object's modData.</summary>
         public const string ModDataPrefix = ModId + "/";
+
+        /// <summary>modData keys. Block settings live on the object so they survive pick-up.</summary>
+        public static class Data
+        {
+            /// <summary>On a disk item: its disk ID (contents are in save data under this ID).</summary>
+            public const string DiskId = ModDataPrefix + "DiskId";
+            /// <summary>On a Storage Rack: disk IDs in slot order, comma-separated.</summary>
+            public const string RackDisks = ModDataPrefix + "Disks";
+            /// <summary>On a Power Rack: charge of each Battery Pack in slot order, comma-separated.</summary>
+            public const string RackCharge = ModDataPrefix + "Charge";
+            /// <summary>On a Coal Generator: fuel loaded, in power units.</summary>
+            public const string Fuel = ModDataPrefix + "Fuel";
+            /// <summary>On a chest: "1" when a Chest Link is attached.</summary>
+            public const string ChestLink = ModDataPrefix + "ChestLink";
+            /// <summary>On a Computer Core: "1" powered, "0" not.</summary>
+            public const string Powered = ModDataPrefix + "Powered";
+            /// <summary>On a Computer Core: day the low-power warning was shown for the current drain.</summary>
+            public const string LastWarningDay = ModDataPrefix + "LastWarningDay";
+            /// <summary>On the farm: tiers built so far, comma-separated tier numbers.</summary>
+            public const string TiersBuilt = ModDataPrefix + "TiersBuilt";
+        }
+
+        /// <summary>Player stat counting Copper Processors pressed (T2 gate).</summary>
+        public const string StatCopperProcessors = ModId + "_CopperProcessorsMade";
     }
 }

@@ -28,4 +28,8 @@
     <None Include="..\..\artwork\exports\*.png" Link="assets\sprites\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="i18n\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
