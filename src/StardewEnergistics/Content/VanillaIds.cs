@@ -15,6 +15,9 @@ internal static class VanillaIds
     public const string Coal = "382";
     public const string Hardwood = "709";
     public const string BatteryPack = "787";
+    public const string PrismaticShard = "74";
+    public const string QiGem = "858";
+    public const string RadioactiveBar = "910";
 
     /// <summary>Big craftable ID of the Furnace.</summary>
     public const string FurnaceBig = "13";

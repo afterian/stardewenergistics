@@ -86,20 +86,24 @@ internal sealed class TerminalController
 
     private void OpenAutocraft(GameLocation location, Vector2 tile)
     {
-        if (Resolve(location, tile) == null)
+        if (Resolve(location, tile) is not { } home)
         {
             Game1.showRedMessage(T("terminal.noNetwork"));
             return;
         }
 
-        var book = RecipeSource.Build(monitor);
+        bool advanced = CraftingService.IsAdvanced(home.Item2);
+        var book = crafting.Book(advanced);
         var craftable = book.Outputs.ToList();
         var backend = new AutocraftBackend(
             Craftable: () => craftable,
             Plan: (key, n) => Resolve(location, tile) is { } r ? crafting.Plan(r.Item1, r.Item2, key, n) : null,
             Start: (key, n) => Resolve(location, tile) is { } r ? crafting.Start(r.Item1, r.Item2, key, n) : T("terminal.noNetwork"),
             Jobs: () => Resolve(location, tile) is { } r && r.Item2.Core != null ? CraftingService.JobsOf(r.Item1.ObjectOf(r.Item2.Core)).Jobs : System.Array.Empty<StardewEnergistics.Core.Crafting.CraftJob>(),
-            Cancel: id => Resolve(location, tile) is { } r && crafting.Cancel(r.Item1, r.Item2, id));
+            Cancel: id => Resolve(location, tile) is { } r && crafting.Cancel(r.Item1, r.Item2, id),
+            Advanced: advanced,
+            StockRules: () => Resolve(location, tile) is { } r ? CraftingService.StockRulesOf(r.Item1, r.Item2) : new List<StardewEnergistics.Core.Crafting.StockRule>(),
+            SetStockRule: (key, n) => Resolve(location, tile) is { } r ? crafting.SetStockRule(r.Item1, r.Item2, key, n) : T("terminal.noNetwork"));
         Game1.activeClickableMenu = new AutocraftMenu(backend, helper.Translation);
     }
 

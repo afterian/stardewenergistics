@@ -20,7 +20,8 @@ internal static class RecipeSource
 {
     public const string FurnaceId = "(BC)" + VanillaIds.FurnaceBig;
 
-    public static RecipeBook Build(IMonitor? monitor = null)
+    /// <param name="cooking">Also include cooking recipes any farmer knows (Advanced Crafting Rack).</param>
+    public static RecipeBook Build(IMonitor? monitor = null, bool cooking = false)
     {
         var known = new HashSet<string>();
         foreach (var farmer in Game1.getAllFarmers())
@@ -43,6 +44,28 @@ internal static class RecipeSource
             }
         }
         recipes.AddRange(FurnaceRules());
+
+        if (cooking)
+        {
+            var dishes = new HashSet<string>();
+            foreach (var farmer in Game1.getAllFarmers())
+                foreach (string name in farmer.cookingRecipes.Keys)
+                    dishes.Add(name);
+            foreach (string name in dishes.OrderBy(n => n))
+            {
+                if (!CraftingRecipe.cookingRecipes.ContainsKey(name))
+                    continue;
+                try
+                {
+                    if (FromCrafting(new CraftingRecipe(name, true)) is { } def)
+                        recipes.Add(def with { Kind = RecipeKind.Cooking, Id = "cook:" + name });
+                }
+                catch (System.Exception e)
+                {
+                    monitor?.Log($"Skipped cooking recipe {name} for autocrafting: {e.Message}", LogLevel.Trace);
+                }
+            }
+        }
         return new RecipeBook(recipes);
     }
 

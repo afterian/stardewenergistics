@@ -160,5 +160,38 @@
   "feed.removed": "Power Feed removed.",
   "feed.charged": "Power Feed: {{count}} Battery Pack(s) went into your Power Racks.",
   "wireless.none": "No network reaches here. Use it on the farm or in a linked building.",
-  "terminal.building.all": "All buildings"
+  "terminal.building.all": "All buildings",
+
+  // M6 whole farm
+  "item.AdvancedCraftingRack.name": "Advanced Crafting Rack",
+  "item.AdvancedCraftingRack.description": "Place beside a Computer Core or another rack. Runs an autocraft job like a Crafting Rack, cooks recipes you know, and keeps items in stock overnight.",
+  "item.PrismaticDisk.name": "Prismatic Disk",
+  "item.PrismaticDisk.description": "Holds any number of kinds, up to 512,000 items in all. Crafting it from an Iridium Disk keeps everything on it.",
+  "item.IslandUplink.name": "Island Uplink",
+  "item.IslandUplink.description": "Place one on wire on the Ginger Island farm and one on wire on the home farm (or in a linked building) to join the island to your farm network.",
+  "mail.T6.title": "The whole farm",
+  "mail.T6.text": "@!^^You've gone further than I ever imagined. The Advanced Crafting Rack cooks, keeps things in stock for you overnight, and works across every linked building. A Prismatic Disk holds anything, and an Island Uplink reaches all the way to Ginger Island.^^Thank you for testing all my gadgets!^^   -Maru",
+  "auto.keep": "Keep {{n}}",
+  "auto.keep.set": "Keeping {{n}} {{item}} in stock.",
+  "auto.keep.cleared": "No longer keeping {{item}} in stock.",
+  "auto.keep.needsRack": "Keep-in-stock needs an Advanced Crafting Rack.",
+  "auto.keep.rules": "Kept in stock: {{items}}",
+  "auto.keep.started": "Keep-in-stock started {{count}} job(s) overnight.",
+  "uplink.linked": "Island Uplink: {{count}} uplink(s) joined.",
+  "mp.versionMismatch": "{{name}} has Stardew Energistics {{theirs}}, you have {{ours}}. Use the same version to avoid problems.",
+  "mp.missing": "{{name}} doesn't have Stardew Energistics installed; they won't see networks.",
+
+  // Config menu
+  "config.general": "General",
+  "config.networkViewKey": "Network View key",
+  "config.networkViewKey.tip": "Shows all wire, covered or not.",
+  "config.wrenchHold": "Wrench hold time",
+  "config.wrenchHold.tip": "Ticks (60 per second) to hold the Network Wrench to cover or uncover a whole run.",
+  "config.tierGates": "Tier gates",
+  "config.tierGates.tip": "Maru's letters wait for hearts, mine depth and earlier tiers. Off sends them as soon as possible.",
+  "config.power": "Power",
+  "config.batteryPower": "Battery Pack power",
+  "config.batteryPower.tip": "Power from one Battery Pack. A starter network uses 7 a day.",
+  "config.coalPower": "Coal power",
+  "config.hardwoodPower": "Hardwood power"
 }

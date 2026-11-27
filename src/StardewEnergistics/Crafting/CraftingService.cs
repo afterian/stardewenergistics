@@ -62,29 +62,36 @@ internal sealed class CraftingService
 
     // ---- Requests (from the Terminal) ----
 
-    private RecipeBook? book;
-    private int bookTick = -1;
+    private readonly RecipeBook?[] books = new RecipeBook?[2];
+    private readonly int[] bookTicks = { -1, -1 };
 
-    /// <summary>Known recipes, rebuilt at most once per in-game time change.</summary>
-    private RecipeBook Book()
+    /// <summary>Known recipes (with cooking for an Advanced Crafting Rack), rebuilt at most once per in-game time change.</summary>
+    public RecipeBook Book(bool cooking)
     {
-        if (book == null || bookTick != Game1.timeOfDay + (int)Game1.stats.DaysPlayed * 10000)
+        int i = cooking ? 1 : 0;
+        int tick = Game1.timeOfDay + (int)Game1.stats.DaysPlayed * 10000;
+        if (books[i] == null || bookTicks[i] != tick)
         {
-            book = RecipeSource.Build(monitor);
-            bookTick = Game1.timeOfDay + (int)Game1.stats.DaysPlayed * 10000;
+            books[i] = RecipeSource.Build(monitor, cooking);
+            bookTicks[i] = tick;
         }
-        return book;
+        return books[i]!;
     }
 
+    /// <summary>True if the network has an Advanced Crafting Rack (cooking, keep-in-stock, all Furnaces).</summary>
+    public static bool IsAdvanced(Network n) => n.OfKind(BlockKind.AdvCraftingRack).Any();
+
+    private static bool HasRack(Network n) => n.OfKind(BlockKind.CraftingRack).Any() || IsAdvanced(n);
+
     public CraftPlan Plan(LocationNetworks loc, Network n, ItemKey target, int count) =>
-        planner.Plan(target, count, Book(), NetworkStorage.For(loc, n, disks));
+        planner.Plan(target, count, Book(IsAdvanced(n)), NetworkStorage.For(loc, n, disks));
 
     /// <summary>Starts a job. Returns null on success, or the reason it can't start.</summary>
     public string? Start(LocationNetworks loc, Network n, ItemKey target, int count)
     {
         if (!Context.IsMainPlayer && !Context.IsSplitScreen)
             return T("auto.hostOnly");
-        if (n.Core == null || !n.OfKind(BlockKind.CraftingRack).Any())
+        if (n.Core == null || !HasRack(n))
             return T("auto.noRack");
         if (!power.IsPowered(loc, n))
             return T("auto.noPower");
@@ -115,6 +122,68 @@ internal sealed class CraftingService
         return ok;
     }
 
+    // ---- Keep in stock (Advanced Crafting Rack) ----
+
+    private static SObject? AdvancedRack(LocationNetworks loc, Network n) => loc.ObjectsOf(n, BlockKind.AdvCraftingRack).FirstOrDefault();
+
+    public static List<StockRule> StockRulesOf(LocationNetworks loc, Network n) =>
+        AdvancedRack(loc, n) is { } rack && rack.modData.TryGetValue(Ids.Data.StockRules, out string? raw) ? StockRuleCodec.Decode(raw) : new List<StockRule>();
+
+    /// <summary>Sets how many of an item to keep (0 removes the rule). Returns null, or why it can't.</summary>
+    public string? SetStockRule(LocationNetworks loc, Network n, ItemKey item, int target)
+    {
+        if (AdvancedRack(loc, n) is not { } rack)
+            return T("auto.keep.needsRack");
+        var rules = StockRuleCodec.With(StockRulesOf(loc, n), item, target);
+        if (rules.Count == 0)
+            rack.modData.Remove(Ids.Data.StockRules);
+        else
+            rack.modData[Ids.Data.StockRules] = StockRuleCodec.Encode(rules);
+        return null;
+    }
+
+    /// <summary>Overnight: start jobs for every keep-in-stock rule that's short and can be made.</summary>
+    public void OnDayEnding()
+    {
+        if (!Context.IsMainPlayer)
+            return;
+        int started = 0;
+        foreach (var loc in networks.AllWithCores())
+        {
+            foreach (var n in loc.Graph.Networks.Where(n => n.Working && n.Core != null && IsAdvanced(n)))
+            {
+                var rules = StockRulesOf(loc, n);
+                if (rules.Count == 0 || !power.IsPowered(loc, n))
+                    continue;
+                var core = loc.ObjectOf(n.Core!);
+                var queue = JobsOf(core);
+                var storage = NetworkStorage.For(loc, n, disks);
+                foreach (var due in StockKeeper.Due(rules, storage, queue))
+                {
+                    var plan = planner.Plan(due.Item, due.Count, Book(true), storage);
+                    if (!plan.CanRun || plan.Steps.Take(plan.Steps.Count - 1).Any(st => !RecipeSource.IsStackable(st.Recipe.Out.Item.QualifiedId)))
+                        continue;
+                    queue.Add(due, plan);
+                    started++;
+                }
+                SaveJobs(core, queue);
+            }
+        }
+        if (started > 0)
+            monitor.Log($"Keep-in-stock started {started} job(s).", LogLevel.Debug);
+        pendingStockMessage = started;
+    }
+
+    private int pendingStockMessage;
+
+    /// <summary>Shows the overnight keep-in-stock summary in the morning.</summary>
+    public void OnDayStarted()
+    {
+        if (pendingStockMessage > 0)
+            Game1.addHUDMessage(new HUDMessage(T("auto.keep.started", new { count = pendingStockMessage })) { noIcon = true });
+        pendingStockMessage = 0;
+    }
+
     public static string Describe(IEnumerable<ItemAmount> items) =>
         string.Join(", ", items.Select(a => $"{a.Count} {NameOf(a.Item.QualifiedId)}"));
 
@@ -128,7 +197,7 @@ internal sealed class CraftingService
         {
             foreach (var n in loc.Graph.Networks.Where(n => n.Working && n.Core != null))
             {
-                var racks = loc.ObjectsOf(n, BlockKind.CraftingRack).ToList();
+                var racks = loc.ObjectsOf(n, BlockKind.CraftingRack).Concat(loc.ObjectsOf(n, BlockKind.AdvCraftingRack)).ToList();
                 if (racks.Count == 0)
                     continue;
                 var core = loc.ObjectOf(n.Core!);
@@ -154,7 +223,7 @@ internal sealed class CraftingService
     {
         var queue = JobsOf(core);
         var storage = NetworkStorage.For(loc, n, disks);
-        var furnaces = LinkedFurnaces(loc, n);
+        var furnaces = LinkedFurnaces(loc, n, allBuildings: IsAdvanced(n));
 
         // Bring finished bars back and credit their jobs.
         foreach (var f in furnaces)
@@ -201,13 +270,13 @@ internal sealed class CraftingService
     }
 
     /// <summary>Furnaces with a Machine Link, and every Furnace touching them, in this network and any joined by Ports.</summary>
-    private static List<SObject> LinkedFurnaces(LocationNetworks home, Network homeNet)
+    private static List<SObject> LinkedFurnaces(LocationNetworks home, Network homeNet, bool allBuildings)
     {
         var list = new List<SObject>();
         foreach (var (loc, n) in home.Manager.Members(home, homeNet))
         {
             // Another building with its own Crafting Rack uses its own Furnaces.
-            if (n != homeNet && n.Working && n.OfKind(BlockKind.CraftingRack).Any())
+            if (!allBuildings && n != homeNet && n.Working && HasRack(n))
                 continue;
             var seen = new HashSet<Vector2>();
             foreach (var link in loc.ObjectsOf(n, BlockKind.MachineLink).Where(o => o.QualifiedItemId == RecipeSource.FurnaceId))

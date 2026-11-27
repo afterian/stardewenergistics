@@ -18,7 +18,10 @@ internal sealed record AutocraftBackend(
     Func<ItemKey, int, CraftPlan?> Plan,
     Func<ItemKey, int, string?> Start,
     Func<IReadOnlyList<CraftJob>> Jobs,
-    Func<int, bool> Cancel);
+    Func<int, bool> Cancel,
+    bool Advanced,
+    Func<IReadOnlyList<StockRule>> StockRules,
+    Func<ItemKey, int, string?> SetStockRule);
 
 /// <summary>
 /// Autocraft screen: pick a known recipe's item, choose how many, see what it uses or what's missing,
@@ -34,7 +37,7 @@ internal sealed class AutocraftMenu : IClickableMenu
     private readonly TextBox search;
     private readonly Rectangle searchBox;
     private readonly List<ClickableComponent> slots = new();
-    private readonly ClickableComponent minus, plus, start;
+    private readonly ClickableComponent minus, plus, start, keepButton;
     private readonly List<ClickableComponent> cancelButtons = new();
 
     private readonly IReadOnlyList<ItemKey> all;
@@ -88,11 +91,14 @@ internal sealed class AutocraftMenu : IClickableMenu
         minus = Button(new Rectangle(right - 360, detailTop, 56, 48), "-", IdBase + 100);
         plus = Button(new Rectangle(right - 200, detailTop, 56, 48), "+", IdBase + 101);
         start = Button(new Rectangle(right - 136, detailTop, 136, 48), "start", IdBase + 102);
+        keepButton = Button(new Rectangle(right - 520, detailTop, 150, 48), "keep", IdBase + 103);
 
         for (int i = 0; i < JobRows; i++)
             cancelButtons.Add(Button(new Rectangle(right - 136, JobsTop + i * JobRowHeight, 136, 40), "cancel", IdBase + 200 + i));
 
         allClickableComponents = new List<ClickableComponent>(slots) { minus, plus, start };
+        if (backend.Advanced)
+            allClickableComponents.Add(keepButton);
         allClickableComponents.AddRange(cancelButtons);
         if (upperRightCloseButton != null)
             allClickableComponents.Add(upperRightCloseButton);
@@ -137,7 +143,14 @@ internal sealed class AutocraftMenu : IClickableMenu
         scrollRow = 0;
     }
 
-    private void RefreshJobs() => jobs = backend.Jobs().Where(j => !j.Finished).Take(JobRows).ToList();
+    private IReadOnlyList<StockRule> stockRules = Array.Empty<StockRule>();
+
+    private void RefreshJobs()
+    {
+        jobs = backend.Jobs().Where(j => !j.Finished).Take(JobRows).ToList();
+        if (backend.Advanced)
+            stockRules = backend.StockRules();
+    }
 
     private void Replan() => plan = selected is { } k ? backend.Plan(k, amount) : null;
 
@@ -229,6 +242,23 @@ internal sealed class AutocraftMenu : IClickableMenu
             return;
         }
 
+        if (backend.Advanced && selected is { } keepKey && keepButton.containsPoint(x, y))
+        {
+            var rules = backend.StockRules();
+            bool clear = rules.Any(r => r.Item.QualifiedId == keepKey.QualifiedId && r.Target == amount);
+            string? error = backend.SetStockRule(keepKey, clear ? 0 : amount);
+            if (error != null)
+            {
+                Game1.showRedMessage(error);
+                return;
+            }
+            Game1.playSound("coin");
+            RefreshJobs();
+            string item = CraftingService.NameOf(keepKey.QualifiedId);
+            Game1.addHUDMessage(new HUDMessage(clear ? i18n.Get("auto.keep.cleared", new { item }) : i18n.Get("auto.keep.set", new { n = amount, item })) { noIcon = true });
+            return;
+        }
+
         for (int i = 0; i < cancelButtons.Count && i < jobs.Count; i++)
         {
             if (cancelButtons[i].containsPoint(x, y))
@@ -314,6 +344,8 @@ internal sealed class AutocraftMenu : IClickableMenu
             b.DrawString(Game1.smallFont, amountText, new Vector2((minus.bounds.Right + plus.bounds.X) / 2f - size.X / 2, detailTop + 10), Game1.textColor);
             DrawButton(b, plus, "+", true);
             DrawButton(b, start, i18n.Get("auto.start"), plan?.CanRun == true);
+            if (backend.Advanced)
+                DrawButton(b, keepButton, i18n.Get("auto.keep", new { n = amount }), true);
 
             if (plan != null)
             {
@@ -326,6 +358,11 @@ internal sealed class AutocraftMenu : IClickableMenu
 
         // Jobs.
         Utility.drawTextWithShadow(b, i18n.Get("auto.jobs"), Game1.smallFont, new Vector2(Left, JobsTop - 36), Game1.textColor);
+        if (backend.Advanced && stockRules.Count > 0)
+        {
+            string kept = string.Join(", ", stockRules.Select(r => $"{r.Target} {CraftingService.NameOf(r.Item.QualifiedId)}"));
+            DrawWrapped(b, i18n.Get("auto.keep.rules", new { items = kept }), new Vector2(Left + 120, JobsTop - 36), Cols * Slot - 120, 1, Game1.textColor * 0.8f);
+        }
         if (jobs.Count == 0)
             b.DrawString(Game1.smallFont, i18n.Get("auto.noJobs"), new Vector2(Left, JobsTop + 8), Game1.textColor * 0.6f);
         for (int i = 0; i < jobs.Count; i++)

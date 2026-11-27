@@ -88,6 +88,8 @@ internal sealed class ProgressionService
                     MarkBuilt(TierId.T4Autocrafting);
                 if (power.IsPowered(loc, n) && n.Working && loc.Manager.GroupOf(n) is { Members.Count: > 2 })
                     MarkBuilt(TierId.T5LinkedBuildings);
+                if (power.IsPowered(loc, n) && n.OfKind(BlockKind.AdvCraftingRack).Any())
+                    MarkBuilt(TierId.T6WholeFarm);
             }
         }
     }
