@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Install Stardew Energistics
+Comment=Sets up SMAPI and the Stardew Energistics auto-updater on this Steam Deck
+Icon=system-software-install
+Terminal=true
+Exec=bash -c "curl -fsSL https://raw.githubusercontent.com/afterian/stardewenergistics/main/deploy/deck/install.sh -o /tmp/se-install.sh && bash /tmp/se-install.sh || { echo; echo 'Download failed. Check the wifi. (Private repo? See the guide.)'; sleep 30; }"

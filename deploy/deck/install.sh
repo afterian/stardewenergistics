@@ -1,39 +1,55 @@
 #!/bin/bash
-# Stardew Energistics - one-time Steam Deck setup (Desktop Mode > Konsole).
-#   - installs or updates SMAPI (native Linux version)
-#   - saves the GitHub token (private repo only) to ~/stardew-energistics/config
-#   - installs the auto-update launcher
-# Usage:  bash install.sh [TOKEN]        (asks for the token if the repo needs one)
-#         bash install.sh OWNER/REPO [TOKEN]
-# Running it again is safe: it updates SMAPI and replaces the saved token.
-set -e
+# Stardew Energistics - one-time Steam Deck setup. No typing needed.
+# Normally started by double-clicking "Install-Stardew-Energistics.desktop"
+# in Desktop Mode. It:
+#   1. checks GitHub (asks for a token only if the repo is private)
+#   2. installs or updates SMAPI (native Linux version)
+#   3. installs the auto-update launcher in ~/stardew-energistics
+#   4. sets Stardew's Steam Launch Options (closes and reopens Steam)
+# Usage: bash install.sh [TOKEN]   or   bash install.sh OWNER/REPO [TOKEN]
+# Running it again is safe (updates SMAPI, refreshes everything).
 REPO="afterian/stardewenergistics"
 case "$1" in */*) REPO="$1"; shift ;; esac
-TOKEN="$1"
+TOKEN="${1:-$SE_TOKEN}"
 DIR="$HOME/stardew-energistics"; mkdir -p "$DIR"
-say()  { echo; echo "== $*"; }
-fail() { echo; echo "!! $*"; exit 1; }
-ask()  { local v; read -r -p "$1" v < /dev/tty; echo "$v"; }
+LAUNCH_OPTIONS="$DIR/launch.sh %command%"
+HAVE_GUI=0; command -v kdialog >/dev/null && [ -n "$DISPLAY$WAYLAND_DISPLAY" ] && HAVE_GUI=1
+
+say() { echo; echo "== $*"; }
+popup() { [ $HAVE_GUI = 1 ] && kdialog --title "Stardew Energistics" "$@" 2>/dev/null; }
+fail() {
+  echo; echo "!! $*"
+  if [ $HAVE_GUI = 1 ]; then popup --error "$*"; else read -r -t 60 -p "Press Enter to close." _ < /dev/tty 2>/dev/null; fi
+  exit 1
+}
 
 # --- 1. GitHub access --------------------------------------------------------
 say "Checking GitHub access to $REPO"
 check() {
   local auth=(); [ -n "$TOKEN" ] && auth=(-H "Authorization: Bearer $TOKEN")
-  curl -s -o /dev/null -w '%{http_code}' "${auth[@]}" "https://api.github.com/repos/$REPO" || true
+  curl -s -m 20 -o /dev/null -w '%{http_code}' "${auth[@]}" "https://api.github.com/repos/$REPO" || true
 }
 CODE=$(check)
 if [ "$CODE" = 404 ] && [ -z "$TOKEN" ]; then
-  echo "The repo is private, so this Deck needs the read-only token (guide part 2)."
-  read -r -s -p "Paste the token (nothing shows while you paste), then press Enter: " TOKEN < /dev/tty; echo
+  echo "The repo is private, so this Deck needs the read-only token."
+  if [ $HAVE_GUI = 1 ]; then
+    TOKEN=$(popup --password "The repo is private. Paste the read-only GitHub token (right-click > Paste):")
+  else
+    read -r -s -p "Paste the token, then press Enter: " TOKEN < /dev/tty; echo
+  fi
   CODE=$(check)
 fi
 case "$CODE" in
   200) echo "OK." ;;
-  401) fail "GitHub says the token is wrong or expired. Make a new one and run this again." ;;
-  404) fail "GitHub can't find $REPO with this token. Check the token's repository access." ;;
-  *)   fail "Could not reach GitHub (answer: $CODE). Check the wifi and run this again." ;;
+  401) fail "GitHub says the token is wrong or expired. Make a new one and run the installer again." ;;
+  404) fail "GitHub can't find $REPO. If it's private, check the token's repository access." ;;
+  *)   fail "Couldn't reach GitHub (answer: $CODE). Check the wifi and run the installer again." ;;
 esac
 AUTH=(); [ -n "$TOKEN" ] && AUTH=(-H "Authorization: Bearer $TOKEN")
+fetch() {  # fetch <repo path> <output file>
+  curl -fsSL -m 30 "${AUTH[@]}" -H "Accept: application/vnd.github.raw" \
+    "https://api.github.com/repos/$REPO/contents/$1" -o "$2"
+}
 
 # --- 2. Find the game --------------------------------------------------------
 say "Looking for Stardew Valley"
@@ -45,57 +61,75 @@ for d in "$HOME/.local/share/Steam/steamapps/common/Stardew Valley" \
          /run/media/*/*/*/steamapps/common/"Stardew Valley"; do
   [ -d "$d" ] && { GAME="$d"; break; }
 done
-[ -n "$GAME" ] || fail "Stardew Valley isn't installed (or hasn't been started once). Install it in Steam, start it once, quit, and run this again."
+[ -n "$GAME" ] || fail "Stardew Valley isn't installed yet. Install it in Steam, start it once, quit, then run the installer again."
 echo "Found: $GAME"
 if [ -f "$GAME/Stardew Valley.exe" ] && [ ! -e "$GAME/StardewValley" ]; then
-  fail "This is the Windows (Proton) version. In Steam: Stardew Valley > Properties > Compatibility, untick 'Force the use of a specific Steam Play compatibility tool', let it update, then run this again."
+  fail "This is the Windows (Proton) version of the game. In Steam: Stardew Valley > Properties > Compatibility, turn OFF 'Force the use of a specific Steam Play compatibility tool', let it update, then run the installer again."
 fi
 
-# --- 3. SMAPI ----------------------------------------------------------------
-if [ -x "$GAME/StardewModdingAPI" ]; then
-  say "SMAPI is already installed"
-  ANS=$(ask "Check for a newer SMAPI and install it? [y/N] ")
-else
-  say "SMAPI isn't installed yet; installing it"
-  ANS=y
-fi
-if [[ "$ANS" =~ ^[Yy] ]]; then
-  # SMAPI is public on GitHub; the token is never sent there.
-  URL=$(curl -fsSL -m 20 https://api.github.com/repos/Pathoschild/SMAPI/releases/latest | python3 -c '
+# --- 3. SMAPI (install or update) -------------------------------------------
+say "Installing the latest SMAPI"
+# SMAPI is public on GitHub; the token is never sent there.
+URL=$(curl -fsSL -m 20 https://api.github.com/repos/Pathoschild/SMAPI/releases/latest | python3 -c '
 import json,sys
 for a in json.load(sys.stdin)["assets"]:
     n=a["name"].lower()
     if n.endswith(".zip") and "installer" in n and "developer" not in n:
-        print(a["browser_download_url"]); break') || true
-  [ -n "$URL" ] || fail "Could not find the SMAPI download. Install it by hand from https://smapi.io, then run this again."
+        print(a["browser_download_url"]); break' 2>/dev/null)
+if [ -z "$URL" ]; then
+  [ -x "$GAME/StardewModdingAPI" ] && echo "Couldn't check for a SMAPI update; keeping the installed one." \
+    || fail "Couldn't find the SMAPI download. Check the wifi and run the installer again."
+else
   echo "Downloading $(basename "$URL")"
   TMP=$(mktemp -d)
-  curl -fsSL -m 300 "$URL" -o "$TMP/smapi.zip" || fail "SMAPI download failed. Check the wifi and run this again."
-  python3 -c 'import zipfile,sys; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])' "$TMP/smapi.zip" "$TMP/x" || fail "Could not unzip SMAPI."
+  curl -fsSL -m 300 "$URL" -o "$TMP/smapi.zip" || fail "SMAPI download failed. Check the wifi and run the installer again."
+  python3 -c 'import zipfile,sys; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])' "$TMP/smapi.zip" "$TMP/x" || fail "Couldn't unzip SMAPI."
   INSTALLER=$(find "$TMP/x" -name "install on Linux.sh" | head -n1)
   [ -n "$INSTALLER" ] || fail "The SMAPI download didn't contain 'install on Linux.sh'."
-  echo "Running the SMAPI installer. If it asks anything, choose to install; at the end press Enter."
-  ( cd "$(dirname "$INSTALLER")" && bash "./install on Linux.sh" --install --game-path "$GAME" < /dev/tty ) || true
+  # --install/--game-path/--no-prompt skip SMAPI's questions; stdin from /dev/null answers anything left.
+  ( cd "$(dirname "$INSTALLER")" && bash "./install on Linux.sh" --install --game-path "$GAME" --no-prompt < /dev/null ) || true
   rm -rf "$TMP"
-  [ -x "$GAME/StardewModdingAPI" ] || fail "SMAPI didn't install. Try the manual steps in the guide (part 3, 'If the automatic SMAPI install fails')."
-  echo "SMAPI installed."
+  [ -x "$GAME/StardewModdingAPI" ] || fail "SMAPI didn't install. See the guide: 'If the automatic SMAPI install fails'."
+  echo "SMAPI is ready."
 fi
 
 # --- 4. Launcher -------------------------------------------------------------
 say "Installing the auto-update launcher"
 ( umask 077; printf 'REPO=%q\nTOKEN=%q\nTAG=test-latest\n' "$REPO" "$TOKEN" > "$DIR/config" )
-curl -fsSL "${AUTH[@]}" -H "Accept: application/vnd.github.raw" \
-  "https://api.github.com/repos/$REPO/contents/deploy/deck/launch.sh" -o "$DIR/launch.sh" \
-  || fail "Could not download the launcher. Check the wifi and run this again."
+fetch deploy/deck/launch.sh "$DIR/launch.sh" || fail "Couldn't download the launcher. Check the wifi and run the installer again."
+fetch deploy/deck/set_launch_options.py "$DIR/set_launch_options.py" || fail "Couldn't download a setup file. Check the wifi and run the installer again."
 chmod +x "$DIR/launch.sh"
 echo "Done."
 
+# --- 5. Steam Launch Options -------------------------------------------------
+say "Setting Stardew's Launch Options in Steam"
+SET_OK=0
+STEAM_WAS_RUNNING=0
+if pgrep -x steam >/dev/null; then
+  STEAM_WAS_RUNNING=1
+  echo "Closing Steam for a moment (it saves its settings on exit)..."
+  steam -shutdown >/dev/null 2>&1 &
+  for _ in $(seq 1 60); do pgrep -x steam >/dev/null || break; sleep 1; done
+fi
+if pgrep -x steam >/dev/null; then
+  echo "Steam didn't close."
+else
+  python3 "$DIR/set_launch_options.py" "$LAUNCH_OPTIONS" && SET_OK=1
+fi
+if [ $STEAM_WAS_RUNNING = 1 ] && ! pgrep -x steam >/dev/null; then
+  echo "Starting Steam again..."
+  (setsid steam >/dev/null 2>&1 &)
+fi
+
 echo
-echo "=============================================================="
-echo " Last step, in Steam: Stardew Valley > Properties > General >"
-echo " Launch Options. Replace what's there with exactly:"
-echo
-echo "     ~/stardew-energistics/launch.sh %command%"
-echo
-echo " Then go back to Game Mode and start the game."
-echo "=============================================================="
+if [ $SET_OK = 1 ]; then
+  MSG="All set! Go back to Gaming Mode (double-click 'Return to Gaming Mode' on the desktop) and start Stardew Valley. The first start takes a few extra seconds."
+else
+  MSG="Almost done. One step left: in Steam, open Stardew Valley > Properties > General > Launch Options and enter:
+
+$LAUNCH_OPTIONS
+
+Then go back to Gaming Mode and start the game."
+fi
+echo "$MSG"
+if [ $HAVE_GUI = 1 ]; then popup --msgbox "$MSG"; else read -r -t 120 -p "Press Enter to close." _ < /dev/tty 2>/dev/null; fi
