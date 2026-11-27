@@ -20,6 +20,16 @@ public enum OutputMode
 public sealed record Schedule(bool Always = true, int FromTime = 600, int ToTime = 2600)
 {
     public static readonly Schedule AlwaysOn = new();
+
+    /// <summary>True if the Link may run at this Stardew time. A window like 2200–800 wraps past midnight.</summary>
+    public bool IsActive(int time)
+    {
+        if (Always)
+            return true;
+        if (FromTime <= ToTime)
+            return time >= FromTime && time < ToTime;
+        return time >= FromTime || time < ToTime;
+    }
 }
 
 /// <summary>A Machine Link's or Shipping Link's player-set rules. A new Link is not <see cref="Configured"/> and does nothing.</summary>
