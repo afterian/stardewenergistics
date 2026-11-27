@@ -82,6 +82,8 @@ internal sealed class ProgressionService
             {
                 if (n.OfKind(BlockKind.StorageRack).Any() && n.OfKind(BlockKind.Terminal).Any() && power.IsPowered(loc, n))
                     MarkBuilt(TierId.T2SimpleStorage);
+                if (power.IsPowered(loc, n) && loc.ObjectsOf(n, BlockKind.MachineLink).Any(o => Machines.MachineLinkService.SettingsOf(o).Configured))
+                    MarkBuilt(TierId.T3Automation);
             }
         }
     }

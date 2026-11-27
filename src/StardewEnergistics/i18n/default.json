@@ -41,6 +41,38 @@
   "item.CopperDisk.name": "Copper Disk",
   "item.CopperDisk.description": "Network storage: 20 kinds, 2,000 items. Goes in a Storage Rack.",
 
+  // Items (M3)
+  "item.IronDisk.name": "Iron Disk",
+  "item.IronDisk.description": "Network storage: 40 kinds, 8,000 items. Crafting it from a Copper Disk keeps what was stored.",
+  "item.GoldDisk.name": "Gold Disk",
+  "item.GoldDisk.description": "Network storage: 63 kinds, 32,000 items. Crafting it from an Iron Disk keeps what was stored.",
+  "item.MachineLink.name": "Machine Link",
+  "item.MachineLink.description": "Use on a machine with wire under it. It feeds and empties every identical machine touching it, once you set it up with the Network Wrench.",
+  "item.ShippingLink.name": "Shipping Link",
+  "item.ShippingLink.description": "Use on a Mini-Shipping Bin with wire under it. Each night it ships the items you choose above the amounts you set.",
+
+  // Links
+  "link.added": "Link attached. Right-click with the Network Wrench to set it up.",
+  "link.removed": "Link removed.",
+  "link.notMachine": "Machine Links go on machines like Kegs and Preserves Jars.",
+  "link.notBin": "Shipping Links go on a Mini-Shipping Bin.",
+  "link.already": "This already has a Link.",
+  "link.title.machine": "Machine Link: {{machine}} x{{count}}",
+  "link.title.shipping": "Shipping Link",
+  "link.inputs": "Inputs (first = highest priority). Click an item in your inventory to add it.",
+  "link.ship": "Ship these. Click an item in your inventory to add it.",
+  "link.keep": "Keep {{n}}",
+  "link.output.storage": "Output: to storage",
+  "link.output.leave": "Output: leave in machine",
+  "link.schedule.always": "Runs: always",
+  "link.schedule.hours": "Runs: {{from}} to {{to}}",
+  "link.copy": "Copy",
+  "link.paste": "Paste",
+  "link.copied": "Settings copied.",
+  "link.pasted": "Settings pasted.",
+  "link.none": "Not set up yet: add at least one item.",
+  "link.shipped": "Shipping Links put {{count}} items in the shipping bin.",
+
   // Network messages
   "disk.contents": "{{name}}: {{kinds}}/{{maxKinds}} kinds, {{items}}/{{maxItems}} items",
   "rack.full": "This rack is full.",
@@ -58,6 +90,9 @@
   "network.status": "Network: {{blocks}} blocks, {{disks}} disks, {{kinds}} kinds, {{items}} items stored. {{power}}",
   "network.powered": "Powered.",
   "network.unpowered": "No power: machines and crafting are paused.",
+
+  "mail.T3.title": "Automation",
+  "mail.T3.text": "@!^^Ready for the fun part? A Machine Link on a Keg runs every Keg touching it, straight from your storage. You tell it what to use and how much to keep.^^I also added a Shipping Link, bigger disks, and heavy cable for long runs.^^   -Maru",
 
   // Terminal
   "terminal.title": "Network Terminal",
