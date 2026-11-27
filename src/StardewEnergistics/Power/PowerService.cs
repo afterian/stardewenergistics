@@ -93,6 +93,20 @@ internal sealed class PowerService
         }
     }
 
+    /// <summary>After adding power mid-day, let the network re-check whether it has enough.</summary>
+    public void Recheck(LocationNetworks loc, Network n)
+    {
+        if (loc.Manager.Home(loc, n) is not { } home || home.Net.Core == null)
+            return;
+        var core = home.Loc.ObjectOf(home.Net.Core);
+        if (core.modData.TryGetValue(Ids.Data.Powered, out string? flag) && flag == "0")
+        {
+            core.modData.Remove(Ids.Data.Powered);
+            RackSlots.ShowFrame(core, IsPowered(home.Loc, home.Net) ? 1 : 0);
+            ShowTerminals(home.Loc);
+        }
+    }
+
     /// <summary>Shows each Network Terminal's "on" frame when its network is powered, "off" otherwise (host).</summary>
     public void ShowTerminals(LocationNetworks loc)
     {

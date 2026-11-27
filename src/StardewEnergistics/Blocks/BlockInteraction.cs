@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using StardewEnergistics.Content;
@@ -55,6 +56,13 @@ internal sealed class BlockInteraction
 
         var location = Game1.currentLocation;
         var tile = e.Cursor.GrabTile;
+
+        if (Game1.player.ActiveObject?.QualifiedItemId == "(O)" + Ids.WirelessTerminal)
+        {
+            helper.Input.Suppress(e.Button);
+            OpenWireless(location);
+            return;
+        }
         if (!location.objects.TryGetValue(tile, out var obj))
         {
             // Big craftables are two tiles tall; clicking the top half targets the tile below.
@@ -67,6 +75,9 @@ internal sealed class BlockInteraction
 
         // Machine and Shipping Links (checked first: a Mini-Shipping Bin is a chest).
         if (HandleLinks(e.Button, location, tile, obj, held))
+            return;
+
+        if (HandlePowerFeed(e.Button, location, tile, obj, held))
             return;
 
         // Chest Link on / off.
@@ -120,6 +131,10 @@ internal sealed class BlockInteraction
                 helper.Input.Suppress(e.Button);
                 power.ShowTerminals(networks.For(location));
                 terminal.Open(location, tile);
+                break;
+            case BlockKind.Port:
+                helper.Input.Suppress(e.Button);
+                ShowPort(location, tile, obj);
                 break;
             case BlockKind.CraftingRack:
                 helper.Input.Suppress(e.Button);
@@ -309,17 +324,91 @@ internal sealed class BlockInteraction
     private void ResetPoweredFlag(GameLocation location, Vector2 tile)
     {
         var loc = networks.For(location);
-        var n = loc.NetworkAt(tile);
-        if (n?.Core != null)
+        if (loc.NetworkAt(tile) is { } n)
+            power.Recheck(loc, n);
+    }
+
+    private static readonly HashSet<string> FeedTargets = new() { "(BC)9", "(BC)231" }; // Lightning Rod, Solar Panel
+
+    private bool HandlePowerFeed(SButton button, GameLocation location, Vector2 tile, SObject obj, SObject? held)
+    {
+        if (IsHeld(held, Ids.PowerFeed))
         {
-            var core = loc.ObjectOf(n.Core);
-            if (core.modData.TryGetValue(Ids.Data.Powered, out string? flag) && flag == "0")
+            helper.Input.Suppress(button);
+            if (!FeedTargets.Contains(obj.QualifiedItemId))
             {
-                core.modData.Remove(Ids.Data.Powered);
-                RackSlots.ShowFrame(core, power.IsPowered(loc, n) ? 1 : 0);
-                power.ShowTerminals(loc);
+                Hud(T("feed.notTarget"));
+                return true;
             }
+            if (obj.modData.ContainsKey(Ids.Data.PowerFeed) || obj.modData.ContainsKey(Ids.Data.MachineLink))
+            {
+                Hud(T("link.already"));
+                return true;
+            }
+            obj.modData[Ids.Data.PowerFeed] = "1";
+            Game1.player.reduceActiveItemByOne();
+            networks.Invalidate(location);
+            Game1.playSound("hammer");
+            Hud(T("feed.added"));
+            return true;
         }
+        if (IsHeld(held, Ids.NetworkWrench) && obj.modData.ContainsKey(Ids.Data.PowerFeed))
+        {
+            helper.Input.Suppress(button);
+            obj.modData.Remove(Ids.Data.PowerFeed);
+            Game1.createItemDebris(ItemRegistry.Create("(O)" + Ids.PowerFeed), tile * 64 + new Vector2(32, 32), -1, location);
+            networks.Invalidate(location);
+            Game1.playSound("hammer");
+            Hud(T("feed.removed"));
+            return true;
+        }
+        return false;
+    }
+
+    private void ShowPort(GameLocation location, Vector2 tile, SObject port)
+    {
+        if (!location.IsOutdoors)
+        {
+            RackSlots.ShowFrame(port, 0);
+            Hud(T("port.outdoorsOnly"));
+            return;
+        }
+        var building = NetworkManager.BuildingBeside(location, tile);
+        if (building?.GetIndoors() is not { } indoors)
+        {
+            RackSlots.ShowFrame(port, 0);
+            Hud(T("port.noBuilding"));
+            return;
+        }
+        RackSlots.ShowFrame(port, 1);
+        Hud(T("port.linked", new { building = indoors.DisplayName }));
+    }
+
+    /// <summary>Opens the Terminal of the network here, or of the farmhouse when on the farm.</summary>
+    private void OpenWireless(GameLocation location)
+    {
+        if (FirstBlockTile(location) is { } tile)
+        {
+            terminal.Open(location, tile);
+            return;
+        }
+        bool onFarm = location.IsFarm || location.ParentBuilding != null;
+        var home = Game1.getLocationFromName("FarmHouse");
+        if (onFarm && home != null && FirstBlockTile(home) is { } homeTile)
+        {
+            terminal.Open(home, homeTile);
+            return;
+        }
+        Game1.showRedMessage(T("wireless.none"));
+    }
+
+    /// <summary>A tile of some block in an active network here (the Core's network first).</summary>
+    private Vector2? FirstBlockTile(GameLocation location)
+    {
+        var loc = networks.For(location);
+        var n = loc.Graph.Networks.Where(loc.IsActive).OrderByDescending(x => x.Working).FirstOrDefault();
+        var b = n?.Core ?? n?.Blocks.FirstOrDefault();
+        return b == null ? null : new Vector2(b.Pos.X, b.Pos.Y);
     }
 
     private void ShowJobs(GameLocation location, Vector2 tile)

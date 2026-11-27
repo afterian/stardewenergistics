@@ -50,6 +50,7 @@ namespace StardewEnergistics
             var terminalNet = new TerminalNet(helper, Monitor, networks, disks, power, ModManifest.UniqueID);
             terminalNet.Register();
             var crafting = new CraftingService(helper, Monitor, networks, disks, power);
+            var feeds = new PowerFeedService(helper, Monitor, networks, power);
             var terminal = new TerminalController(helper, Monitor, networks, disks, power, textures, terminalNet, crafting);
             terminal.Register();
 
@@ -64,6 +65,7 @@ namespace StardewEnergistics
             {
                 links.OnTimeChanged();
                 crafting.OnTimeChanged();
+                feeds.OnTimeChanged();
             };
             helper.ConsoleCommands.Add("se_perf", "Run all Machine Links now and show how long it took.", (_, _) =>
             {
