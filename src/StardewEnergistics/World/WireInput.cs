@@ -106,14 +106,15 @@ internal sealed class WireInput
             if (layer == null || wire == null)
                 return;
 
-            helper.Input.Suppress(e.Button);
             if (action && wire.Kind == WireKind.Heavy)
             {
+                helper.Input.Suppress(e.Button);
                 layer.CycleColor(tile);
                 Game1.playSound("drumkit6");
             }
             else if (useTool)
             {
+                helper.Input.Suppress(e.Button);
                 wrenchButton = e.Button;
                 wrenchTile = tile;
                 wrenchHeldTicks = 0;

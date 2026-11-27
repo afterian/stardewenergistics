@@ -11,6 +11,13 @@ internal static class VanillaIds
     public const string RefinedQuartz = "338";
     public const string Cloth = "428";
     public const string Fiber = "771";
+    public const string Stone = "390";
+    public const string Coal = "382";
+    public const string Hardwood = "709";
+    public const string BatteryPack = "787";
+
+    /// <summary>Big craftable ID of the Furnace.</summary>
+    public const string FurnaceBig = "13";
 
     public static string Obj(string id) => "(O)" + id;
 

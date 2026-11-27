@@ -47,6 +47,8 @@ public static class ProcessorPressOutput
         {
             foreach (var (id, count) in extras)
                 player.Items.ReduceId(id, count);
+            if (outputData.ItemId == "(O)" + Ids.CopperProcessor)
+                player.stats.Increment(Ids.StatCopperProcessors);
         }
 
         return ItemRegistry.Create(outputData.ItemId);
