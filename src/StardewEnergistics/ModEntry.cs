@@ -1,6 +1,7 @@
 using HarmonyLib;
 using StardewEnergistics.Blocks;
 using StardewEnergistics.Content;
+using StardewEnergistics.Crafting;
 using StardewEnergistics.Machines;
 using StardewEnergistics.Multiplayer;
 using StardewEnergistics.Networks;
@@ -48,7 +49,8 @@ namespace StardewEnergistics
             progression = new ProgressionService(Monitor, networks, power) { GatesEnabled = config.TierGates };
             var terminalNet = new TerminalNet(helper, Monitor, networks, disks, power, ModManifest.UniqueID);
             terminalNet.Register();
-            var terminal = new TerminalController(helper, Monitor, networks, disks, power, textures, terminalNet);
+            var crafting = new CraftingService(helper, Monitor, networks, disks, power);
+            var terminal = new TerminalController(helper, Monitor, networks, disks, power, textures, terminalNet, crafting);
             terminal.Register();
 
             var renderer = new WireRenderer(wires, textures, Monitor);
@@ -58,7 +60,11 @@ namespace StardewEnergistics
 
             var links = new MachineLinkService(Monitor, networks, disks, power);
             var shipping = new ShippingLinkService(helper, Monitor, networks, disks, power);
-            helper.Events.GameLoop.TimeChanged += (_, _) => links.OnTimeChanged();
+            helper.Events.GameLoop.TimeChanged += (_, _) =>
+            {
+                links.OnTimeChanged();
+                crafting.OnTimeChanged();
+            };
             helper.ConsoleCommands.Add("se_perf", "Run all Machine Links now and show how long it took.", (_, _) =>
             {
                 if (!Context.IsWorldReady)

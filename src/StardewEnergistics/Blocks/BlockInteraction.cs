@@ -120,6 +120,10 @@ internal sealed class BlockInteraction
                 helper.Input.Suppress(e.Button);
                 terminal.Open(location, tile);
                 break;
+            case BlockKind.CraftingRack:
+                helper.Input.Suppress(e.Button);
+                ShowJobs(location, tile);
+                break;
         }
     }
 
@@ -314,6 +318,22 @@ internal sealed class BlockInteraction
                 RackSlots.ShowFrame(core, power.IsPowered(loc, n) ? 1 : 0);
             }
         }
+    }
+
+    private void ShowJobs(GameLocation location, Vector2 tile)
+    {
+        var loc = networks.For(location);
+        var n = loc.NetworkAt(tile);
+        if (n?.Core == null)
+        {
+            Hud(T("auto.noRack"));
+            return;
+        }
+        var jobs = StardewEnergistics.Crafting.CraftingService.JobsOf(loc.ObjectOf(n.Core)).Jobs.Where(j => !j.Finished).ToList();
+        string list = jobs.Count == 0
+            ? T("auto.noJobs")
+            : string.Join(", ", jobs.Select(j => $"{j.Target.Count} {StardewEnergistics.Crafting.CraftingService.NameOf(j.Target.Item.QualifiedId)} ({(int)(j.Progress * 100)}%)"));
+        Hud(T("rack.crafting", new { jobs = list }));
     }
 
     private void ShowStatus(GameLocation location, Vector2 tile)

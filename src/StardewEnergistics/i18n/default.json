@@ -112,5 +112,32 @@
   "mail.T1.title": "Processor Press",
   "mail.T1.text": "Hi @!^^I've been tinkering with a little press that squeezes bars and quartz into chips. I call them processors. You can also make copper wire with them in mind.^^Here's how to build both. Let me know what you make!^^   -Maru",
   "mail.T2.title": "Farm computer",
-  "mail.T2.text": "@!^^You've made a lot of processors! Want to put them to work?^^Build a Computer Core, put a Storage Rack and a Power Rack beside it, and run wire to a Terminal and your chests. Disks hold your items, and the Terminal can craft from everything on the network.^^Battery Packs keep it running for about two weeks each.^^   -Maru"
+  "mail.T2.text": "@!^^You've made a lot of processors! Want to put them to work?^^Build a Computer Core, put a Storage Rack and a Power Rack beside it, and run wire to a Terminal and your chests. Disks hold your items, and the Terminal can craft from everything on the network.^^Battery Packs keep it running for about two weeks each.^^   -Maru",
+
+  // M4 autocrafting
+  "item.CraftingRack.name": "Crafting Rack",
+  "item.CraftingRack.description": "Place beside a Computer Core or another rack. Runs one autocraft job at a time: ask the Terminal for something and the network makes the parts too, using linked Furnaces for bars.",
+  "mail.T4.title": "Autocrafting",
+  "mail.T4.text": "@!^^Here's one I'm proud of. Put a Crafting Rack next to your Core and the Terminal can make whole recipes for you, parts and all. Put a Machine Link on a Furnace and it'll smelt bars for the job too.^^   -Maru",
+  "auto.button": "Autocraft",
+  "auto.title": "Autocraft",
+  "auto.search": "Search recipes",
+  "auto.amount": "Make {{n}}",
+  "auto.start": "Start",
+  "auto.started": "Job started: {{n}} {{item}}.",
+  "auto.missing": "Missing: {{items}}",
+  "auto.ready": "Ready to make. Uses: {{items}}",
+  "auto.noRack": "Place a Crafting Rack beside the Core to autocraft.",
+  "auto.noPower": "The network has no power.",
+  "auto.hostOnly": "Only the host can start autocraft jobs for now.",
+  "auto.jobs": "Jobs",
+  "auto.noJobs": "No jobs.",
+  "auto.job": "{{n}} {{item}}: {{pct}}%",
+  "auto.job.waiting": "{{n}} {{item}}: waiting for {{what}}",
+  "auto.cancel": "Cancel",
+  "auto.cancelled": "Job cancelled.",
+  "auto.done": "Autocraft done: {{n}} {{item}}.",
+  "auto.furnace": "a free linked Furnace",
+  "auto.queued": "{{n}} {{item}}: queued",
+  "rack.crafting": "Crafting Rack. Jobs: {{jobs}}"
 }

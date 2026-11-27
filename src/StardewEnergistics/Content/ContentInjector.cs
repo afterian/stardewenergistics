@@ -43,6 +43,8 @@ internal sealed class ContentInjector
         new(Ids.GoldDisk, "GoldDisk", "gold-disk.png", false, 1200, TierId.T3Automation, $"{Ids.IronDisk} 1 {GoldBar} 3 {Ids.GoldProcessor} 1"),
         new(Ids.MachineLink, "MachineLink", "machine-link.png", false, 300, TierId.T3Automation, $"{Ids.GoldProcessor} 1 {IronBar} 2"),
         new(Ids.ShippingLink, "ShippingLink", "shipping-link.png", false, 400, TierId.T3Automation, $"{Ids.MachineLink} 1 {GoldBar} 1"),
+        // T4
+        new(Ids.CraftingRack, "CraftingRack", "crafting-rack.png", true, 1500, TierId.T4Autocrafting, $"{Ids.GoldProcessor} 2 {GoldBar} 2 {Diamond} 1"),
         // T5
         new(Ids.IridiumProcessor, "IridiumProcessor", "iridium-processor.png", false, 1000, TierId.T5LinkedBuildings, ""),
     };
@@ -55,7 +57,7 @@ internal sealed class ContentInjector
     /// <summary>Mail ID of Maru's letter for a tier.</summary>
     public static string MailId(TierId tier) => $"{Ids.ModId}_Maru_T{(int)tier}";
 
-    public static readonly TierId[] TiersWithMail = { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation };
+    public static readonly TierId[] TiersWithMail = { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation, TierId.T4Autocrafting };
 
     public void Register()
     {

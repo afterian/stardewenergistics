@@ -28,11 +28,13 @@ internal sealed class TerminalMenu : IClickableMenu
     private readonly ITranslationHelper i18n;
     private readonly Func<string, Texture2D> sprite;
     private readonly Action? onCraft;
+    private readonly Action? onAutocraft;
 
     private readonly TextBox search;
     private readonly InventoryMenu inventory;
     private readonly List<ClickableComponent> gridSlots = new();
     private readonly ClickableComponent craftButton;
+    private readonly ClickableComponent autoButton;
     private readonly Rectangle searchBox;
 
     private IReadOnlyList<TerminalRow> rows = Array.Empty<TerminalRow>();
@@ -44,13 +46,14 @@ internal sealed class TerminalMenu : IClickableMenu
     private TerminalRow? hoverRow;
     private Item? hoverInventory;
 
-    public TerminalMenu(ITerminalBackend backend, ITranslationHelper i18n, Func<string, Texture2D> sprite, Action? onCraft)
+    public TerminalMenu(ITerminalBackend backend, ITranslationHelper i18n, Func<string, Texture2D> sprite, Action? onCraft, Action? onAutocraft = null)
         : base(0, 0, 0, 0, showUpperRightCloseButton: true)
     {
         this.backend = backend;
         this.i18n = i18n;
         this.sprite = sprite;
         this.onCraft = backend.CanCraft ? onCraft : null;
+        this.onAutocraft = backend.CanCraft ? onAutocraft : null;
 
         width = Cols * Slot + borderWidth * 2;
         height = HeaderHeight + Rows * Slot + 48 + 3 * Slot + borderWidth * 2;
@@ -75,6 +78,13 @@ internal sealed class TerminalMenu : IClickableMenu
         {
             myID = GridIdBase - 1,
             downNeighborID = GridIdBase + Cols - 1,
+            leftNeighborID = GridIdBase - 2,
+        };
+        autoButton = new ClickableComponent(new Rectangle(craftButton.bounds.X - 16 - 180, top + 56, 180, 48), "autocraft")
+        {
+            myID = GridIdBase - 2,
+            downNeighborID = GridIdBase + Cols - 4,
+            rightNeighborID = GridIdBase - 1,
         };
 
         int gridTop = top + HeaderHeight;
@@ -95,7 +105,7 @@ internal sealed class TerminalMenu : IClickableMenu
         for (int c = 0; c < Cols && c < inventory.inventory.Count; c++)
             inventory.inventory[c].upNeighborID = GridIdBase + (Rows - 1) * Cols + c;
 
-        allClickableComponents = new List<ClickableComponent>(gridSlots) { craftButton };
+        allClickableComponents = new List<ClickableComponent>(gridSlots) { craftButton, autoButton };
         allClickableComponents.AddRange(inventory.inventory);
         if (upperRightCloseButton != null)
             allClickableComponents.Add(upperRightCloseButton);
@@ -205,6 +215,20 @@ internal sealed class TerminalMenu : IClickableMenu
         if (busy)
             return;
 
+        if (autoButton.containsPoint(x, y) && !one)
+        {
+            if (onAutocraft != null)
+            {
+                Game1.playSound("bigSelect");
+                onAutocraft();
+            }
+            else
+            {
+                Game1.showRedMessage(i18n.Get("auto.hostOnly"));
+            }
+            return;
+        }
+
         if (craftButton.containsPoint(x, y) && !one)
         {
             if (onCraft != null)
@@ -293,6 +317,10 @@ internal sealed class TerminalMenu : IClickableMenu
         string craft = i18n.Get("terminal.tab.craft");
         var size = Game1.smallFont.MeasureString(craft);
         b.DrawString(Game1.smallFont, craft, new Vector2(craftButton.bounds.Center.X - size.X / 2, craftButton.bounds.Center.Y - size.Y / 2), Game1.textColor);
+        drawTextureBox(b, autoButton.bounds.X, autoButton.bounds.Y, autoButton.bounds.Width, autoButton.bounds.Height, onAutocraft != null ? Color.White : Color.Gray);
+        string auto = i18n.Get("auto.button");
+        size = Game1.smallFont.MeasureString(auto);
+        b.DrawString(Game1.smallFont, auto, new Vector2(autoButton.bounds.Center.X - size.X / 2, autoButton.bounds.Center.Y - size.Y / 2), Game1.textColor);
 
         // Network grid.
         for (int i = 0; i < gridSlots.Count; i++)

@@ -101,6 +101,13 @@ internal sealed class MachineLinkService
             if (!location.objects.TryGetValue(new Microsoft.Xna.Framework.Vector2(pos.X, pos.Y), out var machine))
                 continue;
 
+            // Busy with an autocraft job: the Crafting Rack handles it.
+            if (machine.modData.ContainsKey(Ids.Data.ForJob))
+            {
+                anyWorking = true;
+                continue;
+            }
+
             if (settings.Output == OutputMode.ToStorage && MachineDriver.IsReady(machine))
             {
                 var output = MachineDriver.Collect(machine);

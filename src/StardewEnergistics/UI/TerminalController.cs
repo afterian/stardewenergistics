@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using StardewEnergistics.Content;
+using StardewEnergistics.Crafting;
 using StardewEnergistics.Multiplayer;
 using StardewEnergistics.Networks;
 using StardewEnergistics.Power;
@@ -29,11 +30,13 @@ internal sealed class TerminalController
     private readonly PowerService power;
     private readonly TextureRegistry textures;
     private readonly TerminalNet net;
+    private readonly CraftingService crafting;
 
     private readonly PerScreen<CraftSession?> craftSession = new();
 
-    public TerminalController(IModHelper helper, IMonitor monitor, NetworkManager networks, DiskStore disks, PowerService power, TextureRegistry textures, TerminalNet net)
+    public TerminalController(IModHelper helper, IMonitor monitor, NetworkManager networks, DiskStore disks, PowerService power, TextureRegistry textures, TerminalNet net, CraftingService crafting)
     {
+        this.crafting = crafting;
         this.helper = helper;
         this.monitor = monitor;
         this.networks = networks;
@@ -71,7 +74,7 @@ internal sealed class TerminalController
             backend = net.RemoteBackend(location, tile);
         }
 
-        Game1.activeClickableMenu = new TerminalMenu(backend, helper.Translation, textures.Get, () => OpenCraft(location, tile));
+        Game1.activeClickableMenu = new TerminalMenu(backend, helper.Translation, textures.Get, () => OpenCraft(location, tile), () => OpenAutocraft(location, tile));
     }
 
     private (LocationNetworks, StardewEnergistics.Core.Graph.Network)? Resolve(GameLocation location, Vector2 tile)
@@ -79,6 +82,25 @@ internal sealed class TerminalController
         var loc = networks.For(location);
         var n = loc.NetworkAt(tile);
         return n is { Working: true } ? (loc, n) : null;
+    }
+
+    private void OpenAutocraft(GameLocation location, Vector2 tile)
+    {
+        if (Resolve(location, tile) == null)
+        {
+            Game1.showRedMessage(T("terminal.noNetwork"));
+            return;
+        }
+
+        var book = RecipeSource.Build(monitor);
+        var craftable = book.Outputs.ToList();
+        var backend = new AutocraftBackend(
+            Craftable: () => craftable,
+            Plan: (key, n) => Resolve(location, tile) is { } r ? crafting.Plan(r.Item1, r.Item2, key, n) : null,
+            Start: (key, n) => Resolve(location, tile) is { } r ? crafting.Start(r.Item1, r.Item2, key, n) : T("terminal.noNetwork"),
+            Jobs: () => Resolve(location, tile) is { } r && r.Item2.Core != null ? CraftingService.JobsOf(r.Item1.ObjectOf(r.Item2.Core)).Jobs : System.Array.Empty<StardewEnergistics.Core.Crafting.CraftJob>(),
+            Cancel: id => Resolve(location, tile) is { } r && crafting.Cancel(r.Item1, r.Item2, id));
+        Game1.activeClickableMenu = new AutocraftMenu(backend, helper.Translation);
     }
 
     private void OpenCraft(GameLocation location, Vector2 tile)
