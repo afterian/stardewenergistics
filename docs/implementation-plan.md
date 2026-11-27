@@ -240,7 +240,7 @@ Each milestone lists its tasks by lane, the tests it adds, and its "Done when" c
 Mostly sequential; the user's PC setup is the critical path.
 
 - **G** Scaffold `StardewEnergistics.sln`, the two `src/` projects and `tests/` (S). Mod project: `net6.0`, `Pathoschild.Stardew.ModBuildConfig`, `EnableModZip=true`, `EnableHarmony=true`. Core project has no game references (enforced by a test that inspects the assembly's references).
-- **B** `ModEntry` logs "Stardew Energistics loaded"; `manifest.json` with `UniqueID` `afterian.StardewEnergistics` (**Proposed**, needs the user's OK), `UpdateKeys: []`, `MinimumApiVersion` set from the installed SMAPI (S).
+- **B** `ModEntry` logs "Stardew Energistics loaded"; `manifest.json` with `UniqueID` `afterian.StardewEnergistics` (confirmed), `UpdateKeys: []`, `MinimumApiVersion` set from the installed SMAPI (S).
 - **G** GitHub Actions workflow running `dotnet test tests/` on Linux (Core only) (S).
 - **G** Wire `deploy/publish-test.bat` to the real repo `afterian/stardewenergistics`; fill in `deploy/README.md` (S).
 - **A** Commit the §3 contracts as stubs with `NotImplementedException` plus `AssetCatalog` with all 36 entries (S).
@@ -366,8 +366,8 @@ None of these block starting work; each has a default behind a config value.
 | --- | --- | --- |
 | Terminal reach before Network Ports | Own building only (`TerminalReachAllBeforePorts = false`) | end of M2 |
 | Coal value (1 vs 10 power) | `CoalPower = 1`, `HardwoodPower` likewise configurable | first power playtest, M2 |
-| Mod UniqueID / author | `afterian.StardewEnergistics`, author `afterian` (**Proposed**) | M0 |
-| Wire connection rule | A block connects if wire is on its tile or on any of the 4 neighbouring tiles (**Proposed**) | M2 graph |
+| Mod UniqueID / author | `afterian.StardewEnergistics`, author `afterian` (**Confirmed** 2026-11-27) | M0 |
+| Wire connection rule | **Leaning: wire on the block's own tile only** (not the 4 neighbours). The user replied "I think on it", read as "on its tile"; confirm before M2. `NetworkGraphBuilder` takes the rule as a setting so either answer is a one-line change. | M2 graph |
 | Storage insert priority | Disks in rack order, then Chest Links (**Proposed**) | M2 storage |
 | Power across linked buildings | Each building keeps its own power (**Proposed**) | M5 |
 | Installed game / SMAPI versions | — | M0 |
