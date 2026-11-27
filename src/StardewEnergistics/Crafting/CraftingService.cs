@@ -200,19 +200,25 @@ internal sealed class CraftingService
         SaveJobs(core, queue);
     }
 
-    /// <summary>Furnaces with a Machine Link, and every Furnace touching them.</summary>
-    private static List<SObject> LinkedFurnaces(LocationNetworks loc, Network n)
+    /// <summary>Furnaces with a Machine Link, and every Furnace touching them, in this network and any joined by Ports.</summary>
+    private static List<SObject> LinkedFurnaces(LocationNetworks home, Network homeNet)
     {
-        var seen = new HashSet<Vector2>();
         var list = new List<SObject>();
-        foreach (var link in loc.ObjectsOf(n, BlockKind.MachineLink).Where(o => o.QualifiedItemId == RecipeSource.FurnaceId))
+        foreach (var (loc, n) in home.Manager.Members(home, homeNet))
         {
-            var start = new TilePos((int)link.TileLocation.X, (int)link.TileLocation.Y);
-            foreach (var p in MachineGroupFinder.Group(start, t => MachineDriver.MachineIdAt(loc.Location, t.X, t.Y)))
+            // Another building with its own Crafting Rack uses its own Furnaces.
+            if (n != homeNet && n.Working && n.OfKind(BlockKind.CraftingRack).Any())
+                continue;
+            var seen = new HashSet<Vector2>();
+            foreach (var link in loc.ObjectsOf(n, BlockKind.MachineLink).Where(o => o.QualifiedItemId == RecipeSource.FurnaceId))
             {
-                var v = new Vector2(p.X, p.Y);
-                if (seen.Add(v) && loc.Location.objects.TryGetValue(v, out var f))
-                    list.Add(f);
+                var start = new TilePos((int)link.TileLocation.X, (int)link.TileLocation.Y);
+                foreach (var p in MachineGroupFinder.Group(start, t => MachineDriver.MachineIdAt(loc.Location, t.X, t.Y)))
+                {
+                    var v = new Vector2(p.X, p.Y);
+                    if (seen.Add(v) && loc.Location.objects.TryGetValue(v, out var f))
+                        list.Add(f);
+                }
             }
         }
         return list;

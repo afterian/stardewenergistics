@@ -59,7 +59,7 @@ internal sealed class MachineLinkService
         int machines = 0;
         foreach (var loc in networks.AllWithCores())
         {
-            foreach (var n in loc.Graph.Networks.Where(n => n.Working))
+            foreach (var n in loc.Graph.Networks.Where(n => loc.IsActive(n)))
             {
                 var links = loc.ObjectsOf(n, BlockKind.MachineLink).ToList();
                 if (links.Count == 0)

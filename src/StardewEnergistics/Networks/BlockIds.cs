@@ -30,6 +30,8 @@ internal static class BlockIds
             return BlockKind.ShippingLink;
         if (obj is Chest && obj.modData.ContainsKey(Ids.Data.ChestLink))
             return BlockKind.ChestLink;
+        if (obj.modData.ContainsKey(Ids.Data.PowerFeed))
+            return BlockKind.PowerFeed;
         if (obj.modData.ContainsKey(Ids.Data.MachineLink))
             return BlockKind.MachineLink;
         return null;

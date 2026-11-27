@@ -62,7 +62,7 @@ internal sealed class TerminalController
         {
             var loc = networks.For(location);
             var n = loc.NetworkAt(tile);
-            if (n == null || !n.Working)
+            if (n == null || !loc.IsActive(n))
             {
                 Game1.showRedMessage(T("terminal.noNetwork"));
                 return;
@@ -81,7 +81,7 @@ internal sealed class TerminalController
     {
         var loc = networks.For(location);
         var n = loc.NetworkAt(tile);
-        return n is { Working: true } ? (loc, n) : null;
+        return n != null ? networks.Home(loc, n) : null;
     }
 
     private void OpenAutocraft(GameLocation location, Vector2 tile)

@@ -47,6 +47,10 @@ internal sealed class ContentInjector
         new(Ids.CraftingRack, "CraftingRack", "crafting-rack.png", true, 1500, TierId.T4Autocrafting, $"{Ids.GoldProcessor} 2 {GoldBar} 2 {Diamond} 1"),
         // T5
         new(Ids.IridiumProcessor, "IridiumProcessor", "iridium-processor.png", false, 1000, TierId.T5LinkedBuildings, ""),
+        new(Ids.NetworkPort, "NetworkPort", "network-port.png", true, 2000, TierId.T5LinkedBuildings, $"{Ids.IridiumProcessor} 2 {Ids.CopperWire} 5 {GoldBar} 1"),
+        new(Ids.IridiumDisk, "IridiumDisk", "iridium-disk.png", false, 4000, TierId.T5LinkedBuildings, $"{Ids.GoldDisk} 1 {IridiumBar} 3 {Ids.IridiumProcessor} 1"),
+        new(Ids.WirelessTerminal, "WirelessTerminal", "wireless-terminal.png", false, 3000, TierId.T5LinkedBuildings, $"{Big(Ids.NetworkTerminal)} 1 {Ids.IridiumProcessor} 1 {BatteryPack} 1"),
+        new(Ids.PowerFeed, "PowerFeed", "power-feed.png", false, 800, TierId.T5LinkedBuildings, $"{Ids.GoldProcessor} 1 {IridiumBar} 2"),
     };
 
     /// <summary>Crafting recipes taught when a tier unlocks.</summary>
@@ -57,7 +61,7 @@ internal sealed class ContentInjector
     /// <summary>Mail ID of Maru's letter for a tier.</summary>
     public static string MailId(TierId tier) => $"{Ids.ModId}_Maru_T{(int)tier}";
 
-    public static readonly TierId[] TiersWithMail = { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation, TierId.T4Autocrafting };
+    public static readonly TierId[] TiersWithMail = { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation, TierId.T4Autocrafting, TierId.T5LinkedBuildings };
 
     public void Register()
     {

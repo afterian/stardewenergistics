@@ -44,7 +44,10 @@ internal sealed class PowerService
     public bool IsPowered(LocationNetworks loc, Network n)
     {
         if (n.Core == null)
-            return false;
+        {
+            // Outdoor wire joined by a Network Port runs on its group's primary network.
+            return loc.Manager.Home(loc, n) is { } home && home.Net.Core != null && IsPowered(home.Loc, home.Net);
+        }
         var core = loc.ObjectOf(n.Core);
         if (core.modData.TryGetValue(Ids.Data.Powered, out string? flag))
             return flag == "1";

@@ -39,7 +39,7 @@ internal sealed class ShippingLinkService
         int shipped = 0;
         foreach (var loc in networks.AllWithCores())
         {
-            foreach (var n in loc.Graph.Networks.Where(n => n.Working && power.IsPowered(loc, n)))
+            foreach (var n in loc.Graph.Networks.Where(n => loc.IsActive(n) && power.IsPowered(loc, n)))
             {
                 foreach (var link in loc.ObjectsOf(n, BlockKind.ShippingLink))
                 {
