@@ -1,0 +1,28 @@
+{
+  // Items (M1)
+  "item.ProcessorPress.name": "Processor Press",
+  "item.ProcessorPress.description": "Presses bars and quartz into processors overnight.",
+  "item.CopperProcessor.name": "Copper Processor",
+  "item.CopperProcessor.description": "A basic chip for network parts. Made in a Processor Press.",
+  "item.GoldProcessor.name": "Gold Processor",
+  "item.GoldProcessor.description": "A better chip with an etched gold circuit. Made in a Processor Press.",
+  "item.IridiumProcessor.name": "Iridium Processor",
+  "item.IridiumProcessor.description": "A top-tier chip that hums faintly. Takes the Processor Press two days.",
+  "item.CopperWire.name": "Copper Wire",
+  "item.CopperWire.description": "Lay it on the floor. Anything touching the wire joins the network.",
+  "item.HeavyCable.name": "Heavy Cable",
+  "item.HeavyCable.description": "Thick cable for long and outdoor runs. Paint it with the Network Wrench.",
+  "item.NetworkWrench.name": "Network Wrench",
+  "item.NetworkWrench.description": "Tap wire to hide or show it; hold to do a whole run. Use on Heavy Cable to change its colour. Holding it shows Network View.",
+
+  // Machine messages
+  "press.needs": "The Processor Press also needs: {{items}}.",
+  "press.invalid": "The Processor Press takes a Copper, Gold or Iridium Bar.",
+
+  // HUD / console
+  "wire.covered": "Wire hidden.",
+  "wire.uncovered": "Wire shown.",
+  "wire.run": "{{count}} wire tiles changed.",
+  "networkView.on": "Network View on.",
+  "networkView.off": "Network View off."
+}
