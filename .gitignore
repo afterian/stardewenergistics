@@ -1,0 +1,30 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.nupkg
+TestResults/
+
+# IDEs
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+*.DotSettings.user
+
+# Deploy packages and redundant archives
+deploy/*.zip
+artwork/**/*.zip
+
+# Local secrets / config
+.env
+*.local.json
+deploy/deck/config
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
