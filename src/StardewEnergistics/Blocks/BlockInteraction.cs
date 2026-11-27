@@ -1,7 +1,11 @@
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using StardewEnergistics.Content;
+using StardewEnergistics.Core.Geometry;
 using StardewEnergistics.Core.Graph;
+using StardewEnergistics.Core.Machines;
+using StardewEnergistics.Machines;
 using StardewEnergistics.Networks;
 using StardewEnergistics.Power;
 using StardewEnergistics.Storage;
@@ -27,9 +31,11 @@ internal sealed class BlockInteraction
     private readonly DiskStore disks;
     private readonly PowerService power;
     private readonly TerminalController terminal;
+    private readonly TextureRegistry textures;
 
-    public BlockInteraction(IModHelper helper, NetworkManager networks, DiskStore disks, PowerService power, TerminalController terminal)
+    public BlockInteraction(IModHelper helper, NetworkManager networks, DiskStore disks, PowerService power, TerminalController terminal, TextureRegistry textures)
     {
+        this.textures = textures;
         this.helper = helper;
         this.networks = networks;
         this.disks = disks;
@@ -50,6 +56,13 @@ internal sealed class BlockInteraction
 
         var location = Game1.currentLocation;
         var tile = e.Cursor.GrabTile;
+
+        if (Game1.player.ActiveObject?.QualifiedItemId == "(O)" + Ids.WirelessTerminal)
+        {
+            helper.Input.Suppress(e.Button);
+            OpenWireless(location);
+            return;
+        }
         if (!location.objects.TryGetValue(tile, out var obj))
         {
             // Big craftables are two tiles tall; clicking the top half targets the tile below.
@@ -59,6 +72,13 @@ internal sealed class BlockInteraction
         }
 
         var held = Game1.player.ActiveObject;
+
+        // Machine and Shipping Links (checked first: a Mini-Shipping Bin is a chest).
+        if (HandleLinks(e.Button, location, tile, obj, held))
+            return;
+
+        if (HandlePowerFeed(e.Button, location, tile, obj, held))
+            return;
 
         // Chest Link on / off.
         if (obj is Chest chest)
@@ -109,9 +129,100 @@ internal sealed class BlockInteraction
                 break;
             case BlockKind.Terminal:
                 helper.Input.Suppress(e.Button);
+                power.ShowTerminals(networks.For(location));
                 terminal.Open(location, tile);
                 break;
+            case BlockKind.Port:
+                helper.Input.Suppress(e.Button);
+                ShowPort(location, tile, obj);
+                break;
+            case BlockKind.CraftingRack:
+                helper.Input.Suppress(e.Button);
+                ShowJobs(location, tile);
+                break;
         }
+    }
+
+    private const string MiniShippingBin = "(BC)248";
+
+    private static bool IsHeld(SObject? held, string id) => held?.QualifiedItemId == "(O)" + id;
+
+    /// <summary>Attach a Link by using it on a machine or Mini-Shipping Bin; the wrench opens its settings.</summary>
+    private bool HandleLinks(SButton button, GameLocation location, Vector2 tile, SObject obj, SObject? held)
+    {
+        bool hasMachineLink = obj.modData.ContainsKey(Ids.Data.MachineLink);
+        bool hasShippingLink = obj.modData.ContainsKey(Ids.Data.ShippingLink);
+
+        if (IsHeld(held, Ids.MachineLink) || IsHeld(held, Ids.ShippingLink))
+        {
+            bool shipping = IsHeld(held, Ids.ShippingLink);
+            bool fits = shipping ? obj.QualifiedItemId == MiniShippingBin : MachineDriver.IsMachine(obj);
+            if (!fits)
+            {
+                // Let other handlers (and the game) deal with clicks on non-targets, but explain on our own blocks.
+                if (obj is not Chest && BlockIds.KindOf(obj) == null && !shipping)
+                    return false;
+                helper.Input.Suppress(button);
+                Hud(T(shipping ? "link.notBin" : "link.notMachine"));
+                return true;
+            }
+            helper.Input.Suppress(button);
+            if (hasMachineLink || hasShippingLink || obj.modData.ContainsKey(Ids.Data.ChestLink))
+            {
+                Hud(T("link.already"));
+                return true;
+            }
+            obj.modData[shipping ? Ids.Data.ShippingLink : Ids.Data.MachineLink] = "1";
+            obj.modData[Ids.Data.LinkState] = MachineLinkService.NotSetUp.ToString();
+            Game1.player.reduceActiveItemByOne();
+            networks.Invalidate(location);
+            Game1.playSound("hammer");
+            Hud(T("link.added"));
+            return true;
+        }
+
+        if (IsHeld(held, Ids.NetworkWrench) && (hasMachineLink || hasShippingLink))
+        {
+            helper.Input.Suppress(button);
+            OpenLinkSettings(location, tile, obj, hasShippingLink);
+            return true;
+        }
+        return false;
+    }
+
+    private void OpenLinkSettings(GameLocation location, Vector2 tile, SObject obj, bool shipping)
+    {
+        string title;
+        if (shipping)
+            title = T("link.title.shipping");
+        else
+        {
+            int count = MachineGroupFinder.Group(new TilePos((int)tile.X, (int)tile.Y), p => MachineDriver.MachineIdAt(location, p.X, p.Y)).Count;
+            title = T("link.title.machine", new { machine = obj.DisplayName, count });
+        }
+
+        Game1.activeClickableMenu = new LinkSettingsMenu(
+            helper.Translation, textures.Get, obj, shipping, title, MachineLinkService.SettingsOf(obj),
+            onSave: (target, settings) =>
+            {
+                MachineLinkService.SetSettings(target, settings);
+                if (!settings.Configured)
+                    target.modData[Ids.Data.LinkState] = MachineLinkService.NotSetUp.ToString();
+                else if (target.modData.TryGetValue(Ids.Data.LinkState, out string? st) && st == MachineLinkService.NotSetUp.ToString())
+                    target.modData[Ids.Data.LinkState] = MachineLinkService.Idle.ToString();
+            },
+            onRemove: target =>
+            {
+                string item = target.modData.ContainsKey(Ids.Data.ShippingLink) ? Ids.ShippingLink : Ids.MachineLink;
+                target.modData.Remove(Ids.Data.MachineLink);
+                target.modData.Remove(Ids.Data.ShippingLink);
+                target.modData.Remove(Ids.Data.LinkSettings);
+                target.modData.Remove(Ids.Data.LinkState);
+                Game1.createItemDebris(ItemRegistry.Create("(O)" + item), tile * 64 + new Vector2(32, 32), -1, location);
+                networks.Invalidate(location);
+                Game1.playSound("hammer");
+                Hud(T("link.removed"));
+            });
     }
 
     private void StorageRack(SObject rack, SObject? held)
@@ -213,16 +324,107 @@ internal sealed class BlockInteraction
     private void ResetPoweredFlag(GameLocation location, Vector2 tile)
     {
         var loc = networks.For(location);
-        var n = loc.NetworkAt(tile);
-        if (n?.Core != null)
+        if (loc.NetworkAt(tile) is { } n)
+            power.Recheck(loc, n);
+    }
+
+    private static readonly HashSet<string> FeedTargets = new() { "(BC)9", "(BC)231" }; // Lightning Rod, Solar Panel
+
+    private bool HandlePowerFeed(SButton button, GameLocation location, Vector2 tile, SObject obj, SObject? held)
+    {
+        if (IsHeld(held, Ids.PowerFeed))
         {
-            var core = loc.ObjectOf(n.Core);
-            if (core.modData.TryGetValue(Ids.Data.Powered, out string? flag) && flag == "0")
+            helper.Input.Suppress(button);
+            if (!FeedTargets.Contains(obj.QualifiedItemId))
             {
-                core.modData.Remove(Ids.Data.Powered);
-                RackSlots.ShowFrame(core, power.IsPowered(loc, n) ? 1 : 0);
+                Hud(T("feed.notTarget"));
+                return true;
             }
+            if (obj.modData.ContainsKey(Ids.Data.PowerFeed) || obj.modData.ContainsKey(Ids.Data.MachineLink))
+            {
+                Hud(T("link.already"));
+                return true;
+            }
+            obj.modData[Ids.Data.PowerFeed] = "1";
+            Game1.player.reduceActiveItemByOne();
+            networks.Invalidate(location);
+            Game1.playSound("hammer");
+            Hud(T("feed.added"));
+            return true;
         }
+        if (IsHeld(held, Ids.NetworkWrench) && obj.modData.ContainsKey(Ids.Data.PowerFeed))
+        {
+            helper.Input.Suppress(button);
+            obj.modData.Remove(Ids.Data.PowerFeed);
+            Game1.createItemDebris(ItemRegistry.Create("(O)" + Ids.PowerFeed), tile * 64 + new Vector2(32, 32), -1, location);
+            networks.Invalidate(location);
+            Game1.playSound("hammer");
+            Hud(T("feed.removed"));
+            return true;
+        }
+        return false;
+    }
+
+    private void ShowPort(GameLocation location, Vector2 tile, SObject port)
+    {
+        if (!location.IsOutdoors)
+        {
+            RackSlots.ShowFrame(port, 0);
+            Hud(T("port.outdoorsOnly"));
+            return;
+        }
+        var building = NetworkManager.BuildingBeside(location, tile);
+        if (building?.GetIndoors() is not { } indoors)
+        {
+            RackSlots.ShowFrame(port, 0);
+            Hud(T("port.noBuilding"));
+            return;
+        }
+        RackSlots.ShowFrame(port, 1);
+        Hud(T("port.linked", new { building = indoors.DisplayName }));
+    }
+
+    /// <summary>Opens the Terminal of the network here, or of the farmhouse when on the farm.</summary>
+    private void OpenWireless(GameLocation location)
+    {
+        if (FirstBlockTile(location) is { } tile)
+        {
+            terminal.Open(location, tile);
+            return;
+        }
+        bool onFarm = location.IsFarm || location.ParentBuilding != null;
+        var home = Game1.getLocationFromName("FarmHouse");
+        if (onFarm && home != null && FirstBlockTile(home) is { } homeTile)
+        {
+            terminal.Open(home, homeTile);
+            return;
+        }
+        Game1.showRedMessage(T("wireless.none"));
+    }
+
+    /// <summary>A tile of some block in an active network here (the Core's network first).</summary>
+    private Vector2? FirstBlockTile(GameLocation location)
+    {
+        var loc = networks.For(location);
+        var n = loc.Graph.Networks.Where(loc.IsActive).OrderByDescending(x => x.Working).FirstOrDefault();
+        var b = n?.Core ?? n?.Blocks.FirstOrDefault();
+        return b == null ? null : new Vector2(b.Pos.X, b.Pos.Y);
+    }
+
+    private void ShowJobs(GameLocation location, Vector2 tile)
+    {
+        var loc = networks.For(location);
+        var n = loc.NetworkAt(tile);
+        if (n?.Core == null)
+        {
+            Hud(T("auto.noRack"));
+            return;
+        }
+        var jobs = StardewEnergistics.Crafting.CraftingService.JobsOf(loc.ObjectOf(n.Core)).Jobs.Where(j => !j.Finished).ToList();
+        string list = jobs.Count == 0
+            ? T("auto.noJobs")
+            : string.Join(", ", jobs.Select(j => $"{j.Target.Count} {StardewEnergistics.Crafting.CraftingService.NameOf(j.Target.Item.QualifiedId)} ({(int)(j.Progress * 100)}%)"));
+        Hud(T("rack.crafting", new { jobs = list }));
     }
 
     private void ShowStatus(GameLocation location, Vector2 tile)

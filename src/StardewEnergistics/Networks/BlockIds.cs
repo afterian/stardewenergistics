@@ -26,8 +26,14 @@ internal static class BlockIds
     {
         if (ByQualifiedId.TryGetValue(obj.QualifiedItemId, out var kind))
             return kind;
+        if (obj.modData.ContainsKey(Ids.Data.ShippingLink))
+            return BlockKind.ShippingLink;
         if (obj is Chest && obj.modData.ContainsKey(Ids.Data.ChestLink))
             return BlockKind.ChestLink;
+        if (obj.modData.ContainsKey(Ids.Data.PowerFeed))
+            return BlockKind.PowerFeed;
+        if (obj.modData.ContainsKey(Ids.Data.MachineLink))
+            return BlockKind.MachineLink;
         return null;
     }
 

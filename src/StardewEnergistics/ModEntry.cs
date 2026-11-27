@@ -1,6 +1,9 @@
 using HarmonyLib;
 using StardewEnergistics.Blocks;
 using StardewEnergistics.Content;
+using StardewEnergistics.Crafting;
+using StardewEnergistics.Machines;
+using StardewEnergistics.Multiplayer;
 using StardewEnergistics.Networks;
 using StardewEnergistics.Patches;
 using StardewEnergistics.Power;
@@ -21,6 +24,7 @@ namespace StardewEnergistics
         private SaveCoordinator save = null!;
         private PowerService power = null!;
         private ProgressionService progression = null!;
+        private WireSync wireSync = null!;
 
         public override void Entry(IModHelper helper)
         {
@@ -36,19 +40,48 @@ namespace StardewEnergistics
             var disks = new DiskStore(Monitor);
             save = new SaveCoordinator(helper, wires, disks);
 
+            wireSync = new WireSync(helper, Monitor, wires, ModManifest.UniqueID);
+            wireSync.Register();
+
             var networks = new NetworkManager(wires);
             networks.Register(helper);
             power = new PowerService(helper, Monitor, networks) { Table = config.ToPowerTable() };
             progression = new ProgressionService(Monitor, networks, power) { GatesEnabled = config.TierGates };
-            var terminal = new TerminalController(helper, Monitor, networks, disks, power);
+            var terminalNet = new TerminalNet(helper, Monitor, networks, disks, power, ModManifest.UniqueID);
+            terminalNet.Register();
+            var crafting = new CraftingService(helper, Monitor, networks, disks, power);
+            var feeds = new PowerFeedService(helper, Monitor, networks, power);
+            var terminal = new TerminalController(helper, Monitor, networks, disks, power, textures, terminalNet, crafting);
             terminal.Register();
 
             var renderer = new WireRenderer(wires, textures, Monitor);
             renderer.Patch(harmony);
             DiskStackPatch.Apply(harmony);
+            DiskUpgradePatch.Apply(harmony, disks);
+
+            var links = new MachineLinkService(Monitor, networks, disks, power);
+            var shipping = new ShippingLinkService(helper, Monitor, networks, disks, power);
+            helper.Events.GameLoop.TimeChanged += (_, _) =>
+            {
+                links.OnTimeChanged();
+                crafting.OnTimeChanged();
+                feeds.OnTimeChanged();
+            };
+            helper.ConsoleCommands.Add("se_perf", "Run all Machine Links now and show how long it took.", (_, _) =>
+            {
+                if (!Context.IsWorldReady)
+                    return;
+                links.OnTimeChanged();
+                Monitor.Log($"Machine Links: {links.LastMachines} machines in {links.LastMs:0.00} ms.", LogLevel.Info);
+            });
+            helper.Events.GameLoop.DayEnding += (_, _) =>
+            {
+                links.OnDayEnding();
+                shipping.OnDayEnding();
+            };
 
             new WireInput(helper, config, wires, renderer).Register();
-            new BlockInteraction(helper, networks, disks, power, terminal).Register();
+            new BlockInteraction(helper, networks, disks, power, terminal, textures).Register();
             new DebugCommands(helper, Monitor, wires, networks, disks, power).Register();
 
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
@@ -62,6 +95,7 @@ namespace StardewEnergistics
         private void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
         {
             save.Load();
+            wireSync.RequestFullSync();
             Monitor.Log($"Save loaded for {Game1.player.Name}; Stardew Energistics is running.", LogLevel.Info);
             Game1.addHUDMessage(new HUDMessage("Stardew Energistics is running!", HUDMessage.newQuest_type));
         }

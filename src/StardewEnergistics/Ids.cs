@@ -67,6 +67,20 @@ namespace StardewEnergistics
             public const string Powered = ModDataPrefix + "Powered";
             /// <summary>On a Computer Core: day the low-power warning was shown for the current drain.</summary>
             public const string LastWarningDay = ModDataPrefix + "LastWarningDay";
+            /// <summary>On a machine: "1" when a Machine Link is attached.</summary>
+            public const string MachineLink = ModDataPrefix + "MachineLink";
+            /// <summary>On a Mini-Shipping Bin: "1" when a Shipping Link is attached.</summary>
+            public const string ShippingLink = ModDataPrefix + "ShippingLink";
+            /// <summary>On a linked machine or bin: the Link's settings (JSON).</summary>
+            public const string LinkSettings = ModDataPrefix + "LinkSettings";
+            /// <summary>On a linked machine: 0 not set up, 1 idle, 2 working, 3 missing input.</summary>
+            public const string LinkState = ModDataPrefix + "LinkState";
+            /// <summary>On a Lightning Rod or Solar Panel: "1" when a Power Feed is attached.</summary>
+            public const string PowerFeed = ModDataPrefix + "PowerFeed";
+            /// <summary>On a Computer Core: the network's autocraft jobs (JSON).</summary>
+            public const string Jobs = ModDataPrefix + "Jobs";
+            /// <summary>On a machine: ID of the autocraft job it is working for.</summary>
+            public const string ForJob = ModDataPrefix + "ForJob";
             /// <summary>On the farm: tiers built so far, comma-separated tier numbers.</summary>
             public const string TiersBuilt = ModDataPrefix + "TiersBuilt";
         }

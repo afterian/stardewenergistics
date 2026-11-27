@@ -9,11 +9,14 @@ using StardewValley.Objects;
 
 namespace StardewEnergistics.Storage;
 
+/// <summary>One Terminal row: a keyed item (summed over storage) or one specific chest item.</summary>
+internal sealed record StoredRow(ItemKey? Key, Item Display, long Count, Chest? Chest);
+
 /// <summary>
 /// One network's storage: disks in its Storage Racks (rack order), then chests with a Chest Link.
 /// Items go to disks first when they can; anything else goes to linked chests.
 /// </summary>
-internal sealed class NetworkStorage
+internal sealed class NetworkStorage : IStockView
 {
     private NetworkStorage(StorageIndex disks, IReadOnlyList<Chest> chests)
     {
@@ -25,9 +28,27 @@ internal sealed class NetworkStorage
 
     public IReadOnlyList<Chest> Chests { get; }
 
+    /// <summary>Storage of a network and every network a Network Port joins it to.</summary>
     public static NetworkStorage For(LocationNetworks loc, Network network, DiskStore store)
     {
         var contents = new List<DiskContents>();
+        var chests = new List<Chest>();
+        foreach (var (mloc, mn) in loc.Manager.Members(loc, network))
+            Collect(mloc, mn, store, contents, chests);
+        return new NetworkStorage(new StorageIndex(contents), chests);
+    }
+
+    /// <summary>Storage of one network only, ignoring Port links.</summary>
+    public static NetworkStorage ForOne(LocationNetworks loc, Network network, DiskStore store)
+    {
+        var contents = new List<DiskContents>();
+        var chests = new List<Chest>();
+        Collect(loc, network, store, contents, chests);
+        return new NetworkStorage(new StorageIndex(contents), chests);
+    }
+
+    private static void Collect(LocationNetworks loc, Network network, DiskStore store, List<DiskContents> contents, List<Chest> chests)
+    {
         foreach (var rack in loc.ObjectsOf(network, BlockKind.StorageRack))
         {
             foreach (string id in RackSlots.Get(rack, Ids.Data.RackDisks))
@@ -38,8 +59,7 @@ internal sealed class NetworkStorage
             }
         }
 
-        var chests = loc.ObjectsOf(network, BlockKind.ChestLink).OfType<Chest>().ToList();
-        return new NetworkStorage(new StorageIndex(contents), chests);
+        chests.AddRange(loc.ObjectsOf(network, BlockKind.ChestLink).OfType<Chest>());
     }
 
     public int KindsStored => Disks.All().Select(a => a.Key.QualifiedId).Distinct().Count();
@@ -47,6 +67,23 @@ internal sealed class NetworkStorage
     /// <summary>Total count of an item across disks and linked chests.</summary>
     public long Count(ItemKey key) =>
         Disks.Count(key) + Chests.Sum(c => c.Items.Where(i => StardewItemKeys.TryGetKey(i, out var k) && k == key).Sum(i => (long)i.Stack));
+
+    /// <summary>Keyed items summed over disks and linked chests (for machine input choice and crafting).</summary>
+    public IEnumerable<(ItemKey Key, long Count)> All()
+    {
+        var totals = new Dictionary<ItemKey, long>();
+        foreach (var (key, count) in Disks.All())
+            totals[key] = count;
+        foreach (var chest in Chests)
+        {
+            foreach (var item in chest.Items)
+            {
+                if (StardewItemKeys.TryGetKey(item, out var key))
+                    totals[key] = totals.TryGetValue(key, out long n) ? n + item.Stack : item.Stack;
+            }
+        }
+        return totals.Select(kv => (kv.Key, kv.Value));
+    }
 
     /// <summary>Stores an item stack. Returns what didn't fit (null if everything was stored).</summary>
     public Item? Put(Item item)
@@ -67,6 +104,74 @@ internal sealed class NetworkStorage
             item = left;
         }
         return item;
+    }
+
+    /// <summary>
+    /// Everything stored, for the Terminal: keyed items are summed over disks and linked chests;
+    /// other chest items (tools, preserves…) are listed one by one.
+    /// </summary>
+    public List<StoredRow> Rows()
+    {
+        var keyed = new Dictionary<ItemKey, long>();
+        foreach (var (key, count) in Disks.All())
+            keyed[key] = count;
+
+        var rows = new List<StoredRow>();
+        foreach (var chest in Chests)
+        {
+            foreach (var item in chest.Items)
+            {
+                if (item == null)
+                    continue;
+                if (StardewItemKeys.TryGetKey(item, out var key))
+                    keyed[key] = keyed.TryGetValue(key, out long n) ? n + item.Stack : item.Stack;
+                else
+                    rows.Add(new StoredRow(null, item, item.Stack, chest));
+            }
+        }
+
+        rows.InsertRange(0, keyed.Select(kv => new StoredRow(kv.Key, StardewItemKeys.Create(kv.Key, 1), kv.Value, null)));
+        return rows;
+    }
+
+    /// <summary>Takes up to <paramref name="n"/> of a keyed item (disks first, then chests).</summary>
+    public Item? Take(ItemKey key, int n)
+    {
+        int got = Disks.Extract(key, n).Extracted;
+        foreach (var chest in Chests)
+        {
+            for (int i = 0; i < chest.Items.Count && got < n; i++)
+            {
+                var item = chest.Items[i];
+                if (item == null || !StardewItemKeys.TryGetKey(item, out var k) || k != key)
+                    continue;
+                int take = System.Math.Min(n - got, item.Stack);
+                got += take;
+                item.Stack -= take;
+                if (item.Stack <= 0)
+                    chest.Items[i] = null;
+            }
+            chest.clearNulls();
+        }
+        return got > 0 ? StardewItemKeys.Create(key, got) : null;
+    }
+
+    /// <summary>Takes up to <paramref name="n"/> of one specific (unkeyed) item from a chest.</summary>
+    public Item? TakeFromChest(Chest chest, Item item, int n)
+    {
+        int index = chest.Items.IndexOf(item);
+        if (index < 0)
+            return null;
+        if (n >= item.Stack)
+        {
+            chest.Items[index] = null;
+            chest.clearNulls();
+            return item;
+        }
+        var part = item.getOne();
+        part.Stack = n;
+        item.Stack -= n;
+        return part;
     }
 
     /// <summary>

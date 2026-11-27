@@ -17,6 +17,9 @@ public sealed class RecipeBook
         }
     }
 
+    /// <summary>Every item some recipe makes, in the order first added.</summary>
+    public IEnumerable<ItemKey> Outputs => byOutput.Keys.Select(id => new ItemKey(id));
+
     /// <summary>Recipes that make this item, in the order they were added.</summary>
     public IReadOnlyList<RecipeDef> Making(ItemKey item) =>
         byOutput.TryGetValue(item.QualifiedId, out var list) ? list : Array.Empty<RecipeDef>();

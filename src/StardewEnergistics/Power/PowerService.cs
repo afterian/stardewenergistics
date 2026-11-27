@@ -26,6 +26,7 @@ internal sealed class PowerService
         this.helper = helper;
         this.monitor = monitor;
         this.networks = networks;
+        helper.Events.World.ObjectListChanged += OnObjectListChanged;
     }
 
     public PowerTable Table { get; set; } = PowerTable.Default;
@@ -44,7 +45,10 @@ internal sealed class PowerService
     public bool IsPowered(LocationNetworks loc, Network n)
     {
         if (n.Core == null)
-            return false;
+        {
+            // Outdoor wire joined by a Network Port runs on its group's primary network.
+            return loc.Manager.Home(loc, n) is { } home && home.Net.Core != null && IsPowered(home.Loc, home.Net);
+        }
         var core = loc.ObjectOf(n.Core);
         if (core.modData.TryGetValue(Ids.Data.Powered, out string? flag))
             return flag == "1";
@@ -85,7 +89,49 @@ internal sealed class PowerService
 
                 monitor.Log($"{where}: power use {use}, powered={day.Powered}, {day.After.Available} left.", LogLevel.Trace);
             }
+            ShowTerminals(loc);
         }
+    }
+
+    /// <summary>After adding power mid-day, let the network re-check whether it has enough.</summary>
+    public void Recheck(LocationNetworks loc, Network n)
+    {
+        if (loc.Manager.Home(loc, n) is not { } home || home.Net.Core == null)
+            return;
+        var core = home.Loc.ObjectOf(home.Net.Core);
+        if (core.modData.TryGetValue(Ids.Data.Powered, out string? flag) && flag == "0")
+        {
+            core.modData.Remove(Ids.Data.Powered);
+            RackSlots.ShowFrame(core, IsPowered(home.Loc, home.Net) ? 1 : 0);
+            ShowTerminals(home.Loc);
+        }
+    }
+
+    /// <summary>Shows each Network Terminal's "on" frame when its network is powered, "off" otherwise (host).</summary>
+    public void ShowTerminals(LocationNetworks loc)
+    {
+        if (!Context.IsMainPlayer)
+            return;
+        foreach (var n in loc.Graph.Networks)
+        {
+            bool on = IsPowered(loc, n);
+            foreach (var terminal in loc.ObjectsOf(n, BlockKind.Terminal))
+                RackSlots.ShowFrame(terminal, on ? 1 : 0);
+        }
+    }
+
+    /// <summary>A placed Terminal lights up at once; a picked-up one goes back to its "off" icon.</summary>
+    private void OnObjectListChanged(object? sender, StardewModdingAPI.Events.ObjectListChangedEventArgs e)
+    {
+        if (!Context.IsMainPlayer)
+            return;
+        foreach (var removed in e.Removed)
+        {
+            if (BlockIds.KindOf(removed.Value) == BlockKind.Terminal)
+                RackSlots.ShowFrame(removed.Value, 0);
+        }
+        if (e.Added.Any(a => BlockIds.KindOf(a.Value) == BlockKind.Terminal))
+            ShowTerminals(networks.For(e.Location));
     }
 
     /// <summary>Writes battery charge and fuel back onto the racks and generators, removing spent batteries.</summary>
