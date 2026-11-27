@@ -75,6 +75,10 @@ namespace StardewEnergistics
             public const string LinkSettings = ModDataPrefix + "LinkSettings";
             /// <summary>On a linked machine: 0 not set up, 1 idle, 2 working, 3 missing input.</summary>
             public const string LinkState = ModDataPrefix + "LinkState";
+            /// <summary>On a Computer Core: the network's autocraft jobs (JSON).</summary>
+            public const string Jobs = ModDataPrefix + "Jobs";
+            /// <summary>On a machine: ID of the autocraft job it is working for.</summary>
+            public const string ForJob = ModDataPrefix + "ForJob";
             /// <summary>On the farm: tiers built so far, comma-separated tier numbers.</summary>
             public const string TiersBuilt = ModDataPrefix + "TiersBuilt";
         }
