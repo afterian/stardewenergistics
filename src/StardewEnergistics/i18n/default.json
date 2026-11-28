@@ -216,5 +216,7 @@
   "test.close": "Close",
   "test.kit.done": "Starter kit added.",
   "test.materials.done": "Materials added.",
-  "test.unlock.done": "Learned {{count}} new recipes."
+  "test.unlock.done": "Learned {{count}} new recipes.",
+  "config.wireUnder": "Wire must be under blocks",
+  "config.wireUnder.tip": "Off: wire on a block's tile or right beside it connects. On: only wire under the block counts. Applies after reloading the save."
 }

@@ -15,6 +15,12 @@ public sealed class ModConfig
     /// <summary>Ticks (60 per second) the wrench must be held to cover or uncover a whole run.</summary>
     public int WrenchHoldTicks { get; set; } = 30;
 
+    /// <summary>
+    /// False (default): a chest, machine or block connects to wire on its own tile or on any of the 4 tiles
+    /// beside it. True: only wire on its own tile counts. Takes effect when a save is loaded.
+    /// </summary>
+    public bool WireUnderBlockOnly { get; set; } = false;
+
     /// <summary>Maru's letters wait for hearts, mine depth and earlier tiers. False sends them as soon as possible.</summary>
     public bool TierGates { get; set; } = true;
 

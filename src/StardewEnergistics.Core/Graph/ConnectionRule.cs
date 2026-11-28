@@ -1,8 +1,8 @@
 namespace StardewEnergistics.Core.Graph;
 
 /// <summary>
-/// How a non-rack block connects to wire. Open item: leaning <see cref="OwnTile"/>
-/// (wire must be on the block's own tile); confirm with the user before M2.
+/// How a non-rack block connects to wire. The mod uses <see cref="OwnTileOrNeighbours"/> by default
+/// (playtest 2026-11-28: wire next to a block counts); <see cref="OwnTile"/> is a config option.
 /// </summary>
 public enum ConnectionRule
 {

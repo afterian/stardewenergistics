@@ -50,10 +50,11 @@ internal sealed class LocationNetworks
 internal sealed class NetworkManager
 {
     private readonly WireLayerStore wires;
-    private readonly NetworkGraphBuilder builder = new(ConnectionRule.OwnTile);
+    private readonly NetworkGraphBuilder builder;
     private readonly Dictionary<string, LocationNetworks> cache = new();
-    public NetworkManager(WireLayerStore wires)
+    public NetworkManager(WireLayerStore wires, ConnectionRule rule = ConnectionRule.OwnTileOrNeighbours)
     {
+        builder = new NetworkGraphBuilder(rule);
         this.wires = wires;
         wires.TileChanged += (key, _) =>
         {
