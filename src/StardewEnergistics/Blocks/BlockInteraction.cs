@@ -51,7 +51,12 @@ internal sealed class BlockInteraction
 
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
-        if (!Context.IsPlayerFree || !e.Button.IsActionButton() || helper.Input.IsSuppressed(e.Button))
+        if (!Context.IsPlayerFree || helper.Input.IsSuppressed(e.Button))
+            return;
+        // Controllers often "use" a held item with the tool button (X) instead of the action button (A).
+        bool useButton = e.Button.IsUseToolButton() && Game1.player.CurrentTool == null
+            && !IsHeld(Game1.player.ActiveObject, Ids.NetworkWrench) && IsOurAttachable(Game1.player.ActiveObject);
+        if (!e.Button.IsActionButton() && !useButton)
             return;
 
         var location = Game1.currentLocation;
@@ -63,13 +68,13 @@ internal sealed class BlockInteraction
             OpenWireless(location);
             return;
         }
-        if (!location.objects.TryGetValue(tile, out var obj))
-        {
-            // Big craftables are two tiles tall; clicking the top half targets the tile below.
-            tile = new Vector2(tile.X, tile.Y + 1);
-            if (!location.objects.TryGetValue(tile, out obj) || !obj.bigCraftable.Value)
-                return;
-        }
+        if (FindTarget(location, e.Cursor.GrabTile) is not { } found)
+            return;
+        tile = found.Tile;
+        var obj = found.Obj;
+        // With the tool button, only act on our own blocks (and our attachments' targets); leave vanilla use alone.
+        if (!e.Button.IsActionButton() && BlockIds.KindOf(obj) == null && !Game1.player.ActiveObject!.QualifiedItemId.StartsWith("(O)" + Ids.Prefix))
+            return;
 
         var held = Game1.player.ActiveObject;
 
@@ -142,6 +147,55 @@ internal sealed class BlockInteraction
                 break;
         }
     }
+
+    /// <summary>
+    /// The object the player means: the tile under the cursor (or the base of a big craftable whose top half
+    /// was clicked), else the tile the player faces. If neither has anything, look at the 8 tiles around the
+    /// player (facing side first), like the game does for controllers, but only accept our own blocks or a
+    /// target for the mod item in hand, so vanilla interactions aren't taken over.
+    /// </summary>
+    private static (Vector2 Tile, SObject Obj)? FindTarget(GameLocation location, Vector2 cursorTile)
+    {
+        foreach (var t in new[] { cursorTile, Game1.player.GetGrabTile() })
+        {
+            if (At(location, t) is { } hit)
+                return hit;
+        }
+
+        // Only controllers target nearby tiles; a mouse click means the clicked tile.
+        if (Game1.lastCursorMotionWasMouse && Game1.mouseCursorTransparency > 0)
+            return null;
+
+        var held = Game1.player.ActiveObject;
+        var me = Game1.player.Tile;
+        var facing = Game1.player.GetGrabTile() - me;
+        var around = new List<Vector2>();
+        for (int dx = -1; dx <= 1; dx++)
+            for (int dy = -1; dy <= 1; dy++)
+                if (dx != 0 || dy != 0)
+                    around.Add(new Vector2(dx, dy));
+        foreach (var d in around.OrderBy(d => Vector2.DistanceSquared(d, facing)))
+        {
+            if (At(location, me + d) is { } hit && (BlockIds.KindOf(hit.Obj) != null || (IsOurAttachable(held) && held!.QualifiedItemId.StartsWith("(O)" + Ids.Prefix))))
+                return hit;
+        }
+        return null;
+    }
+
+    private static (Vector2 Tile, SObject Obj)? At(GameLocation location, Vector2 t)
+    {
+        if (location.objects.TryGetValue(t, out var obj))
+            return (t, obj);
+        var below = new Vector2(t.X, t.Y + 1);
+        if (location.objects.TryGetValue(below, out obj) && obj.bigCraftable.Value)
+            return (below, obj);
+        return null;
+    }
+
+    /// <summary>Held items this mod puts into or onto things.</summary>
+    private static bool IsOurAttachable(SObject? held) => held != null && (
+        held.QualifiedItemId.StartsWith("(O)" + Ids.Prefix)
+        || held.QualifiedItemId is "(O)" + VanillaIds.BatteryPack or "(O)" + VanillaIds.Coal or "(O)" + VanillaIds.Hardwood);
 
     private const string MiniShippingBin = "(BC)248";
 
