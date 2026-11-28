@@ -1,8 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewEnergistics.Content;
+using StardewEnergistics.Core.Geometry;
+using StardewEnergistics.Core.Graph;
+using StardewEnergistics.Networks;
+using StardewEnergistics.Power;
 using StardewEnergistics.Core.Wires;
 using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
@@ -25,12 +31,21 @@ internal sealed class WireRenderer
     private readonly TextureRegistry textures;
     private readonly IMonitor monitor;
     private bool failedOnce;
+    private readonly NetworkManager networks;
+    private readonly PowerService power;
+    private readonly ModConfig config;
+    private readonly ConditionalWeakTable<LocationNetworks, Dictionary<TilePos, WireSignal>> routes = new();
 
-    public WireRenderer(WireLayerStore store, TextureRegistry textures, IMonitor monitor)
+    private readonly record struct WireSignal(Network Network, int Distance);
+
+    public WireRenderer(WireLayerStore store, TextureRegistry textures, NetworkManager networks, PowerService power, ModConfig config, IMonitor monitor)
     {
         this.store = store;
         this.textures = textures;
         this.monitor = monitor;
+        this.networks = networks;
+        this.power = power;
+        this.config = config;
     }
 
     private readonly PerScreen<bool> networkView = new();
@@ -75,7 +90,14 @@ internal sealed class WireRenderer
         if (layer == null || layer.Count == 0)
             return;
 
-        var copper = textures.Get(NetworkView ? "wire-tiles-glow.png" : "wire-tiles.png");
+        var copper = textures.Get("wire-tiles.png");
+        var copperInspect = NetworkView ? textures.Get("wire-tiles-glow.png") : copper;
+        var copperSignal = textures.GetOptional("copper-data-signal.png");
+        var heavySignal = textures.GetOptional("heavy-data-signal.png");
+        var loc = networks.For(location);
+        var wireRoutes = routes.GetValue(loc, _ => TraceRoutes(loc, layer));
+        var powered = new Dictionary<Network, bool>();
+        int tick = (int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 125) & 7;
         var heavy = textures.Get("heavy-cable-tiles.png");
 
         var vp = Game1.viewport;
@@ -92,14 +114,24 @@ internal sealed class WireRenderer
                 continue;
 
             int frame = layer.MaskAt(pos);
-            var tex = tile.Kind == WireKind.Heavy ? heavy : copper;
-            var color = tile.Kind == WireKind.Heavy ? CableColor(tile.Color) : Color.White;
+            bool isHeavy = tile.Kind == WireKind.Heavy;
+            bool isPowered = false;
+            int distance = 0;
+            if (wireRoutes.TryGetValue(pos, out var route))
+            {
+                if (!powered.TryGetValue(route.Network, out isPowered))
+                    powered[route.Network] = isPowered = power.IsPowered(loc, route.Network);
+                distance = route.Distance;
+            }
+            var tex = isHeavy ? heavy : (isPowered ? copperInspect : copper);
+            var color = isHeavy ? CableColor(tile.Color) : Color.White;
             if (hidden)
                 color *= 0.55f;
 
+            var at = Game1.GlobalToLocal(Game1.viewport, new Vector2(pos.X * 64, pos.Y * 64));
             b.Draw(
                 tex,
-                Game1.GlobalToLocal(Game1.viewport, new Vector2(pos.X * 64, pos.Y * 64)),
+                at,
                 new Rectangle(frame * 16, 0, 16, 16),
                 color,
                 0f,
@@ -107,12 +139,41 @@ internal sealed class WireRenderer
                 4f,
                 SpriteEffects.None,
                 1.5E-08f);
+            var signal = isHeavy ? heavySignal : copperSignal;
+            if (isPowered && signal != null)
+            {
+                int phase = config.AnimateDataCables ? (tick - distance) & 7 : 7;
+                b.Draw(signal, at, new Rectangle((phase * 16 + frame) * 16, 0, 16, 16),
+                    hidden ? Color.White * .55f : Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 2E-08f);
+            }
         }
+    }
+
+    private static Dictionary<TilePos, WireSignal> TraceRoutes(LocationNetworks location, WireLayer layer)
+    {
+        var result = new Dictionary<TilePos, WireSignal>();
+        foreach (var network in location.Graph.Networks)
+        {
+            if (network.Core is not { } core || !layer.Has(core.Pos))
+                continue;
+            var queue = new Queue<TilePos>();
+            if (!result.TryAdd(core.Pos, new WireSignal(network, 0)))
+                continue;
+            queue.Enqueue(core.Pos);
+            while (queue.TryDequeue(out var tile))
+            {
+                int nextDistance = result[tile].Distance + 1;
+                foreach (var next in tile.Neighbours())
+                    if (layer.Has(next) && result.TryAdd(next, new WireSignal(network, nextDistance)))
+                        queue.Enqueue(next);
+            }
+        }
+        return result;
     }
 
     private static bool HasFlooring(GameLocation location, int x, int y) =>
         location.terrainFeatures.TryGetValue(new Vector2(x, y), out var feature) && feature is Flooring;
 
-    /// <summary>0 = unpainted (light grey art as-is); 1..19 = Stardew's chest colours.</summary>
-    public static Color CableColor(int color) => color <= 0 ? Color.White : DiscreteColorPicker.getColorFromSelection(color);
+    /// <summary>0 = Maru plum; 1..19 = Stardew's chest colours.</summary>
+    public static Color CableColor(int color) => color <= 0 ? new Color(157, 119, 180) : DiscreteColorPicker.getColorFromSelection(color);
 }

@@ -306,7 +306,8 @@ internal sealed class TerminalMenu : IClickableMenu
         int top = yPositionOnScreen + borderWidth;
 
         // Title and meters.
-        Utility.drawTextWithShadow(b, i18n.Get("terminal.title"), Game1.dialogueFont, new Vector2(left, top - 8), Game1.textColor);
+        DrawTabIcon(b, TabStorage, left, top - 4, 3f);
+        Utility.drawTextWithShadow(b, i18n.Get("terminal.title"), Game1.dialogueFont, new Vector2(left + 56, top - 8), Game1.textColor);
         DrawMeters(b, left + 360, top);
 
         // Search box and Craft button.
@@ -316,17 +317,22 @@ internal sealed class TerminalMenu : IClickableMenu
         drawTextureBox(b, craftButton.bounds.X, craftButton.bounds.Y, craftButton.bounds.Width, craftButton.bounds.Height, onCraft != null ? Color.White : Color.Gray);
         string craft = i18n.Get("terminal.tab.craft");
         var size = Game1.smallFont.MeasureString(craft);
-        b.DrawString(Game1.smallFont, craft, new Vector2(craftButton.bounds.Center.X - size.X / 2, craftButton.bounds.Center.Y - size.Y / 2), Game1.textColor);
+        DrawTabIcon(b, TabCraft, craftButton.bounds.X + 12, craftButton.bounds.Center.Y - 16, 2f, onCraft != null);
+        b.DrawString(Game1.smallFont, craft, new Vector2(craftButton.bounds.Center.X + 18 - size.X / 2, craftButton.bounds.Center.Y - size.Y / 2), Game1.textColor);
         drawTextureBox(b, autoButton.bounds.X, autoButton.bounds.Y, autoButton.bounds.Width, autoButton.bounds.Height, onAutocraft != null ? Color.White : Color.Gray);
         string auto = i18n.Get("auto.button");
         size = Game1.smallFont.MeasureString(auto);
-        b.DrawString(Game1.smallFont, auto, new Vector2(autoButton.bounds.Center.X - size.X / 2, autoButton.bounds.Center.Y - size.Y / 2), Game1.textColor);
+        DrawTabIcon(b, TabJobs, autoButton.bounds.X + 12, autoButton.bounds.Center.Y - 16, 2f, onAutocraft != null);
+        b.DrawString(Game1.smallFont, auto, new Vector2(autoButton.bounds.Center.X + 18 - size.X / 2, autoButton.bounds.Center.Y - size.Y / 2), Game1.textColor);
 
-        // Network grid.
+        // Network grid on the green terminal screen.
+        var first = gridSlots[0].bounds;
+        var grid = new Rectangle(first.X, first.Y, Cols * Slot, Rows * Slot);
+        DrawNineSlice(b, sprite("terminal-frame.png"), new Rectangle(grid.X - ScreenInset, grid.Y - ScreenInset, grid.Width + ScreenInset * 2, grid.Height + ScreenInset * 2));
         for (int i = 0; i < gridSlots.Count; i++)
         {
             var r = gridSlots[i].bounds;
-            b.Draw(Game1.menuTexture, r, Game1.getSourceRectForStandardTileSheet(Game1.menuTexture, 10), Color.White);
+            b.Draw(Game1.staminaRect, new Rectangle(r.X + 2, r.Y + 2, r.Width - 4, r.Height - 4), ScreenSlot);
             int index = scrollRow * Cols + i;
             if (index >= shown.Count)
                 continue;
@@ -340,14 +346,14 @@ internal sealed class TerminalMenu : IClickableMenu
             }
         }
         if (shown.Count == 0 && !busy)
-            b.DrawString(Game1.smallFont, rows.Count == 0 ? i18n.Get("terminal.empty") : i18n.Get("terminal.noMatch"), new Vector2(left + 16, top + HeaderHeight + 16), Game1.textColor * 0.7f);
+            b.DrawString(Game1.smallFont, rows.Count == 0 ? i18n.Get("terminal.empty") : i18n.Get("terminal.noMatch"), new Vector2(left + 16, top + HeaderHeight + 16), ScreenText);
 
         // Scroll hint.
         int totalRows = (shown.Count + Cols - 1) / Cols;
         if (totalRows > Rows)
         {
             string page = $"{scrollRow + 1}-{Math.Min(totalRows, scrollRow + Rows)} / {totalRows}";
-            b.DrawString(Game1.smallFont, page, new Vector2(left + Cols * Slot - Game1.smallFont.MeasureString(page).X, top + HeaderHeight + Rows * Slot + 4), Game1.textColor);
+            b.DrawString(Game1.smallFont, page, new Vector2(left + Cols * Slot - Game1.smallFont.MeasureString(page).X, top + HeaderHeight + Rows * Slot + ScreenInset), Game1.textColor);
         }
 
         // Player inventory.
@@ -378,6 +384,36 @@ internal sealed class TerminalMenu : IClickableMenu
         DrawMeter(b, "storage-meter.png", x, y + 44, used);
         string kinds = status.KindsMax > 0 ? $"{status.KindsUsed}/{status.KindsMax}" : status.KindsUsed.ToString();
         b.DrawString(Game1.smallFont, i18n.Get("terminal.meter.disks", new { disks = status.Disks, kinds, items = status.ItemsUsed.ToString("N0"), maxItems = status.ItemsMax.ToString("N0") }), new Vector2(x + 200, y + 40), Game1.textColor);
+    }
+
+    private const int TabStorage = 0, TabCraft = 1, TabJobs = 2;
+
+    /// <summary>How far the terminal-frame border reaches outside the item grid (4 px at 4x scale, plus a gap).</summary>
+    private const int ScreenInset = 20;
+
+    private static readonly Color ScreenSlot = new(0, 0, 0, 40);
+    private static readonly Color ScreenText = new(206, 230, 196);
+
+    /// <summary>tab-icons.png: storage crate, craft hammer, jobs gear (16 x 16 each).</summary>
+    private void DrawTabIcon(SpriteBatch b, int icon, int x, int y, float scale, bool enabled = true) =>
+        b.Draw(sprite("tab-icons.png"), new Vector2(x, y), new Rectangle(icon * 16, 0, 16, 16), enabled ? Color.White : Color.Gray, 0f, Vector2.Zero, scale, SpriteEffects.None, 0.89f);
+
+    /// <summary>Draws a 48 x 48 frame with fixed 16 px corners at 4x, stretching the edges and centre.</summary>
+    private static void DrawNineSlice(SpriteBatch b, Texture2D tex, Rectangle dest)
+    {
+        const int c = 16, scale = 4, d = c * scale;
+        int[] sx = { 0, c, tex.Width - c }, sw = { c, tex.Width - 2 * c, c };
+        int[] sy = { 0, c, tex.Height - c }, sh = { c, tex.Height - 2 * c, c };
+        int[] dx = { dest.X, dest.X + d, dest.Right - d }, dw = { d, dest.Width - 2 * d, d };
+        int[] dy = { dest.Y, dest.Y + d, dest.Bottom - d }, dh = { d, dest.Height - 2 * d, d };
+        for (int row = 0; row < 3; row++)
+        {
+            for (int col = 0; col < 3; col++)
+            {
+                if (dw[col] > 0 && dh[row] > 0)
+                    b.Draw(tex, new Rectangle(dx[col], dy[row], dw[col], dh[row]), new Rectangle(sx[col], sy[row], sw[col], sh[row]), Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.87f);
+            }
+        }
     }
 
     /// <summary>Meter sprite: frame 0 = empty frame, frame 1 = fill (cut to length).</summary>
