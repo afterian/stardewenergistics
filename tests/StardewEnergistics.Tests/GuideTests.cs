@@ -17,7 +17,7 @@ public class GuideTests
 
     private static ProgressSnapshot Snap(int hearts = 0, int mine = 0, int skull = 0, int processors = 0, bool iridium = false,
         bool island = false, bool walnut = false, bool prismatic = false, params TierId[] built) =>
-        new(hearts, mine, skull, processors, iridium, island, walnut, prismatic, new HashSet<TierId>(built));
+        new(hearts, mine, skull, processors, iridium, island, walnut, prismatic, new HashSet<TierId>(built), TalkedToMaru: hearts > 0);
 
     private static GuideFacts Facts(ProgressSnapshot? s = null, bool opened = false, IEnumerable<TierId>? letters = null,
         IEnumerable<string>? got = null, IEnumerable<WorldFlag>? world = null) =>
@@ -176,6 +176,15 @@ public class GuideTests
         Assert.Equal(new[] { "built2", "mines", "maru" }, reqs.Select(r => r.Key));
         Assert.Equal((64, 80), (reqs[1].Have, reqs[1].Need));
         Assert.False(reqs[2].Met);
+    }
+
+    [Fact]
+    public void TheFirstLetterOnlyNeedsOneChatWithMaru()
+    {
+        Assert.Equal(new[] { "talkedMaru" }, GateRequirements.For(TierId.T1Components, Snap()).Select(r => r.Key));
+        Assert.Contains("maru", GateRequirements.For(TierId.T2SimpleStorage, Snap()).Select(r => r.Key));
+        var done = GuideProgress.Update(Facts(Snap() with { TalkedToMaru = true }, opened: true), Array.Empty<string>());
+        Assert.Contains("maru", done);
     }
 
     [Theory]

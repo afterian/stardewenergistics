@@ -19,23 +19,24 @@ public static class GateRequirements
 
         return tier switch
         {
-            TierId.T1Components => new[] { new GateRequirement("maru", s.MaruHearts, 2) },
+            TierId.T1Components => new[] { new GateRequirement("talkedMaru", B(s.TalkedToMaru), 1) },
             TierId.T2SimpleStorage => new[]
             {
                 new GateRequirement("processors", s.CopperProcessorsCrafted, 10),
                 new GateRequirement("mines", s.DeepestMineLevel, 20),
+                new GateRequirement("maru", s.MaruHearts, 2),
             },
             TierId.T3Automation => new[]
             {
                 Built(TierId.T2SimpleStorage),
                 new GateRequirement("mines", s.DeepestMineLevel, 80),
-                new GateRequirement("maru", s.MaruHearts, 4),
+                new GateRequirement("maru", s.MaruHearts, 5),
             },
             TierId.T4Autocrafting => new[]
             {
                 Built(TierId.T3Automation),
                 new GateRequirement("mines", s.DeepestMineLevel, 120),
-                new GateRequirement("maru", s.MaruHearts, 6),
+                new GateRequirement("maru", s.MaruHearts, 7),
             },
             TierId.T5LinkedBuildings => new[]
             {

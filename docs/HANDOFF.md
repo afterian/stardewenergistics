@@ -89,6 +89,7 @@ The Deck playtest found these, fixed in PRs #19–#32. Manual steps: `docs/testi
 - Broken blocks drop what they hold. The test menu can recover lost disks.
 - No vanilla placement square on mod items.
 - Disks take any item (#32): items with their own state are stored whole in one global inventory per disk. **Not yet self-tested in game:** the `whole-items` scenario has only been compiled (0 errors on Stardew 1.6.15 / SMAPI 4.5.2). Run `deploy\selftest.bat -Only whole-items,terminal,capacity,save` when the PC is free.
+- Maru's first letter comes the morning after you talk to her once. Later gates went up: T2 also needs 2 hearts, T3 5, T4 7 (T5 stays 8). **Not yet self-tested in game:** run `deploy\selftest.bat -Only quest,playthrough` when the PC is free.
 
 ## Final review (2026-11-28)
 

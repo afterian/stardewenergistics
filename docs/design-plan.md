@@ -112,10 +112,10 @@ Components → small storage network in late Spring Y1 → machine automation in
 
 | Tier | When | Gate | Unlocks |
 | --- | --- | --- | --- |
-| T1 Components | Spring Y1 | Maru 2 hearts mails the Processor Press blueprint; Copper Bars + Refined Quartz | Processor Press, Copper Processor, Copper Wire |
-| T2 Simple storage + basic crafting | late Spring Y1 | 10 Copper Processors crafted, Mines level 20 | Computer Core, Storage Rack, Copper Disk, Terminal, Chest Link, Power Rack, Coal Generator, Network Wrench |
-| T3 Bigger storage + automation | Summer Y1 | Mines level 80 (Gold), Maru 4 hearts | Gold Processor, Iron and Gold Disks, Machine Link, Shipping Link, Heavy Cable |
-| T4 Autocrafting | Fall Y1 | Mines floor 120, Maru 6 hearts | Crafting Rack, multi-step crafting inside one building |
+| T1 Components | Spring Y1 | Talk to Maru once; she mails the Processor Press blueprint the next morning; Copper Bars + Refined Quartz | Processor Press, Copper Processor, Copper Wire |
+| T2 Simple storage + basic crafting | late Spring Y1 | 10 Copper Processors crafted, Mines level 20, Maru 2 hearts | Computer Core, Storage Rack, Copper Disk, Terminal, Chest Link, Power Rack, Coal Generator, Network Wrench |
+| T3 Bigger storage + automation | Summer Y1 | Mines level 80 (Gold), Maru 5 hearts | Gold Processor, Iron and Gold Disks, Machine Link, Shipping Link, Heavy Cable |
+| T4 Autocrafting | Fall Y1 | Mines floor 120, Maru 7 hearts | Crafting Rack, multi-step crafting inside one building |
 | T5 Linked buildings | Winter Y1 – Y2 | Skull Cavern floor 25, Iridium Bars, Maru 8 hearts | Iridium Processor, Network Port, Iridium Disk, Wireless Terminal, Power Feed |
 | T6 Whole-farm automation | Year 2+ | Ginger Island, Qi's Walnut Room, Qi Gems, a Prismatic Shard | Advanced Crafting Rack, Prismatic Disk, Island Uplink |
 

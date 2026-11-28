@@ -120,7 +120,7 @@
 
   // Maru's letters
   "mail.T1.title": "Processor Press",
-  "mail.T1.text": "Hi @!^^I've been tinkering with a little press that squeezes bars and quartz into chips. I call them processors. You can also make copper wire with them in mind.^^Here's how to build both. Let me know what you make!^^   -Maru",
+  "mail.T1.text": "Hi @! Thanks for stopping by to chat.^^I've been tinkering with a little press that squeezes bars and quartz into chips. I call them processors. You can also make copper wire with them in mind.^^Here's how to build both. Let me know what you make!^^   -Maru",
   "mail.T2.title": "Farm computer",
   "mail.T2.text": "@!^^You've made a lot of processors! Want to put them to work?^^Build a Computer Core, put a Storage Rack and a Power Rack beside it, and run wire to a Terminal and your chests. Disks hold your items, and the Terminal can craft from everything on the network.^^Battery Packs keep it running for about two weeks each.^^   -Maru",
 
@@ -256,6 +256,7 @@
   "guide.req.header": "Maru writes once you have:",
   "guide.req.morning": "She checks every morning, so new things count the next day.",
   "guide.req.gatesOff": "Tier gates are off, so her letters come as soon as they can.",
+  "guide.req.talkedMaru": "Said hello to Maru",
   "guide.req.maru": "Friendship with Maru: {{have}}/{{need}} hearts",
   "guide.req.processors": "Copper Processors pressed: {{have}}/{{need}}",
   "guide.req.mines": "Deepest Mines floor: {{have}}/{{need}}",
@@ -292,11 +293,11 @@
 
   "guide.q.open.title": "Open the Journal",
   "guide.q.open.text": "You did it! This journal follows you through every gadget in Stardew Energistics. Each chapter is one of Maru's letters; each goal ticks itself off when you've done it, for you alone, so every farmer in co-op keeps their own journal.\n\nHow to open it: hold the Tinkerer's Journal and press the action button (A on a controller), or press F8. Lost it? Craft another from the crafting menu.\n\nFinish every goal in a chapter and Maru mails you a little thank-you.",
-  "guide.q.maru.title": "Make a Friend in the Mountains",
-  "guide.q.maru.text": "Maru lives at the Carpenter's Shop, north of town, with Robin and Demetrius. Reach 2 hearts with her and she'll mail you the Processor Press blueprints.\n\nTips: she loves Battery Packs, Gold Bars, Iridium Bars, Diamonds, Cauliflower and Strawberries, and likes Copper and Iron Bars. Talk to her every day too. She also works at the clinic some days.\n\nSee your hearts on the Social tab of the game menu.",
+  "guide.q.maru.title": "Say Hello to Maru",
+  "guide.q.maru.text": "Maru lives at the Carpenter's Shop, north of town, with Robin and Demetrius. Find her and say hello. The next morning she'll mail you the Processor Press blueprints.\n\nHer later letters wait for friendship: 2 hearts for the farm computer, then 5, 7 and 8. She loves Battery Packs, Gold Bars, Iridium Bars, Diamonds, Cauliflower and Strawberries, and likes Copper and Iron Bars. Talk to her every day too. She also works at the clinic some days.\n\nSee your hearts on the Social tab of the game menu.",
 
   "guide.q.letter1.title": "Read Maru's First Blueprints",
-  "guide.q.letter1.text": "When Maru reaches 2 hearts she sends a letter the next morning. Open it in your mailbox to learn the Processor Press and Copper Wire recipes.",
+  "guide.q.letter1.text": "The morning after you first talk to Maru, she sends a letter. Open it in your mailbox to learn the Processor Press and Copper Wire recipes.",
   "guide.q.press.title": "Squeeze the Day",
   "guide.q.press.text": "How to get: craft a Processor Press from the crafting menu.\n\nHow to use: place it like a Furnace, indoors or out. Hold a bar and use it on the Press; it also takes the other parts from your backpack. Processors are ready the next morning (Iridium takes two days). Click the Press to collect.\n\nIf it says it also needs something, check your backpack for the Refined Quartz, Diamond or processor listed.",
   "guide.q.chip.title": "A Chip off the Old Bar",
@@ -304,7 +305,7 @@
   "guide.q.wire.title": "Wired for Adventure",
   "guide.q.wire.text": "How to get: craft Copper Wire (10 per craft).\n\nHow to use: hold the wire and click a floor tile to lay one, or hold the button and walk to lay a line. It joins up on its own. Anything with wire on its tile or right beside it is connected: Computer Cores, Terminals, linked chests and machines. So run the wire up to a chest and stop next to it.\n\nWire is walkable and you can put flooring on top. A pickaxe picks bare wire back up, like a path.",
   "guide.q.tenChips.title": "Chip Collector",
-  "guide.q.tenChips.text": "Press 10 Copper Processors in all. Once you've done that and reached floor 20 of the Mines, Maru sends the farm computer blueprints.\n\nTip: a row of Processor Presses works overnight while you sleep.",
+  "guide.q.tenChips.text": "Press 10 Copper Processors in all. Once you've done that, reached floor 20 of the Mines and have 2 hearts with Maru, she sends the farm computer blueprints.\n\nTip: a row of Processor Presses works overnight while you sleep.",
 
   "guide.q.letter2.title": "Read the Farm Computer Letter",
   "guide.q.letter2.text": "Maru's second letter teaches the Computer Core, Storage Rack, Power Rack, Coal Generator, Network Terminal, Chest Link, Copper Disk and Network Wrench.",

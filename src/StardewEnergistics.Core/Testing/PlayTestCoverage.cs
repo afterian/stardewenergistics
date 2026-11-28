@@ -62,10 +62,10 @@ public static class PlayTestCoverage
         F("item:QuestJournal", "The journal: mailed on day one, opens when used", "quest", "playthrough"),
 
         // Maru's letters.
-        F("letter:T1", "2 hearts: components", "quest", "playthrough"),
-        F("letter:T2", "10 processors, Mines 20: storage", "quest", "playthrough"),
-        F("letter:T3", "storage built, Mines 80, 4 hearts: automation", "playthrough"),
-        F("letter:T4", "automation built, Mines 120, 6 hearts: autocrafting", "playthrough"),
+        F("letter:T1", "one chat with Maru: components", "quest", "playthrough"),
+        F("letter:T2", "10 processors, Mines 20, 2 hearts: storage", "quest", "playthrough"),
+        F("letter:T3", "storage built, Mines 80, 5 hearts: automation", "playthrough"),
+        F("letter:T4", "automation built, Mines 120, 7 hearts: autocrafting", "playthrough"),
         F("letter:T5", "autocrafting built, Skull Cavern 25, Iridium Bar, 8 hearts: linked buildings", "playthrough"),
         F("letter:T6", "linked buildings, island, walnuts, Prismatic Shard: whole farm", "playthrough"),
         F("letter:chapter", "journal chapter thank-you letters with rewards", "playthrough"),
