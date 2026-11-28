@@ -32,3 +32,25 @@ public class StoreAttemptTests
         Assert.Equal(3, left!.Count);
     }
 }
+
+public class StoreRefusalTests
+{
+    [Fact]
+    public void AKindAlreadyOnADiskIsRefusedForItemsNotKinds()
+        => Assert.Equal(StoreRefusal.Full, StoreRefusals.Why(true, 1, 20, 20, kindAlreadyStored: true));
+
+    [Fact]
+    public void ANewKindWithEveryKindUsedIsKindsFull()
+        => Assert.Equal(StoreRefusal.KindsFull, StoreRefusals.Why(true, 1, 20, 20, kindAlreadyStored: false));
+
+    [Fact]
+    public void NoDisksAndUnstorableItemsSaySo()
+    {
+        Assert.Equal(StoreRefusal.NoDisks, StoreRefusals.Why(true, 0, 0, 0, false));
+        Assert.Equal(StoreRefusal.CantStore, StoreRefusals.Why(false, 3, 0, 60, false));
+    }
+
+    [Fact]
+    public void UnlimitedKindsIsNeverKindsFull()
+        => Assert.Equal(StoreRefusal.Full, StoreRefusals.Why(true, 1, 500, 0, false));
+}
