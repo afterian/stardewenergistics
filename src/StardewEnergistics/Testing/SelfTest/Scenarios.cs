@@ -249,7 +249,7 @@ internal static class Scenarios
         Game1.hudMessages.Clear();
         c.ClickInventorySlot(menu!, slot);
         c.CheckEqual("no disks: Stone comes back (exactly once)", 50, c.Carried(Stone));
-        c.Check("no disks: says why", c.LastMessage() == c.T("terminal.noDisks"), c.LastMessage());
+        c.Check("no disks: says why", c.Showed(c.T("terminal.noDisks")), c.Messages());
         Game1.exitActiveMenu();
     }
 
@@ -274,7 +274,7 @@ internal static class Scenarios
         c.ClickInventorySlot(menu!, 5);
         c.CheckEqual("kinds full: the item comes back once", 7, c.Carried(extra));
         c.CheckEqual("kinds full: nothing stored", 0L, SelfTestContext.Stored(c.StorageAt(term), extra));
-        c.Check("kinds full: says why", c.LastMessage() == c.T("terminal.kindsFull"), c.LastMessage());
+        c.Check("kinds full: says why", c.Showed(c.T("terminal.kindsFull")), c.Messages());
         yield return null;
 
         // Taking every one of a kind out frees the kind at once.
@@ -289,14 +289,15 @@ internal static class Scenarios
         // Item limit: fill up with Stone (already a kind) to the disk's total.
         long room = disk.Spec.MaxItems - disk.TotalItems;
         storage = c.StorageAt(term)!;
-        storage.Put(ItemRegistry.Create(Kinds[1], (int)room));
+        for (long left = room; left > 0; left -= 999)
+            storage.Put(ItemRegistry.Create(Kinds[1], (int)Math.Min(999, left)));
         c.CheckEqual("disk is at its item limit", disk.Spec.MaxItems, disk.TotalItems);
         c.Player.Items[6] = ItemRegistry.Create(Kinds[1], 5);
         int carriedBefore = c.Carried(Kinds[1]);
         Game1.hudMessages.Clear();
         c.ClickInventorySlot(menu!, 6);
         c.CheckEqual("items full: the stack comes back once", carriedBefore, c.Carried(Kinds[1]));
-        c.Check("items full: says why", c.LastMessage() == c.T("terminal.full"), c.LastMessage());
+        c.Check("items full: says why", c.Showed(c.T("terminal.full")), c.Messages());
 
         // Withdrawing frees item space at once.
         Game1.exitActiveMenu();
@@ -481,7 +482,7 @@ internal static class Scenarios
         c.Hold(O(BatteryPack));
         Game1.hudMessages.Clear();
         c.Action(c.T(8, 3));
-        c.Check("unconnected Power Rack: warns", c.LastMessage() == c.T("power.notConnected"), c.LastMessage());
+        c.Check("unconnected Power Rack: warns", c.Showed(c.T("power.notConnected")), c.Messages());
     }
 
     private static IEnumerable<object?> PowerDay(SelfTestContext c)

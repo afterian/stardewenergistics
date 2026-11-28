@@ -28,3 +28,6 @@ deploy/deck/config
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Local copies of the game DLLs (for compiling without the game)
+.refs/

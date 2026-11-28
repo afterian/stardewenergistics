@@ -386,7 +386,7 @@ internal sealed class SelfTestRunner
             try
             {
                 ctx.Reset();
-                steps = s.Run(ctx).GetEnumerator();
+                steps = Prelude(ctx, s).GetEnumerator();
             }
             catch (Exception e)
             {
@@ -395,6 +395,19 @@ internal sealed class SelfTestRunner
                 return NextScenario();
             }
             return false;
+        }
+
+        /// <summary>
+        /// SMAPI reports the objects Reset removed on the next tick, and the mod drops their contents then:
+        /// wait for that and sweep the ground again, so a scenario starts with nothing lying around.
+        /// </summary>
+        private static IEnumerable<object?> Prelude(SelfTestContext c, Scenario s)
+        {
+            yield return Wait.Ticks(2);
+            c.Loc.debris.Clear();
+            Game1.hudMessages.Clear();
+            foreach (object? step in s.Run(c))
+                yield return step;
         }
 
         private void EndScenario(string? status, string detail)

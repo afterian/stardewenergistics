@@ -162,11 +162,17 @@ internal sealed class SelfTestContext
         Player.Halt();
     }
 
-    /// <summary>Puts an item in the first backpack slot and selects it.</summary>
+    /// <summary>
+    /// The backpack slot used as "the hand": the last toolbar slot, so items that land in the first free
+    /// slots (withdrawals, pick-ups) are never overwritten by what a scenario holds next.
+    /// </summary>
+    public const int HandSlot = 11;
+
+    /// <summary>Puts an item in the hand slot and selects it.</summary>
     public Item Hold(Item item)
     {
-        Player.Items[0] = item;
-        Player.CurrentToolIndex = 0;
+        Player.Items[HandSlot] = item;
+        Player.CurrentToolIndex = HandSlot;
         return item;
     }
 
@@ -174,8 +180,8 @@ internal sealed class SelfTestContext
 
     public void HoldNothing()
     {
-        Player.Items[0] = null;
-        Player.CurrentToolIndex = 0;
+        Player.Items[HandSlot] = null;
+        Player.CurrentToolIndex = HandSlot;
     }
 
     /// <summary>How many of an item the player carries.</summary>
@@ -395,6 +401,11 @@ internal sealed class SelfTestContext
 
     /// <summary>The latest HUD or red message text (for "why didn't that work" checks).</summary>
     public string LastMessage() => Game1.hudMessages.Count > 0 ? Game1.hudMessages[^1].message ?? "" : "";
+
+    /// <summary>True if any HUD message on screen has this text.</summary>
+    public bool Showed(string text) => Game1.hudMessages.Any(m => m.message == text);
+
+    public string Messages() => string.Join(" | ", Game1.hudMessages.Select(m => m.message));
 
     public string T(string key) => Helper.Translation.Get(key);
 }
