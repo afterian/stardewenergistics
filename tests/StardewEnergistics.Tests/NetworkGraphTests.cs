@@ -108,11 +108,33 @@ public class NetworkGraphTests
     }
 
     [Fact]
-    public void RackAwayFromTheCoreReportsAnIssueEvenOnWire()
+    public void RackOnWireJoinsTheNetwork()
     {
         var (w, blocks) = Shed();
-        // A rack sitting on the wire at (4,4) does not touch the Core or another rack.
-        blocks.Add(new BlockNode("lonely", BlockKind.StorageRack, new TilePos(4, 4)));
+        // A rack sitting on the wire at (4,4), away from the Core, joins through the wire.
+        blocks.Add(new BlockNode("wired", BlockKind.StorageRack, new TilePos(4, 4)));
+
+        var g = new NetworkGraphBuilder().Build(w, blocks);
+
+        Assert.Empty(g.Issues);
+        Assert.Contains(g.NetworkOf("core")!.Blocks, b => b.Id == "wired");
+    }
+
+    [Fact]
+    public void RackBesideWireJoinsWithTheNeighbourRule()
+    {
+        var (w, blocks) = Shed();
+        blocks.Add(new BlockNode("beside", BlockKind.StorageRack, new TilePos(4, 5))); // wire is at (4,4)
+
+        Assert.DoesNotContain(new NetworkGraphBuilder(ConnectionRule.OwnTile).Build(w, blocks).NetworkOf("core")!.Blocks, b => b.Id == "beside");
+        Assert.Contains(new NetworkGraphBuilder(ConnectionRule.OwnTileOrNeighbours).Build(w, blocks).NetworkOf("core")!.Blocks, b => b.Id == "beside");
+    }
+
+    [Fact]
+    public void RackAwayFromTheCoreAndWireReportsAnIssue()
+    {
+        var (w, blocks) = Shed();
+        blocks.Add(new BlockNode("lonely", BlockKind.StorageRack, new TilePos(12, 12)));
 
         var g = new NetworkGraphBuilder().Build(w, blocks);
 

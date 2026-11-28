@@ -8,7 +8,7 @@ namespace StardewEnergistics.Core.Graph;
 /// <list type="bullet">
 /// <item>Non-rack blocks (Core, Terminal, Links, generator, port…) join the wire run on their tile
 /// (or a neighbouring tile, depending on <see cref="Rule"/>).</item>
-/// <item>Racks join only by touching the Core or another rack that does; wire doesn't connect racks.</item>
+/// <item>Racks join like other blocks through wire, and also by touching the Core or another rack.</item>
 /// <item>A network needs exactly one Core. Two Cores disable it (<see cref="Network.Core"/> is null).</item>
 /// </list>
 /// </summary>
@@ -40,7 +40,7 @@ public sealed class NetworkGraphBuilder
             var b = blocks[i];
             if (b.Kind.IsRack())
             {
-                // Racks join by touching the Core or another rack.
+                // Racks also join by touching the Core or another rack (and through wire, below).
                 foreach (var np in b.Pos.Neighbours())
                 {
                     if (!byPos.TryGetValue(np, out var others))
@@ -51,7 +51,6 @@ public sealed class NetworkGraphBuilder
                             uf.Union(i, j);
                     }
                 }
-                continue;
             }
 
             foreach (var p in ConnectTiles(b.Pos))

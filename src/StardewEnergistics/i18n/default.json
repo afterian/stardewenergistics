@@ -29,9 +29,9 @@
   "item.ComputerCore.name": "Computer Core",
   "item.ComputerCore.description": "The brain of a network. One per building. Put racks beside it and run wire from it.",
   "item.StorageRack.name": "Storage Rack",
-  "item.StorageRack.description": "Holds 4 disks. Place it beside the Computer Core or another rack. Click with a disk to insert; click with empty hands to take one out.",
+  "item.StorageRack.description": "Holds 4 disks. Place it beside the Computer Core or another rack, or on wire (or right beside wire) that runs to the Core. Click with a disk to insert; click with empty hands to take one out.",
   "item.PowerRack.name": "Power Rack",
-  "item.PowerRack.description": "Holds 4 Battery Packs. One Battery Pack runs a small network for about two weeks. Place beside the Core.",
+  "item.PowerRack.description": "Holds 4 Battery Packs. One Battery Pack runs a small network for about two weeks. Place beside the Core or another rack, or on or beside wire that runs to the Core.",
   "item.CoalGenerator.name": "Coal Generator",
   "item.CoalGenerator.description": "Burns Coal or Hardwood for power when the batteries are empty. Click with fuel to load it. Put it on the wire.",
   "item.NetworkTerminal.name": "Network Terminal",
@@ -78,7 +78,7 @@
   "disk.contents": "{{name}}: {{kinds}}/{{maxKinds}} kinds, {{items}}/{{maxItems}} items",
   "rack.full": "This rack is full.",
   "rack.empty": "This rack is empty.",
-  "rack.notTouching": "This rack isn't touching the Computer Core or a rack that does, so the network can't use its disks. Racks connect by touching, not by wire.",
+  "rack.notTouching": "This rack isn't connected to a Computer Core, so the network can't use its disks. Put it beside the Core or another rack, or on or right beside wire that runs to the Core.",
   "power.rack": "Power Rack: {{count}}/4 Battery Packs, {{charge}} power left.",
   "power.generator": "Coal Generator: {{fuel}} power of fuel loaded.",
   "power.low": "The {{location}} network has {{days}} day(s) of power left.",
@@ -90,7 +90,7 @@
   "chestLink.already": "This chest is already linked.",
   "network.problem.TwoCores": "Two Computer Cores on one network. Remove one.",
   "network.problem.NoCore": "Not connected to a Computer Core.",
-  "network.problem.RackNotTouchingCore": "Racks must touch the Computer Core or another rack.",
+  "network.problem.RackNotTouchingCore": "Racks must touch the Computer Core or another rack, or sit on or beside wire that runs to it.",
   "network.status": "Network: {{blocks}} blocks, {{disks}} disks, {{kinds}} kinds, {{items}} items stored. {{power}}",
   "network.powered": "Powered.",
   "network.unpowered": "No power: machines and crafting are paused.",
@@ -105,7 +105,7 @@
   "terminal.search": "Search",
   "terminal.noNetwork": "This terminal isn't connected to a working network.",
   "terminal.full": "Network storage is full. Add another disk to a Storage Rack, or upgrade a disk.",
-  "terminal.noDisks": "This network has no disks. Put a disk in a Storage Rack that touches the Computer Core (or touches a rack that does). Racks connect by touching, not by wire.",
+  "terminal.noDisks": "This network has no disks. Put a disk in a Storage Rack beside the Computer Core or another rack, or on or right beside wire that runs to the Core.",
   "terminal.kindsFull": "Your disks hold as many kinds of items as they can. Add another disk, or upgrade one to hold more kinds.",
     "terminal.remoteCraft": "Crafting from the Terminal is host and split-screen only for now.",
   "terminal.empty": "Nothing stored yet. Click items in your inventory to store them.",
@@ -122,7 +122,7 @@
 
   // M4 autocrafting
   "item.CraftingRack.name": "Crafting Rack",
-  "item.CraftingRack.description": "Place beside a Computer Core or another rack. Runs one autocraft job at a time: ask the Terminal for something and the network makes the parts too, using linked Furnaces for bars.",
+  "item.CraftingRack.description": "Place beside a Computer Core or another rack, or on or beside wire to it. Runs one autocraft job at a time: ask the Terminal for something and the network makes the parts too, using linked Furnaces for bars.",
   "mail.T4.title": "Autocrafting",
   "mail.T4.text": "@!^^Here's one I'm proud of. Put a Crafting Rack next to your Core and the Terminal can make whole recipes for you, parts and all. Put a Machine Link on a Furnace and it'll smelt bars for the job too.^^   -Maru",
   "auto.button": "Autocraft",
@@ -133,7 +133,7 @@
   "auto.started": "Job started: {{n}} {{item}}.",
   "auto.missing": "Missing: {{items}}",
   "auto.ready": "Ready to make. Uses: {{items}}",
-  "auto.noRack": "Place a Crafting Rack beside the Core to autocraft.",
+  "auto.noRack": "Connect a Crafting Rack to the network (beside the Core, or by wire) to autocraft.",
   "auto.noPower": "The network has no power.",
   "auto.hostOnly": "Only the host can start autocraft jobs for now.",
   "auto.jobs": "Jobs",
@@ -170,7 +170,7 @@
 
   // M6 whole farm
   "item.AdvancedCraftingRack.name": "Advanced Crafting Rack",
-  "item.AdvancedCraftingRack.description": "Place beside a Computer Core or another rack. Runs an autocraft job like a Crafting Rack, cooks recipes you know, and keeps items in stock overnight.",
+  "item.AdvancedCraftingRack.description": "Place beside a Computer Core or another rack, or on or beside wire to it. Runs an autocraft job like a Crafting Rack, cooks recipes you know, and keeps items in stock overnight.",
   "item.PrismaticDisk.name": "Prismatic Disk",
   "item.PrismaticDisk.description": "Holds any number of kinds, up to 512,000 items in all. Crafting it from an Iridium Disk keeps everything on it.",
   "item.IslandUplink.name": "Island Uplink",
@@ -304,7 +304,7 @@
   "guide.q.core.title": "A Core Memory",
   "guide.q.core.text": "How to get: craft a Computer Core. It needs a Battery Pack (from a Lightning Rod during a storm).\n\nHow to use: place it inside your farmhouse or a shed. It's the brain: every building gets exactly one. Two Cores on the same wire stop that network until you move one.\n\nClick the Core any time to see what its network holds and how much power is left.",
   "guide.q.disk.title": "Disk-overy",
-  "guide.q.disk.text": "How to get: craft a Storage Rack and a Copper Disk.\n\nHow to use: place the rack right beside the Core (or beside another rack touching it). Racks join by touching, not by wire. Hold a disk and click the rack to slide it in; click with empty hands to take the last disk out, with everything still on it. Each rack holds 4 disks.\n\nA Copper Disk holds 20 kinds and 2,000 items. All qualities of an item count as one kind.",
+  "guide.q.disk.text": "How to get: craft a Storage Rack and a Copper Disk.\n\nHow to use: place the rack right beside the Core or another rack, or run wire from the Core to it (wire on its tile or right beside it). Racks beside each other share the connection. Hold a disk and click the rack to slide it in; click with empty hands to take the last disk out, with everything still on it. Each rack holds 4 disks.\n\nA Copper Disk holds 20 kinds and 2,000 items. All qualities of an item count as one kind.",
   "guide.q.power.title": "Power Nap",
   "guide.q.power.text": "How to get: craft a Power Rack and bring Battery Packs.\n\nHow to use: place it beside the Core like any rack, then hold a Battery Pack and click the rack. It holds 4. Each Battery Pack gives {{battery}} power.\n\nThe Core uses 2 a day, each rack and Terminal 1, each Link 0.3, so a small network runs about two weeks on one battery. Out of power, storage still opens but machines and crafting pause. Maru writes 3 days before it runs dry.",
   "guide.q.generator.title": "Keep the Home Fires Burning",
@@ -383,5 +383,5 @@
 
   "config.wireUnder": "Wire must be under blocks",
   "config.wireUnder.tip": "Off: wire on a block's tile or right beside it connects. On: only wire under the block counts. Applies after reloading the save.",
-  "power.notConnected": "Not connected to a Computer Core. A Coal Generator needs wire on or right beside it that runs to the Core; a Power Rack must touch the Core or another rack."
+  "power.notConnected": "Not connected to a Computer Core. A Coal Generator needs wire on or right beside it that runs to the Core; a Power Rack connects the same way, or by touching the Core or another rack."
 }

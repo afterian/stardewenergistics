@@ -60,7 +60,7 @@ A first network is a Computer Core in the player home, then a sub computer for e
 - **Wire and cable sit on their own floor layer.** Walkable; flooring or paths can be laid on top, which hides them.
 - **Network Wrench** (tool): tap a wire to cover/uncover it; hold to cover a whole connected run. Covered wire is invisible except in Network View. The wrench also paints Heavy Cable and opens a Link's settings.
 - **Anything touching the wire network is connected**: racks, terminals, links, the port.
-- **The Computer Core** is the brain; each network has exactly one. **Racks** placed directly beside the Core (or beside another rack) make it bigger: Storage Racks hold disks, Crafting Racks run autocrafting jobs, Power Racks hold batteries.
+- **The Computer Core** is the brain; each network has exactly one. **Racks** placed beside the Core (or beside another rack), or connected by wire like any block, make it bigger: Storage Racks hold disks, Crafting Racks run autocrafting jobs, Power Racks hold batteries.
 - **Network View** (hotkey, or holding the Wrench) shows all wire, covered or not, plus anything unpowered, unconfigured or full.
 
 ### Buildings as subnetworks
@@ -164,7 +164,7 @@ A disk crafted into the next tier keeps everything stored on it.
 Single C# SMAPI mod (SMAPI 4.x, .NET 6, Stardew 1.6+). The C# mod injects its own content; Content Patcher is not required. Wires without channels need only a connected-tiles search, re-run when a wire or block is placed or removed.
 
 1. **Content layer.** Inject items, recipes, Processor Press machine rules and Maru's letters into `Data/Objects`, `Data/BigCraftables`, `Data/CraftingRecipes`, `Data/Machines`, `Data/Mail` via SMAPI `AssetRequested`. Use namespaced string IDs (e.g. `StardewEnergistics.ComputerCore`).
-2. **Wire graph.** Per location, flood fill from each Computer Core across wire tiles and adjacent blocks. Racks join if they touch the Core or another rack. Ports join two locations' graphs (building interior ↔ farm exterior ↔ farmhouse).
+2. **Wire graph.** Per location, flood fill from each Computer Core across wire tiles and adjacent blocks. Racks join through wire like other blocks, and also by touching the Core or another rack. Ports join two locations' graphs (building interior ↔ farm exterior ↔ farmhouse).
 3. **Power service.** Daily power use summed per network at `DayStarted`; batteries, then generators drawn down; warnings mailed 3 days ahead.
 4. **Storage service.** Index `ItemKey → count` across disks and Chest Links. `ItemKey` = item ID + quality + flavour; the kind limit counts base item IDs only.
 5. **Machine service.** Each Machine Link finds its group of identical touching machines and applies its settings through the game's own machine logic (`MachineDataUtility` / `Object.PlaceInMachine` etc.).
