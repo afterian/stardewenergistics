@@ -104,6 +104,8 @@ namespace StardewEnergistics
                 Power = power,
                 Crafting = crafting,
                 Links = links,
+                Shipping = shipping,
+                Feeds = feeds,
                 Guide = guide,
                 Progression = progression,
                 InputHandlers = new object[] { guide, wireInput, blockInteraction },

@@ -450,6 +450,13 @@ internal sealed class SelfTestRunner
         private static IEnumerable<object?> Prelude(SelfTestContext c, Scenario s)
         {
             yield return Wait.Ticks(2);
+            if (Game1.currentLocation != c.Scratch)
+            {
+                // The last scenario stopped somewhere else (a farm building, the island): come back first.
+                foreach (object? step in c.GoHome())
+                    yield return step;
+                c.Reset();
+            }
             c.Loc.debris.Clear();
             Game1.hudMessages.Clear();
             foreach (object? step in s.Run(c))

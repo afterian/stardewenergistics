@@ -47,13 +47,40 @@ internal static class Quest
         f.Points = hearts * 250;
     }
 
-    /// <summary>The mod's own morning handlers, as if a new day started (journal first, then Maru's letters).</summary>
-    public static void Morning(SelfTestContext c)
+    /// <summary>
+    /// A new morning as far as this mod is concerned (a real new day would save): yesterday's letters arrive,
+    /// then the mod's DayStarted handlers run in their real order: autocraft summary, journal, optionally the
+    /// day's power use (<paramref name="powerPass"/>; it touches every network), then Maru's tier letters.
+    /// </summary>
+    public static void Morning(SelfTestContext c, bool powerPass = false)
     {
-        c.Step("morning: journal check and Maru's letters");
+        c.Step("morning: yesterday's letters, journal check" + (powerPass ? ", the day's power" : "") + " and Maru's letters");
+        foreach (string id in c.Player.mailForTomorrow.Where(m => m.StartsWith(Ids.ModId)).ToList())
+        {
+            c.Player.mailForTomorrow.Remove(id);
+            if (!c.Player.mailbox.Contains(id))
+                c.Player.mailbox.Add(id);
+        }
+        c.S.Crafting.OnDayStarted();
         Call(c, c.S.Guide, "OnDayStarted");
+        if (powerPass)
+            c.S.Power.OnDayStarted();
         c.S.Progression.OnDayStarted();
+        c.S.Networks.Clear();
     }
+
+    /// <summary>The mod's evening work (DayEnding: Links finish up, keep-in-stock jobs, Shipping Links), without the save.</summary>
+    public static void Evening(SelfTestContext c)
+    {
+        c.Step("evening: Links finish up, keep-in-stock jobs start, Shipping Links ship");
+        c.S.Links.OnDayEnding();
+        c.S.Crafting.OnDayEnding();
+        c.S.Shipping.OnDayEnding();
+        c.S.Networks.Clear();
+    }
+
+    /// <summary>True if Maru's letter for this tier has arrived or been read.</summary>
+    public static bool LetterCame(SelfTestContext c, TierId tier) => c.Player.hasOrWillReceiveMail(ContentInjector.MailId(tier));
 
     /// <summary>The journal re-checks goals (it does this every 10 minutes and when menus close).</summary>
     public static void Refresh(SelfTestContext c) => Call(c, c.S.Guide, "Refresh");

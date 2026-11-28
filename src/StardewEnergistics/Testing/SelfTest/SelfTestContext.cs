@@ -27,6 +27,8 @@ internal sealed class SelfTestServices
     public PowerService Power { get; init; } = null!;
     public CraftingService Crafting { get; init; } = null!;
     public MachineLinkService Links { get; init; } = null!;
+    public ShippingLinkService Shipping { get; init; } = null!;
+    public PowerFeedService Feeds { get; init; } = null!;
     public Guide.GuideService Guide { get; init; } = null!;
     public Progression.ProgressionService Progression { get; init; } = null!;
 
@@ -63,7 +65,7 @@ internal sealed record ShotStep(string Caption, int SettleTicks, int PauseTicks)
 /// Everything is done through the same code paths a player's actions take: the game's placement,
 /// tools and menus, and the mod's own input handlers.
 /// </summary>
-internal sealed class SelfTestContext
+internal sealed partial class SelfTestContext
 {
     public const string LocationName = "afterian.StardewEnergistics_SelfTest";
 
@@ -75,8 +77,8 @@ internal sealed class SelfTestContext
         Helper = helper;
         this.monitor = monitor;
         S = services;
-        Loc = location;
-        Origin = origin;
+        Loc = Scratch = location;
+        Origin = ScratchOrigin = origin;
         Throwaway = throwaway;
         this.results = results;
         Input = new SyntheticInput(helper, services.InputHandlers, this);
@@ -86,11 +88,20 @@ internal sealed class SelfTestContext
 
     public SelfTestServices S { get; }
 
-    /// <summary>The scratch location every scenario builds in.</summary>
-    public GameLocation Loc { get; }
+    /// <summary>
+    /// Where the scenario is working now: the scratch location, or a real one it visited (<see cref="Visit"/>).
+    /// Every helper (Place, LayWire, StandBeside, ...) works here.
+    /// </summary>
+    public GameLocation Loc { get; private set; }
 
-    /// <summary>Top-left tile of the free area (at least <see cref="AreaWidth"/> x <see cref="AreaHeight"/>).</summary>
-    public Vector2 Origin { get; }
+    /// <summary>Top-left tile of the area being worked in (<see cref="T"/> is relative to it).</summary>
+    public Vector2 Origin { get; private set; }
+
+    /// <summary>The scratch building every scenario starts in.</summary>
+    public GameLocation Scratch { get; }
+
+    /// <summary>Top-left of the scratch building's free area (at least <see cref="AreaWidth"/> x <see cref="AreaHeight"/>).</summary>
+    public Vector2 ScratchOrigin { get; }
 
     public const int AreaWidth = 10;
     public const int AreaHeight = 6;
@@ -210,6 +221,8 @@ internal sealed class SelfTestContext
     public void Reset()
     {
         CloseMenu();
+        Loc = Scratch;
+        Origin = ScratchOrigin;
         Loc.objects.Clear();
         Loc.debris.Clear();
         Loc.terrainFeatures.Clear();
@@ -278,7 +291,17 @@ internal sealed class SelfTestContext
     public SObject? Place(string qualifiedId, Vector2 tile)
     {
         StandBeside(tile);
-        var item = Hold(qualifiedId);
+        // Use one the player carries (crafted earlier), else a new one.
+        int slot = Player.Items.ToList().FindIndex(i => i?.QualifiedItemId == qualifiedId);
+        Item item;
+        if (slot >= 0 && slot != HandSlot)
+        {
+            item = Player.Items[slot]!.getOne();
+            Player.Items[slot] = Player.Items[slot]!.ConsumeStack(1);
+            Hold(item);
+        }
+        else
+            item = Hold(qualifiedId);
         bool placed = Utility.tryToPlaceItem(Loc, (SObject)item, (int)tile.X * Game1.tileSize + 32, (int)tile.Y * Game1.tileSize + 32);
         Check($"place {Short(qualifiedId)} at {Rel(tile)}", placed && Loc.objects.ContainsKey(tile), placed ? "" : "tryToPlaceItem returned false");
         return Loc.objects.TryGetValue(tile, out var obj) ? obj : null;
