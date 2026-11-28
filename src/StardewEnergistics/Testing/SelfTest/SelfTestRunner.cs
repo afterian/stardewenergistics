@@ -29,6 +29,7 @@ internal sealed class SelfTestRunner
     /// <summary>Launched for the self-test: load a save, run, quit (SE_SELFTEST=1).</summary>
     private readonly bool auto = Environment.GetEnvironmentVariable("SE_SELFTEST") == "1";
 
+    private readonly Screenshots shots;
     private Run? run;
     private bool loadRequested;
     private int readyTicks;
@@ -40,6 +41,7 @@ internal sealed class SelfTestRunner
         this.monitor = monitor;
         this.config = config;
         this.services = services;
+        shots = new Screenshots(helper, monitor);
     }
 
     public void Register()
@@ -93,8 +95,8 @@ internal sealed class SelfTestRunner
 
     private void Start(IReadOnlyCollection<string> only)
     {
-        var chosen = Scenarios.All.Where(s => only.Count == 0 || only.Contains(s.Id)).ToList();
-        run = new Run(helper, monitor, services, chosen, throwaway: auto);
+        var chosen = Scenarios.All.Where(s => only.Count == 0 ? !s.OnlyWhenNamed : only.Contains(s.Id)).ToList();
+        run = new Run(helper, monitor, services, chosen, throwaway: auto, shots);
         monitor.Log($"{Marker}: starting {chosen.Count} scenarios.", LogLevel.Info);
     }
 
@@ -235,8 +237,11 @@ internal sealed class SelfTestRunner
         private int setupTicks;
         private bool warped;
 
-        public Run(IModHelper helper, IMonitor monitor, SelfTestServices services, List<Scenario> scenarios, bool throwaway)
+        private readonly Screenshots shots;
+
+        public Run(IModHelper helper, IMonitor monitor, SelfTestServices services, List<Scenario> scenarios, bool throwaway, Screenshots shots)
         {
+            this.shots = shots;
             this.helper = helper;
             this.monitor = monitor;
             this.services = services;
@@ -256,6 +261,8 @@ internal sealed class SelfTestRunner
             if (ctx == null)
                 return Setup();
 
+            if (shots.Busy)
+                return false; // let the screenshot be taken before anything changes
             if (waitTicks > 0)
             {
                 waitTicks--;
@@ -338,7 +345,7 @@ internal sealed class SelfTestRunner
                 return false;
             }
             warped = true;
-            ctx = new SelfTestContext(helper, monitor, services, scratch, pendingOrigin, throwaway, results);
+            ctx = new SelfTestContext(helper, monitor, services, scratch, pendingOrigin, throwaway, results) { Shots = shots };
             return false;
         }
 
@@ -455,6 +462,7 @@ internal sealed class SelfTestRunner
                 Game1.player.CurrentToolIndex = homeToolIndex;
                 Game1.player.Stamina = homeStamina;
                 services.Networks.Clear();
+                shots.WriteIndex();
             }
             catch (Exception e)
             {

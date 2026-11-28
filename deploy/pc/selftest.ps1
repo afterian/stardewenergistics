@@ -6,6 +6,7 @@
 #
 #   deploy\selftest.bat                         build this folder and test it
 #   powershell -File deploy\pc\selftest.ps1 -Only disks,terminal
+#   deploy\showcase.bat                         build a whole base slowly, with a screenshot per step
 #   powershell -File deploy\pc\selftest.ps1 -Save "Farm_123456789"
 #
 # Exit code: 0 all passed, 1 something failed, 2 couldn't run (game open, no save, timeout, build failed).
@@ -18,6 +19,7 @@ param(
   [string]$GamePath = "",
   [int]$TimeoutMinutes = 6,
   [string]$Commit = "",          # with -Publish: the commit to mark
+  [switch]$Showcase,             # run the slow showcase (screenshots in %LOCALAPPDATA%\StardewEnergistics\selftest\shots)
   [switch]$Publish,              # set a pc-selftest tick/cross on the commit and attach the report to test-latest
   [ValidateSet("", "on", "off")][string]$Watcher = ""   # on: the build watcher self-tests every new build
 )
@@ -81,6 +83,13 @@ New-Item -ItemType Directory -Force -Path $mods | Out-Null
 Expand-Archive -Path $zip.FullName -DestinationPath $mods -Force
 
 # ---- Run
+$shots = Join-Path $work "shots"
+if ($Showcase) {
+  $Only = "showcase"
+  if ($TimeoutMinutes -lt 10) { $TimeoutMinutes = 10 }
+  if (Test-Path $shots) { Remove-Item $shots -Recurse -Force }
+}
+$env:SE_SELFTEST_SHOTS = $shots
 Remove-Item $report, ([IO.Path]::ChangeExtension($report, ".json")) -ErrorAction SilentlyContinue
 $env:SE_SELFTEST = "1"
 $env:SE_SELFTEST_REPORT = $report
@@ -95,7 +104,7 @@ if (-not $finished) {
   Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
   Get-Process -Name "Stardew Valley" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 }
-Remove-Item Env:SE_SELFTEST, Env:SE_SELFTEST_REPORT, Env:SE_SELFTEST_SAVE, Env:SE_SELFTEST_ONLY -ErrorAction SilentlyContinue
+Remove-Item Env:SE_SELFTEST, Env:SE_SELFTEST_REPORT, Env:SE_SELFTEST_SAVE, Env:SE_SELFTEST_ONLY, Env:SE_SELFTEST_SHOTS -ErrorAction SilentlyContinue
 
 # Keep the SMAPI log next to the report.
 $smapiLog = Join-Path $env:APPDATA "StardewValley\ErrorLogs\SMAPI-latest.txt"
@@ -123,6 +132,20 @@ if ($Publish) {
   $state = if ($code -eq 0) { "success" } else { "failure" }
   Set-CommitStatus $s.Repo $sha $state ($summary -replace '^SE-SELFTEST RESULT: ', 'Self-test ') "pc-selftest"
   Publish-Log $s.Repo "test-latest" $report $sha "last-selftest.txt"
+  if ($Showcase -and (Test-Path $shots)) {
+    $shotsZip = Join-Path $work "selftest-shots.zip"
+    Remove-Item $shotsZip -ErrorAction SilentlyContinue
+    Compress-Archive -Path (Join-Path $shots "*") -DestinationPath $shotsZip
+    try {
+      $rel = Get-OrCreate-Release $s.Repo "test-latest" $sha
+      foreach ($a in (Invoke-GhApi GET "repos/$($s.Repo)/releases/$($rel.id)/assets?per_page=100" $null)) {
+        if ($a.name -eq "selftest-shots.zip") { Invoke-GhApi DELETE "repos/$($s.Repo)/releases/assets/$($a.id)" $null | Out-Null }
+      }
+      Upload-Asset $s.Repo $rel.id $shotsZip "selftest-shots.zip" "application/zip" | Out-Null
+      Write-Host "Screenshots uploaded to the test-latest release as selftest-shots.zip."
+    } catch { Write-Host "Couldn't upload the screenshots: $($_.Exception.Message)" }
+  }
 }
+if ($Showcase) { Write-Host "Screenshots: $shots" }
 
 Done $code $summary

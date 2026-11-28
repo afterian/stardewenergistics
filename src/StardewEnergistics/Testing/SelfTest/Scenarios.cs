@@ -17,8 +17,9 @@ using SObject = StardewValley.Object;
 
 namespace StardewEnergistics.Testing.SelfTest;
 
-/// <summary>One end-to-end scenario. <see cref="ThrowawayOnly"/> ones change state outside the scratch area (e.g. a day's power pass on every network), so they only run in a session launched for the self-test.</summary>
-internal sealed record Scenario(string Id, string Title, Func<SelfTestContext, IEnumerable<object?>> Run, bool ThrowawayOnly = false);
+/// <summary>One end-to-end scenario. <see cref="ThrowawayOnly"/> ones change state outside the scratch area (e.g. a day's power pass on every network), so they only run in a session launched for the self-test.
+/// <see cref="OnlyWhenNamed"/> ones (the showcase) are left out of a plain run.</summary>
+internal sealed record Scenario(string Id, string Title, Func<SelfTestContext, IEnumerable<object?>> Run, bool ThrowawayOnly = false, bool OnlyWhenNamed = false);
 
 /// <summary>The self-test's scenarios. Each starts from an empty scratch area and a cleared backpack.</summary>
 internal static class Scenarios
@@ -60,6 +61,7 @@ internal static class Scenarios
         new("autocraft", "Crafting Rack autocrafts Copper Wire", Autocraft),
         new("tools", "Plain tools go on disks through the Terminal", Tools),
         new("save", "Save data and the game's own save format keep everything", Save),
+        new("showcase", "Build a whole working base slowly, with screenshots", Showcase.Run, OnlyWhenNamed: true),
     };
 
     // ---------------------------------------------------------------

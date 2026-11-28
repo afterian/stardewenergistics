@@ -95,6 +95,19 @@ internal sealed class SelfTestContext
 
     public SyntheticInput Input { get; }
 
+    /// <summary>Screenshots for the showcase run (set by the runner).</summary>
+    public Screenshots? Shots { get; set; }
+
+    /// <summary>
+    /// Showcase: pause so a person can follow along, and save a screenshot with this caption.
+    /// Yield the result: <c>yield return c.Show("...")</c>.
+    /// </summary>
+    public object Show(string caption, int pauseTicks = 75)
+    {
+        Shots?.Request(caption);
+        return Wait.Ticks(pauseTicks);
+    }
+
     /// <summary>The scenario now running (set by the runner).</summary>
     public string Scenario { get; set; } = "";
 

@@ -30,6 +30,15 @@ build after publishing it: a `pc-selftest` tick or cross on the commit, and the 
 `last-selftest.txt` on the `test-latest` release. It skips a build if the game is open. Restart the watcher
 (sign out and in) after merging changes to `watch.ps1`. Re-running `setup-pc.bat` turns it off again.
 
+## Showcase (watch it build)
+
+Double-click `deploy\showcase.bat` (or `se_selftest showcase` in the console). It builds a whole working base
+in the scratch building, slowly enough to follow: wire, Core, racks, power, disks, a linked chest and Furnace,
+Network View, storing and taking items at the Terminal, the Autocraft screen, an autocraft job and the Furnace
+running from storage. Each step is checked and photographed; the screenshots (with `index.json` captions) go to
+`%LOCALAPPDATA%\StardewEnergistics\selftest\shots`, which opens at the end. With `-Publish` they are also
+uploaded to the `test-latest` release as `selftest-shots.zip`. Like the self-test, it never saves.
+
 ## Report
 
 `%LOCALAPPDATA%\StardewEnergistics\selftest\report.txt` (and `.json`), plus `SMAPI-latest.txt` from the run.
