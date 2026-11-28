@@ -3,6 +3,7 @@
   "mods": [
     { "name": "StardewEnergistics", "repo": "afterian/stardewenergistics", "branch": "main", "project": "src/StardewEnergistics/StardewEnergistics.csproj" },
     { "name": "StardewFoodTime",    "repo": "afterian/stardewfoodtime",    "branch": "main", "project": "src/StardewFoodTime/StardewFoodTime.csproj" },
-    { "name": "StardewFisherman",   "repo": "afterian/stardewfisherman",   "branch": "main", "project": "src/StardewFisherman/StardewFisherman.csproj" }
+    { "name": "StardewFisherman",   "repo": "afterian/stardewfisherman",   "branch": "main", "project": "src/StardewFisherman/StardewFisherman.csproj" },
+    { "name": "StardewMeow",        "repo": "afterian/stardewmeow",        "branch": "main", "project": "src/StardewMeow/StardewMeow.csproj" }
   ]
 }
