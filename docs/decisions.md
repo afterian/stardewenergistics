@@ -41,6 +41,8 @@ Confirmed decisions log. The full design is in `docs/design-plan.md`; status and
 - Shipping Links go on the farm's main Shipping Bin too (user, 2026-11-28): use the Link on the bin, run wire on any tile right beside it, set it up with the wrench. Outdoors it needs a network with a Core: an outdoor Computer Core, or (T5) a Network Port joining the farmhouse. The Mini-Shipping Bin still works with wire under it.
 - Two Computer Cores on one network stop it until one is moved; each Core shows the "two Cores" problem (user, 2026-11-28).
 - Keep-in-stock rules start jobs overnight only (user, 2026-11-28).
+- Racks connect through wire (user, 2026-11-28): racks join a network through wire on or beside them, like other blocks, and still join by touching the Core or another rack. Replaces "wire doesn't connect racks" in the Core rules above.
+- Wire under placed machines (user, 2026-11-28): wire can be laid onto a tile that already has a machine or chest (pointing at either half of a tall one); it draws under the item. Adjacency stays as well.
 - Autocraft sets ingredients aside (user, 2026-11-28): when a job starts, its ingredients from stock leave network storage and are held on the job with the parts it makes; Terminals, Machine Links and other jobs can't use them. Leftovers and a cancelled job's items go back to storage.
 
 ## Open
