@@ -48,6 +48,7 @@ internal static class ConfigMenu
         to.BatteryPower = from.BatteryPower;
         to.CoalPower = from.CoalPower;
         to.HardwoodPower = from.HardwoodPower;
+        to.ConfigVersion = ModConfig.CurrentVersion;
         to.TerminalReachAllBeforePorts = from.TerminalReachAllBeforePorts;
     }
 }

@@ -30,6 +30,8 @@ namespace StardewEnergistics
         {
             Monitor.Log("Stardew Energistics loaded", LogLevel.Info);
             config = helper.ReadConfig<ModConfig>();
+            if (config.Upgrade())
+                helper.WriteConfig(config);
             var harmony = new Harmony(ModManifest.UniqueID);
 
             var textures = new TextureRegistry(helper, Monitor);

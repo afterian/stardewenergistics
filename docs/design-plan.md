@@ -75,7 +75,7 @@ A first network is a Computer Core in the player home, then a sub computer for e
 
 - Each block uses a small amount of power per day. A starter network (Core, 1 rack, 1 terminal, 10 links) uses about 7 power a day.
 - **Battery Pack** in a Power Rack = 100 power, about two weeks for a starter network. A Power Rack holds 4.
-- **Coal Generator** (low-tech): load Coal or Hardwood; 1 Coal = 1 power (user-edited value; was 10 — confirm in playtest). Burns only when batteries are empty.
+- **Coal Generator** (low-tech): load Coal or Hardwood; 1 Coal = 5 power (confirmed 2026-11-28; about 1–2 Coal a day for a starter network). Burns only when batteries are empty.
 - **Out of power**: storage still opens, but machines and crafting pause. A mail note and an icon on the Core warn 3 days ahead.
 - Late game, a Power Feed wired to Lightning Rods or Solar Panels sends their batteries straight into the Power Rack.
 

@@ -33,9 +33,11 @@ Confirmed decisions log. The full design is in `docs/design-plan.md`; status and
 - Art style (2026-11-27): Maru purple-and-oak approved (amethyst cases, plum outlines, honey-oak supports, green CRTs). First final batch: `computer-core.png`, `network-terminal.png`, `wire-tiles.png`, `wire-tiles-glow.png`, `heavy-cable-tiles.png`. See `docs/artwork-pipeline.md`.
 - Art complete (2026-11-27): all 38 assets final. Added #37 `copper-data-signal.png` and #38 `heavy-data-signal.png` (8 phases × 16 masks, drawn on powered wire). Unpainted Heavy Cable is tinted Maru plum.
 
+- Wire connects only on the block's own tile (`ConnectionRule.OwnTile`); neighbouring tiles don't count (user, 2026-11-28).
+- Terminal reach before Network Ports: own building only (default). The config option "Terminals reach all buildings early" stays available, off by default (user, 2026-11-28).
+- Coal Generator: 1 Coal = 5 power, Hardwood 1 (user, 2026-11-28). Old config.json files with Coal 1 are moved to 5 once.
+- Shipping Links go on the farm's main Shipping Bin too (user, 2026-11-28): use the Link on the bin, run wire on any tile right beside it, set it up with the wrench. Outdoors it needs a network with a Core: an outdoor Computer Core, or (T5) a Network Port joining the farmhouse. The Mini-Shipping Bin still works with wire under it.
+
 ## Open
 
-- Wire connection rule: wire on the block's own tile only (what the code does, `ConnectionRule.OwnTile`) vs also the 4 neighbouring tiles (`OwnTileOrNeighbours`, already in Core and tested). Confirm in the first playtest.
-- Terminal reach before Network Ports (own building only vs all buildings). Default own building; since 2026-11-28 the config option "Terminals reach all buildings early" (GMCM) joins every building's network to the farmhouse's without Ports.
-- Coal Generator value (1 Coal = 1 power vs 10).
 - Installed game and SMAPI versions on PC and Decks.

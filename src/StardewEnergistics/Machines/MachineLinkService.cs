@@ -11,6 +11,7 @@ using StardewEnergistics.Power;
 using StardewEnergistics.Storage;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Mods;
 using SObject = StardewValley.Object;
 
 namespace StardewEnergistics.Machines;
@@ -37,10 +38,13 @@ internal sealed class MachineLinkService
         this.power = power;
     }
 
-    public static LinkSettings SettingsOf(SObject obj) =>
-        LinkSettingsCodec.Decode(obj.modData.TryGetValue(Ids.Data.LinkSettings, out string? json) ? json : null);
+    public static LinkSettings SettingsOf(SObject obj) => SettingsOf(obj.modData);
 
-    public static void SetSettings(SObject obj, LinkSettings s) => obj.modData[Ids.Data.LinkSettings] = LinkSettingsCodec.Encode(s);
+    /// <summary>A Link's settings from the modData of whatever it's on (an object, or the main Shipping Bin building).</summary>
+    public static LinkSettings SettingsOf(ModDataDictionary data) =>
+        LinkSettingsCodec.Decode(data.TryGetValue(Ids.Data.LinkSettings, out string? json) ? json : null);
+
+    public static void SetSettings(ModDataDictionary data, LinkSettings s) => data[Ids.Data.LinkSettings] = LinkSettingsCodec.Encode(s);
 
     /// <summary>Machines handled and time taken by the last pass (for se_perf).</summary>
     public int LastMachines { get; private set; }

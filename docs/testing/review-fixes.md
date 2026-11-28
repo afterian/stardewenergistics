@@ -16,3 +16,12 @@ Fixes from the final code review (after M6). None of these has been tried in the
 | 10 | Let a network's power fall to 3 days | HUD warning plus a letter from Maru |
 | 11 | Outdoor wire with Network Ports and Machine Links: check the farmhouse Core's daily use | It includes the outdoor blocks (1 per Port, 0.3 per Link) |
 | 12 | Generic Mod Config Menu: turn on "Terminals reach all buildings early" | A farmhouse Terminal shows a shed's storage without any Network Port |
+
+## Decisions applied (2026-11-28)
+
+| # | Do this | Expect |
+| --- | --- | --- |
+| 13 | Load a save whose config.json has `"CoalPower": 1` | It becomes 5 (and `"ConfigVersion": 1`); one Coal adds 5 fuel |
+| 14 | Right-click the farm's Shipping Bin holding a Shipping Link | "Link attached to the Shipping Bin…"; the Link is used up |
+| 15 | Run wire from an outdoor Computer Core (with power) to a tile right beside the bin; wrench the bin, add an item with Keep 2; put 10 in storage; sleep | 8 shipped overnight; the shipping summary shows them |
+| 16 | Wrench the bin, press Remove | The Shipping Link drops back |

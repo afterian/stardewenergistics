@@ -49,13 +49,14 @@
   "item.MachineLink.name": "Machine Link",
   "item.MachineLink.description": "Use on a machine with wire under it. It feeds and empties every identical machine touching it, once you set it up with the Network Wrench.",
   "item.ShippingLink.name": "Shipping Link",
-  "item.ShippingLink.description": "Use on a Mini-Shipping Bin with wire under it. Each night it ships the items you choose above the amounts you set.",
+  "item.ShippingLink.description": "Use on the Shipping Bin (with wire right beside it) or a Mini-Shipping Bin (with wire under it). Each night it ships the items you choose above the amounts you set.",
 
   // Links
   "link.added": "Link attached. Right-click with the Network Wrench to set it up.",
   "link.removed": "Link removed.",
   "link.notMachine": "Machine Links go on machines like Kegs and Preserves Jars.",
-  "link.notBin": "Shipping Links go on a Mini-Shipping Bin.",
+  "link.notBin": "Shipping Links go on the Shipping Bin or a Mini-Shipping Bin.",
+  "link.added.bin": "Link attached to the Shipping Bin. Run wire right beside it, then right-click with the Network Wrench to set it up.",
   "link.already": "This already has a Link.",
   "link.title.machine": "Machine Link: {{machine}} x{{count}}",
   "link.title.shipping": "Shipping Link",
