@@ -1,9 +1,0 @@
-{
-  "_comment": "Mods the PC watcher builds and the Steam Decks install. Temporary pack loader: every mod's zip goes to this repo's test-latest release (StardewEnergistics-test.zip, the others <name>-test.mod, also zips); the Decks install all of them. Add a mod: copy an entry. project = the SMAPI mod's .csproj (its manifest.json sits next to it).",
-  "mods": [
-    { "name": "StardewEnergistics", "repo": "afterian/stardewenergistics", "branch": "main", "project": "src/StardewEnergistics/StardewEnergistics.csproj" },
-    { "name": "StardewFoodTime",    "repo": "afterian/stardewfoodtime",    "branch": "main", "project": "src/StardewFoodTime/StardewFoodTime.csproj" },
-    { "name": "StardewFisherman",   "repo": "afterian/stardewfisherman",   "branch": "main", "project": "src/StardewFisherman/StardewFisherman.csproj" },
-    { "name": "StardewMeow",        "repo": "afterian/stardewmeow",        "branch": "main", "project": "src/StardewMeow/StardewMeow.csproj" }
-  ]
-}

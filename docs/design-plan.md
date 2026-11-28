@@ -201,7 +201,7 @@ Each milestone is playable from a fresh save up to that point.
 - **PC setup:** Stardew Valley + SMAPI; .NET 6 SDK; Visual Studio 2022 Community (".NET desktop development") or Rider; Git + GitHub CLI (`gh auth login`). Build with `Pathoschild.Stardew.ModBuildConfig` (auto-deploys to `Mods`). [Modder guide](https://stardewvalleywiki.com/Modding:Modder_Guide/Get_Started).
 - **Logic tests:** keep storage maths, recipe planning and wire graph in game-independent classes with xUnit tests, so they run without the game.
 - **Bug reports:** upload the SMAPI log at https://smapi.io/log and share the link.
-- **Steam Deck testing:** see `deploy/README.md`. PC: `deploy/publish-test.bat` → private GitHub release `test-latest`. Decks: launch option `~/stardew-energistics/launch.sh %command%` auto-installs the newest build on every game start; offline-safe; keeps `config.json`.
+- **Steam Deck testing:** through [Stardew Mod Master](https://github.com/afterian/stardewmodmaster): its PC watcher builds each new `main` commit and its Deck launcher installs the newest build on every game start (offline-safe, keeps `config.json`).
 - **Multiplayer testing:** local split-screen co-op on one PC first, then the two Decks online.
 - **Release:** every MP player needs the same mod version. Publish on Nexus Mods with `UpdateKeys` in `manifest.json`. Semver; save-breaking change bumps major.
 - **Reference code:** [AE2 source](https://github.com/AppliedEnergistics/Applied-Energistics-2) (code LGPL-3.0, API MIT, textures CC BY-NC-SA 3.0) — read for ideas only; never copy code or art. [Automate source](https://github.com/Pathoschild/StardewMods) for how a mod drives vanilla machines.

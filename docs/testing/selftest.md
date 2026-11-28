@@ -19,17 +19,14 @@ clicks. The Core library's xUnit tests (`tests/`) cover the game-independent log
 Leave the game window alone while it runs (about a minute). The game must be closed first.
 
 Options (`powershell -File deploy\pc\selftest.ps1 ...`): `-Only disks,terminal`, `-Save <save folder name>`,
-`-ZipDir <folder with a built zip>`, `-TimeoutMinutes 6`, `-Watcher on|off`.
+`-ZipDir <folder with a built zip>`, `-TimeoutMinutes 6`.
 
 **While playing:** with test mode on (off by default; turn it on in the mod settings), type `se_selftest` in the SMAPI console (`se_selftest list` for the
 scenarios, `se_selftest disks terminal` for some). It builds in a temporary location, then puts your
 backpack and position back. Scenarios that would touch your other networks (the morning power pass) only
 run in a session launched by the script.
 
-**Every build:** `deploy\selftest.bat -Watcher on` makes the PC build watcher self-test each new `main`
-build after publishing it: a `pc-selftest` tick or cross on the commit, and the report as
-keeps the full self-test report on the build PC. It skips a build if the game is open. Restart the watcher
-(sign out and in) after merging changes to `watch.ps1`. Re-running `setup-pc.bat` turns it off again.
+**Every build:** the PC build watcher moved to Stardew Mod Master, which does not self-test Energistics builds yet. Run `deploy\selftest.bat` by hand.
 
 ## Playthrough and showcase (start to finish)
 

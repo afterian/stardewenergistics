@@ -18,27 +18,16 @@ param(
   [string]$Only = "",            # comma-separated scenario IDs; default: all
   [string]$GamePath = "",
   [int]$TimeoutMinutes = 6,
-  [string]$Commit = "",          # with -Publish: the commit to mark
   [switch]$Showcase,             # run the slow showcase (screenshots in %LOCALAPPDATA%\StardewEnergistics\selftest\shots); the game stays open afterwards
-  [switch]$Close,                # with -Showcase: close the game at the end anyway
-  [switch]$Publish,              # set a pc-selftest tick/cross on the commit and attach the report to test-latest
-  [ValidateSet("", "on", "off")][string]$Watcher = ""   # on: the build watcher self-tests every new build
+  [switch]$Close                 # with -Showcase: close the game at the end anyway
 )
 $ErrorActionPreference = "Continue"
-. (Join-Path $PSScriptRoot "common.ps1")
+$SEDir = Join-Path $env:LOCALAPPDATA "StardewEnergistics"
 
 $work   = Join-Path $SEDir "selftest"
 $mods   = Join-Path $work "Mods"
 $report = Join-Path $work "report.txt"
 New-Item -ItemType Directory -Force -Path $work | Out-Null
-
-if ($Watcher) {
-  $settings = Get-Settings
-  $settings | Add-Member -NotePropertyName SelfTest -NotePropertyValue ($Watcher -eq "on") -Force
-  $settings | ConvertTo-Json -Depth 5 | Set-Content -Path $SESettingsPath -Encoding UTF8
-  Write-Host "Build watcher self-test is now $Watcher. It takes effect with the next new commit." -ForegroundColor Green
-  exit 0
-}
 
 function Done([int]$code, [string]$text) {
   if ($code -eq 0) { Write-Host $text -ForegroundColor Green } else { Write-Host $text -ForegroundColor Red }
@@ -46,8 +35,9 @@ function Done([int]$code, [string]$text) {
 }
 
 # ---- Find the game
-if (-not $GamePath) {
-  if (Test-Path $SESettingsPath) { $GamePath = (Get-Settings).GamePath }
+# The pack's PC setup (Stardew Mod Master, or the older Energistics one) remembers the game folder.
+foreach ($f in @((Join-Path $env:LOCALAPPDATA "StardewModMaster\settings.json"), (Join-Path $SEDir "settings.json"))) {
+  if (-not $GamePath -and (Test-Path $f)) { try { $GamePath = (Get-Content $f -Raw | ConvertFrom-Json).GamePath } catch { } }
 }
 if (-not $GamePath) {
   $targets = Join-Path $env:USERPROFILE "stardewvalley.targets"
@@ -56,7 +46,7 @@ if (-not $GamePath) {
     if ($m.Success) { $GamePath = $m.Groups[1].Value.Trim() }
   }
 }
-if (-not $GamePath) { Done 2 "Game path not found. Run deploy\setup-pc.bat or pass -GamePath." }
+if (-not $GamePath) { Done 2 "Game path not found. Pass -GamePath, or set up Stardew Mod Master on this PC." }
 $smapi = Join-Path $GamePath "StardewModdingAPI.exe"
 if (-not (Test-Path $smapi)) { Done 2 "SMAPI not found at $smapi. Pass -GamePath." }
 
@@ -137,17 +127,10 @@ if ((Test-Path $report) -and ((Get-Item $report).LastWriteTime -ge $started)) {
   $crash = Join-Path $work "selftest-crash.txt"
   if (Test-Path $crash) { Write-Host "Where it stopped (also in $crash):" -ForegroundColor Yellow; Get-Content $crash | Select-Object -First 40 | Write-Host }
 } else {
-  # Leave the reason in the report file too, for the watcher and Claude.
+  # Leave the reason in the report file too, for Claude.
   Set-Content -Path $report -Value "SE-SELFTEST RESULT: FAIL (did not finish)`n$summary"
 }
 
-if ($Publish) {
-  $s = Get-Settings
-  $sha = $Commit
-  if (-not $sha) { $sha = (git -C $Source rev-parse HEAD).Trim() }
-  $state = if ($code -eq 0) { "success" } else { "failure" }
-  Set-CommitStatus $s.Repo $sha $state $(if ($code -eq 0) { "Self-test passed." } else { "Self-test failed. See the local report." }) "pc-selftest"
-}
 if ($Showcase) { Write-Host "Screenshots: $shots" }
 
 Done $code $summary
