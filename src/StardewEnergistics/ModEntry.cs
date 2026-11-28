@@ -67,6 +67,7 @@ namespace StardewEnergistics
             DiskStackPatch.Apply(harmony);
             NotPlaceablePatch.Apply(harmony);
             DiskUpgradePatch.Apply(harmony, disks);
+            QiGemCostPatch.Apply(harmony);
 
             var links = new MachineLinkService(Monitor, networks, disks, power);
             var shipping = new ShippingLinkService(helper, Monitor, networks, disks, power);

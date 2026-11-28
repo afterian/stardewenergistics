@@ -117,8 +117,17 @@ internal sealed partial class SelfTestContext
         Log($"tidied the backpack: put away {removed} stacks");
     }
 
+    /// <summary>How many of an item the player has to craft with: Qi Gems count the balance, as the game keeps them there.</summary>
+    public int Have(string qualifiedId) =>
+        Player.Items.CountId(qualifiedId) + (qualifiedId == "(O)858" ? Player.QiGems : 0);
+
     private void GiveNow(string qualifiedId, int count)
     {
+        if (qualifiedId == "(O)858")
+        {
+            Player.QiGems += count; // picked-up Qi Gems never stay in the backpack
+            return;
+        }
         while (count > 0)
         {
             int n = Math.Min(count, 999);
@@ -175,7 +184,7 @@ internal sealed partial class SelfTestContext
             foreach (var (id, count) in recipe.recipeList)
             {
                 string q = ItemRegistry.QualifyItemId(id) ?? id;
-                int missing = count - Player.Items.CountId(q);
+                int missing = count - Have(q);
                 if (missing > 0)
                     Give(q, missing);
             }
@@ -217,7 +226,7 @@ internal sealed partial class SelfTestContext
         int yield = Math.Max(1, recipe.numberProducedPerCraft);
         Check($"crafted {Short(expected)} x{yield}", gained == yield,
             $"backpack gained {gained}; on the cursor: {held?.QualifiedItemId ?? "nothing"}; free slots {Player.Items.Count(i => i == null)}; ingredients now: "
-            + string.Join(", ", recipe.recipeList.Select(kv => $"{Short(kv.Key)} {Player.Items.CountId(ItemRegistry.QualifyItemId(kv.Key) ?? kv.Key)}/{kv.Value}")) + $"; {Messages()}");
+            + string.Join(", ", recipe.recipeList.Select(kv => $"{Short(kv.Key)} {Have(ItemRegistry.QualifyItemId(kv.Key) ?? kv.Key)}/{kv.Value}")) + $"; {Messages()}");
         CheckEqual($"{Short(recipeId)}: crafted count went up by {yield}", timesBefore + yield, Player.craftingRecipes[recipeId]);
         var made = gained > 0 ? CarriedItems(expected).LastOrDefault() : null;
         if (made != null)

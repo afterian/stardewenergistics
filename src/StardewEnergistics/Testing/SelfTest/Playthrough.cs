@@ -589,7 +589,10 @@ internal static class Playthrough
     private static IEnumerable<object?> WholeFarm(SelfTestContext c)
     {
         c.TidyBackpack();
+        // Qi Gems live in the player's balance (the Walnut Room currency), never in the backpack.
+        c.Player.QiGems = 7;
         c.CraftTimes(Ids.AdvancedCraftingRack, 1);
+        c.CheckEqual("the Advanced Crafting Rack spent 5 Qi Gems from the balance", 2, c.Player.QiGems);
         c.Place(BC(Ids.AdvancedCraftingRack), c.T(7, 0));
         c.S.Networks.Invalidate(c.Loc);
         var net = c.NetworkAt(c.T(0, 0))!;
@@ -616,7 +619,9 @@ internal static class Playthrough
         c.StandAt(c.T(7, 1), Game1.up);
         yield return c.Show("The Advanced Crafting Rack keeps 60 Copper Wire in stock");
 
+        c.Player.QiGems = 12;
         c.CraftTimes(Ids.PrismaticDisk, 1);
+        c.CheckEqual("the Prismatic Disk spent 10 Qi Gems from the balance", 2, c.Player.QiGems);
         c.CheckEqual("the Prismatic Disk used the Iridium Disk", 0, c.Carried(O(Ids.IridiumDisk)));
 
         // Island Uplinks: one in the base, one on Ginger Island.

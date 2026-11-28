@@ -90,6 +90,7 @@ public static class PlayTestCoverage
         F("ports.buildings", "Ports beside the farmhouse and Sheds join one group", "playthrough"),
         F("uplink.island", "Uplinks join Ginger Island to the base", "playthrough"),
         F("crafting.menu", "every recipe crafts at the game's crafting menu", "playthrough"),
+        F("crafting.qiGems", "recipes with Qi Gems spend them from the player's Qi Gem balance", "playthrough"),
         F("save.roundtrip", "mod data and the game's save format keep everything", "save"),
         F("progression.gates", "each tier letter waits for its last missing requirement", "playthrough"),
     };
