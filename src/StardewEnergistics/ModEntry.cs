@@ -90,6 +90,7 @@ namespace StardewEnergistics
 
             new WireInput(helper, config, wires, renderer).Register();
             new BlockInteraction(helper, networks, disks, power, terminal, textures).Register();
+            new BlockDrops(helper, Monitor, disks, power).Register();
             new DebugCommands(helper, Monitor, wires, networks, disks, power).Register();
             new Testing.TestMenu(helper, Monitor, config).Register();
 
