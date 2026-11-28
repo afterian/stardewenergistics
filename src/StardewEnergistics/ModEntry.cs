@@ -68,6 +68,7 @@ namespace StardewEnergistics
             NotPlaceablePatch.Apply(harmony);
             DiskUpgradePatch.Apply(harmony, disks);
             QiGemCostPatch.Apply(harmony);
+            Monitor.Log("Patched crafting so Qi Gem recipes spend the Qi Gem balance.", LogLevel.Trace);
 
             var links = new MachineLinkService(Monitor, networks, disks, power);
             var shipping = new ShippingLinkService(helper, Monitor, networks, disks, power);

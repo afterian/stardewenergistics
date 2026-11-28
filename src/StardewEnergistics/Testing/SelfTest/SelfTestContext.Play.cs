@@ -211,6 +211,9 @@ internal sealed partial class SelfTestContext
         }
         if (!Check($"{Short(recipeId)}: shown in the crafting menu", button != null))
             return null;
+        // The page's own check before it crafts (Qi Gems count the balance, through the mod's patch).
+        Check($"{Short(recipeId)}: the crafting menu sees every ingredient", recipe.doesFarmerHaveIngredientsInInventory(HarmonyLib.AccessTools.Method(typeof(CraftingPage), "getContainerContents").Invoke(page, null) as IList<Item>),
+            string.Join(", ", recipe.recipeList.Select(kv => $"{Short(kv.Key)} {Have(ItemRegistry.QualifyItemId(kv.Key) ?? kv.Key)}/{kv.Value}")));
         int carriedBefore = Carried(expected);
         Item? held = null;
         KeepHandFree(() =>
