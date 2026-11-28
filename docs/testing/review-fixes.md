@@ -52,3 +52,4 @@ Bug: on a controller, a Battery Pack wouldn't go into a Power Rack and Coal woul
 6. Take a whole stack out: the disk meter's kinds and items go down.
 7. Test menu (L3+R3 or F7) > Recover lost disks: a disk lost before this fix comes back in your backpack with its items. Running it again finds 0.
 8. Open the Terminal, then Craft, then close it with X, Escape or B: you are back on the Terminal storage screen, and unused ingredients are back in storage. Do the same with Autocraft.
+9. Hold a Chest Link or Machine Link over a chest or machine: no red/green placement square shows, and using it attaches the Link. Hold Copper Wire: only the mod outline (green/red) shows.

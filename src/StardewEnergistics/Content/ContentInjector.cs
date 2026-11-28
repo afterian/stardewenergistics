@@ -128,7 +128,7 @@ internal sealed class ContentInjector
                 Name = i.Id,
                 DisplayName = T($"item.{i.Key}.name"),
                 Description = T($"item.{i.Key}.description"),
-                Type = "Crafting",
+                Type = "Basic", // used on things, never placed (see NotPlaceablePatch)
                 Category = 0,
                 Price = i.Price,
                 Texture = AssetCatalog.Get(i.File).GameAssetName,
@@ -143,7 +143,7 @@ internal sealed class ContentInjector
             Name = Journal.Id,
             DisplayName = T("item.QuestJournal.name"),
             Description = T("item.QuestJournal.description"),
-            Type = "Crafting",
+            Type = "Basic",
             Category = 0,
             Price = 0,
             SpriteIndex = JournalSpriteIndex,
