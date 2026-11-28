@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using StardewEnergistics.Core.Storage;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
@@ -285,13 +286,21 @@ internal sealed class TerminalMenu : IClickableMenu
     /// <summary>Why an item didn't go into storage, so the player knows what to fix.</summary>
     private string WhyNotStored(Item item)
     {
-        if (!StardewEnergistics.Storage.StardewItemKeys.TryGetKey(item, out _))
-            return "terminal.cantStore";
-        if (status is { Disks: 0 })
-            return "terminal.noDisks";
-        return status != null && status.KindsMax > 0 && status.KindsUsed >= status.KindsMax
-            ? "terminal.kindsFull"
-            : "terminal.full";
+        bool storable = StardewEnergistics.Storage.StardewItemKeys.TryGetKey(item, out _);
+        // Local rows carry a StoredRow, farmhand rows an ItemKey.
+        bool kindStored = rows.Any(r => r.Handle switch
+        {
+            StardewEnergistics.Storage.StoredRow { Key: { } k } => k.QualifiedId == item.QualifiedItemId,
+            ItemKey k => k.QualifiedId == item.QualifiedItemId,
+            _ => false,
+        });
+        return StoreRefusals.Why(storable, status?.Disks ?? 1, status?.KindsUsed ?? 0, status?.KindsMax ?? 0, kindStored) switch
+        {
+            StoreRefusal.CantStore => "terminal.cantStore",
+            StoreRefusal.NoDisks => "terminal.noDisks",
+            StoreRefusal.KindsFull => "terminal.kindsFull",
+            _ => "terminal.full",
+        };
     }
 
     public override void performHoverAction(int x, int y)
