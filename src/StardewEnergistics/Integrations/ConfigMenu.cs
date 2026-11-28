@@ -29,6 +29,7 @@ internal static class ConfigMenu
         api.AddSectionTitle(manifest, () => T("config.general"));
         api.AddKeybindList(manifest, () => config.NetworkViewKey, v => config.NetworkViewKey = v, () => T("config.networkViewKey"), () => T("config.networkViewKey.tip"));
         api.AddNumberOption(manifest, () => config.WrenchHoldTicks, v => config.WrenchHoldTicks = v, () => T("config.wrenchHold"), () => T("config.wrenchHold.tip"), min: 10, max: 120, interval: 5);
+        api.AddBoolOption(manifest, () => config.WireUnderBlockOnly, v => config.WireUnderBlockOnly = v, () => T("config.wireUnder"), () => T("config.wireUnder.tip"));
         api.AddBoolOption(manifest, () => config.TierGates, v => config.TierGates = v, () => T("config.tierGates"), () => T("config.tierGates.tip"));
         api.AddBoolOption(manifest, () => config.AnimateDataCables, v => config.AnimateDataCables = v, () => T("config.animateCables"), () => T("config.animateCables.tip"));
         api.AddBoolOption(manifest, () => config.TerminalReachAllBeforePorts, v => config.TerminalReachAllBeforePorts = v, () => T("config.reachAll"), () => T("config.reachAll.tip"));
@@ -49,6 +50,7 @@ internal static class ConfigMenu
         to.WrenchHoldTicks = from.WrenchHoldTicks;
         to.AnimateDataCables = from.AnimateDataCables;
         to.TierGates = from.TierGates;
+        to.WireUnderBlockOnly = from.WireUnderBlockOnly;
         to.BatteryPower = from.BatteryPower;
         to.CoalPower = from.CoalPower;
         to.HardwoodPower = from.HardwoodPower;
