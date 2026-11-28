@@ -23,6 +23,9 @@
   "wire.covered": "Wire hidden.",
   "wire.uncovered": "Wire shown.",
   "wire.run": "{{count}} wire tiles changed.",
+  "wire.cant.offMap": "Wire can't go there.",
+  "wire.cant.water": "Wire can't go on water.",
+  "wire.cant.blocked": "Wire can't go there: something is in the way (a wall, building, tree, bush or rock).",
   "networkView.on": "Network View on.",
   "networkView.off": "Network View off.",
   // Items (M2)
