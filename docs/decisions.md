@@ -34,9 +34,10 @@ Confirmed decisions log. The full design is in `docs/design-plan.md`; status and
 - Art style (2026-11-27): Maru purple-and-oak approved (amethyst cases, plum outlines, honey-oak supports, green CRTs). First final batch: `computer-core.png`, `network-terminal.png`, `wire-tiles.png`, `wire-tiles-glow.png`, `heavy-cable-tiles.png`. See `docs/artwork-pipeline.md`.
 - Art complete (2026-11-27): all 38 assets final. Added #37 `copper-data-signal.png` and #38 `heavy-data-signal.png` (8 phases × 16 masks, drawn on powered wire). Unpainted Heavy Cable is tinted Maru plum.
 
+- Wire connection (confirmed by the user in the playtest, 2026-11-28): wire on a block's own tile **or on any of the 4 tiles beside it** connects (`ConnectionRule.OwnTileOrNeighbours`, the default). Config `WireUnderBlockOnly` switches back to own-tile only.
+
 ## Open
 
-- Wire connection rule: wire on the block's own tile only (what the code does, `ConnectionRule.OwnTile`) vs also the 4 neighbouring tiles (`OwnTileOrNeighbours`, already in Core and tested). Confirm in the first playtest.
 - Terminal reach before Network Ports (own building only vs all buildings). Default own building; since 2026-11-28 the config option "Terminals reach all buildings early" (GMCM) joins every building's network to the farmhouse's without Ports.
 - Coal Generator value (1 Coal = 1 power vs 10).
 - Installed game and SMAPI versions on PC and Decks.
