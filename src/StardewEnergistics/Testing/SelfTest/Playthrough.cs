@@ -338,6 +338,7 @@ internal static class Playthrough
 
         var pressTile = c.T(PressAt.X, PressAt.Y);
         c.CheckEqual("Gold Processor pressed", 1, c.PressProcessors(pressTile, "336", 1));
+        yield return Wait.Ticks(2); // the journal notices it in the backpack (SMAPI's InventoryChanged, next tick)
 
         // Machine Link on a Furnace, set up with the wrench.
         c.CraftTimes(Ids.MachineLink, 1);
@@ -450,6 +451,7 @@ internal static class Playthrough
 
         var pressTile = c.T(PressAt.X, PressAt.Y);
         c.CheckEqual("Iridium Processor pressed", 1, c.PressProcessors(pressTile, "337", 1));
+        yield return Wait.Ticks(2);
 
         // Wireless Terminal.
         c.CraftTimes(Ids.WirelessTerminal, 1);
@@ -523,6 +525,8 @@ internal static class Playthrough
         c.Hold(O(Ids.CopperWire), wire.Count + 10);
         foreach (var t in wire)
         {
+            if (!ports.Contains(t))
+                c.ClearTile(farm, t);
             c.StandBeside(t);
             c.Hold(O(Ids.CopperWire), wire.Count + 10);
             c.Input.Press(SButton.MouseLeft, t);

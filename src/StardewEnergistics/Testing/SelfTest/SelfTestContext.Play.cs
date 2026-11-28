@@ -78,7 +78,29 @@ internal sealed partial class SelfTestContext
     }
 
     /// <summary>Adds items to the backpack (outside the hand slot), as if picked up.</summary>
-    public void Give(string qualifiedId, int count = 1)
+    public void Give(string qualifiedId, int count = 1) => KeepHandFree(() => GiveNow(qualifiedId, count));
+
+    /// <summary>
+    /// Runs something that adds to the backpack while keeping the hand slot out of it, so what lands there
+    /// isn't lost the next time the scenario holds something.
+    /// </summary>
+    public void KeepHandFree(Action add)
+    {
+        bool blocked = Player.Items[HandSlot] == null;
+        if (blocked)
+            Player.Items[HandSlot] = ItemRegistry.Create("(O)0"); // a placeholder (Weeds), removed again below
+        try
+        {
+            add();
+        }
+        finally
+        {
+            if (blocked)
+                Player.Items[HandSlot] = null;
+        }
+    }
+
+    private void GiveNow(string qualifiedId, int count)
     {
         while (count > 0)
         {
@@ -164,12 +186,16 @@ internal sealed partial class SelfTestContext
         if (!Check($"{Short(recipeId)}: shown in the crafting menu", button != null))
             return null;
         int carriedBefore = Carried(expected);
-        page.receiveLeftClick(button!.bounds.Center.X, button.bounds.Center.Y);
-        // The page holds the result on the cursor, or (1.6) puts it straight into the backpack.
-        var held = page.heldItem;
-        page.heldItem = null;
-        if (held != null && !Player.addItemToInventoryBool(held))
-            Log($"backpack full: {held.QualifiedItemId} dropped", LogLevel.Warn);
+        Item? held = null;
+        KeepHandFree(() =>
+        {
+            page.receiveLeftClick(button!.bounds.Center.X, button.bounds.Center.Y);
+            // The page holds the result on the cursor, or (1.6) puts it straight into the backpack.
+            held = page.heldItem;
+            page.heldItem = null;
+            if (held != null && !Player.addItemToInventoryBool(held))
+                Log($"backpack full: {held.QualifiedItemId} dropped", LogLevel.Warn);
+        });
         int gained = Carried(expected) - carriedBefore;
         int yield = Math.Max(1, recipe.numberProducedPerCraft);
         Check($"crafted {Short(expected)} x{yield}", gained == yield,
@@ -230,7 +256,7 @@ internal sealed partial class SelfTestContext
             Check($"press finished {Short(output)}", press.readyForHarvest.Value, $"minutes left {press.MinutesUntilReady}");
             HoldNothing();
             int before = Carried(output);
-            GameAction(pressTile);
+            KeepHandFree(() => GameAction(pressTile));
             if (Check($"collected {Short(output)} from the press", Carried(output) == before + 1, $"carried {Carried(output)}, was {before}"))
                 made++;
         }
@@ -247,6 +273,34 @@ internal sealed partial class SelfTestContext
             && loc.GetFurnitureAt(t) == null && (!loc.terrainFeatures.TryGetValue(t, out var tf) || tf is StardewValley.TerrainFeatures.Grass)
             && loc.getBuildingAt(t) == null
             && loc.getTileIndexAt(x, y, "Buildings") < 0 && loc.CanItemBePlacedHere(t) && !Game1.player.Tile.Equals(t);
+    }
+
+    /// <summary>
+    /// True if a player could clear the tile for building: on the map, dry, no building, wall, furniture, tree,
+    /// stump or boulder; only grass or litter (weeds, stones, twigs) on it, which <see cref="ClearTile"/> removes.
+    /// </summary>
+    public bool IsClearable(GameLocation loc, Vector2 t)
+    {
+        int x = (int)t.X, y = (int)t.Y;
+        if (!loc.isTileOnMap(t) || loc.isWaterTile(x, y) || loc.getBuildingAt(t) != null || loc.getTileIndexAt(x, y, "Buildings") >= 0
+            || loc.GetFurnitureAt(t) != null || Game1.player.Tile.Equals(t))
+            return false;
+        if (loc.objects.TryGetValue(t, out var o) && !(o.IsWeeds() || o.IsBreakableStone() || o.IsTwig()))
+            return false;
+        if (loc.terrainFeatures.TryGetValue(t, out var tf) && tf is not StardewValley.TerrainFeatures.Grass)
+            return false;
+        if (loc.resourceClumps.Any(r => r.occupiesTile(x, y)) || loc.largeTerrainFeatures.Any(f => f.getBoundingBox().Intersects(new Rectangle(x * 64, y * 64, 64, 64))))
+            return false;
+        return loc.isTilePassable(t) || loc.objects.ContainsKey(t);
+    }
+
+    /// <summary>Clears litter and grass off a tile, as a player would with a scythe or pickaxe.</summary>
+    public void ClearTile(GameLocation loc, Vector2 t)
+    {
+        if (loc.objects.TryGetValue(t, out var o) && (o.IsWeeds() || o.IsBreakableStone() || o.IsTwig()))
+            loc.objects.Remove(t);
+        if (loc.terrainFeatures.TryGetValue(t, out var tf) && tf is StardewValley.TerrainFeatures.Grass)
+            loc.terrainFeatures.Remove(t);
     }
 
     /// <summary>True if the tile and its four neighbours have no wire or mod block, so new blocks there join nothing of the player's.</summary>
@@ -317,7 +371,7 @@ internal sealed partial class SelfTestContext
                 var n = at + d;
                 if (prev.ContainsKey(n))
                     continue;
-                if (n != to && !(IsFree(loc, n) && AwayFromNetworks(loc, n, own)))
+                if (n != to && !(IsClearable(loc, n) && AwayFromNetworks(loc, n, own)))
                     continue;
                 prev[n] = at;
                 queue.Enqueue(n);
@@ -332,8 +386,11 @@ internal sealed partial class SelfTestContext
         foreach (var p in Networks.NetworkManager.TilesBeside(b))
         {
             var t = new Vector2(p.X, p.Y);
-            if (IsFree(outdoors, t) && AwayFromNetworks(outdoors, t) && Networks.NetworkManager.BuildingBeside(outdoors, t) == b)
+            if (IsClearable(outdoors, t) && AwayFromNetworks(outdoors, t) && Networks.NetworkManager.BuildingBeside(outdoors, t) == b)
+            {
+                ClearTile(outdoors, t);
                 return t;
+            }
         }
         return null;
     }
@@ -352,7 +409,7 @@ internal sealed partial class SelfTestContext
         var free = new bool[mapW, mapH];
         for (int fy = 0; fy < mapH; fy++)
             for (int fx = 0; fx < mapW; fx++)
-                free[fx, fy] = IsFree(farm, new Vector2(fx, fy)) && AwayFromNetworks(farm, new Vector2(fx, fy))
+                free[fx, fy] = IsClearable(farm, new Vector2(fx, fy)) && AwayFromNetworks(farm, new Vector2(fx, fy))
                     && farm.doesTileHaveProperty(fx, fy, "NoBuild", "Back") == null;
         for (int y = 3; y + h + 2 < mapH; y++)
         {
@@ -364,10 +421,10 @@ internal sealed partial class SelfTestContext
                         ok = free[x + dx, y + dy];
                 if (!ok)
                     continue;
-                // Grass goes, as it does under a real building.
-                for (int dy = 0; dy < h; dy++)
-                    for (int dx = 0; dx < w; dx++)
-                        farm.terrainFeatures.Remove(new Vector2(x + dx, y + dy));
+                // The player clears the spot first (and a tile round it, for the Port and wire).
+                for (int dy = -1; dy <= h; dy++)
+                    for (int dx = -1; dx <= w; dx++)
+                        ClearTile(farm, new Vector2(x + dx, y + dy));
                 if (farm.buildStructure(type, new Vector2(x, y), Player, out var built, magicalConstruction: true, skipSafetyChecks: true))
                 {
                     built.daysOfConstructionLeft.Value = 0;
@@ -378,6 +435,11 @@ internal sealed partial class SelfTestContext
                 }
             }
         }
+        int count = 0;
+        foreach (bool f in free)
+            if (f)
+                count++;
+        Log($"no room for a {type} ({w}x{h} plus a tile round it) on the farm; {count} clearable tiles", LogLevel.Warn);
         return null;
     }
 }
