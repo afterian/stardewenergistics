@@ -35,17 +35,17 @@ try {
   $out = Join-Path $env:TEMP "StardewEnergistics-zip"
   if (Test-Path $out) { Remove-Item $out -Recurse -Force }
   $log = Join-Path $env:TEMP "StardewEnergistics-build.log"
-  & dotnet build "src\StardewEnergistics\StardewEnergistics.csproj" -c Release `
+  & dotnet build "src\StardewEnergistics\StardewEnergistics.csproj" -c Release --no-incremental `
+      "-p:DebugType=None" "-p:DebugSymbols=false" "-p:PathMap=$((Get-Location).Path)=/src" `
       "-p:EnableModDeploy=false" "-p:ModZipPath=$out" "-p:GamePath=$($s.GamePath)" *> $log
   $ok = ($LASTEXITCODE -eq 0)
   [IO.File]::WriteAllText((Resolve-Path $manifestPath), $original, (New-Object Text.UTF8Encoding $false))
 } finally { Pop-Location }
 
 $short = $sha.Substring(0, 7)
-$when = (Get-Date).ToString("yyyy-MM-dd HH:mm")
+$when = [DateTime]::UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC"
 if (-not $ok) {
-  Set-CommitStatus $repo $sha "failure" "PC build failed ($version). Log is attached to the test-latest release."
-  Publish-Log $repo $Tag $log $sha
+  Set-CommitStatus $repo $sha "failure" "PC build failed ($version). See the local build log."
   Write-Host "Build FAILED for $short. Log: $log" -ForegroundColor Red
   exit 1
 }
@@ -54,7 +54,6 @@ if (-not $zip) { Set-CommitStatus $repo $sha "failure" "Build made no zip"; exit
 
 $notes = "Version $version, built from $Label @ $short on $when.`n`nRolling test build for the Steam Decks. Not for players."
 Publish-Zip $repo $Tag $zip.FullName $version $notes $sha
-Publish-Log $repo $Tag $log $sha
 Set-CommitStatus $repo $sha "success" "Published $version to test-latest"
 Write-Host "Published $version ($short). Start the game on each Deck to get it." -ForegroundColor Green
 exit 0

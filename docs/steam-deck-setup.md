@@ -30,7 +30,7 @@ If you keep it private, the Decks need a read-only token (part 2), and the Deck 
 
 ## Part 1. PC (once, about 5 minutes)
 
-1. Get the latest project files: in `E:\Projects\stardewenergistics`, pull `main` (GitHub Desktop: **Fetch origin**, then **Pull**; or `git pull` in a terminal).
+1. Get the latest project files: in your local Stardew Energistics checkout, pull `main` (GitHub Desktop: **Fetch origin**, then **Pull**; or `git pull` in a terminal).
 2. In File Explorer, open the `deploy` folder and double-click **`setup-pc.bat`**.
 3. A window works through 5 steps. It:
    - installs Git, the .NET 8 SDK and the GitHub CLI if they're missing (click **Yes** if Windows asks)
@@ -40,7 +40,7 @@ If you keep it private, the Decks need a read-only token (part 2), and the Deck 
    - builds and publishes the first build
 4. When it says **PC setup done**, press a key to close it.
 
-To check it worked, look at https://github.com/afterian/stardewenergistics/releases/tag/test-latest, which should have `StardewEnergistics-test.zip`. Each commit on `main` also gets a green tick ("pc-build") once it's published, or a red cross if the build failed. The build log is attached to the release as `last-build-log.txt`, so Claude can read the errors without your PC.
+To check it worked, look at https://github.com/afterian/stardewenergistics/releases/tag/test-latest, which should have `StardewEnergistics-test.zip`. Each commit on `main` also gets a green tick ("pc-build") once it's published, or a red cross if the build failed. Raw build logs stay on the build PC.
 
 Running the setup again is safe. Do it if you move the game to another drive.
 

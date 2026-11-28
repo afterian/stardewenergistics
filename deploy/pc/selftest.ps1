@@ -56,7 +56,7 @@ if (-not $GamePath) {
     if ($m.Success) { $GamePath = $m.Groups[1].Value.Trim() }
   }
 }
-if (-not $GamePath) { $GamePath = "D:\SteamLibrary\steamapps\common\Stardew Valley" }
+if (-not $GamePath) { Done 2 "Game path not found. Run deploy\setup-pc.bat or pass -GamePath." }
 $smapi = Join-Path $GamePath "StardewModdingAPI.exe"
 if (-not (Test-Path $smapi)) { Done 2 "SMAPI not found at $smapi. Pass -GamePath." }
 
@@ -146,21 +146,7 @@ if ($Publish) {
   $sha = $Commit
   if (-not $sha) { $sha = (git -C $Source rev-parse HEAD).Trim() }
   $state = if ($code -eq 0) { "success" } else { "failure" }
-  Set-CommitStatus $s.Repo $sha $state ($summary -replace '^SE-SELFTEST RESULT: ', 'Self-test ') "pc-selftest"
-  Publish-Log $s.Repo "test-latest" $report $sha "last-selftest.txt"
-  if ($Showcase -and (Test-Path $shots)) {
-    $shotsZip = Join-Path $work "selftest-shots.zip"
-    Remove-Item $shotsZip -ErrorAction SilentlyContinue
-    Compress-Archive -Path (Join-Path $shots "*") -DestinationPath $shotsZip
-    try {
-      $rel = Get-OrCreate-Release $s.Repo "test-latest" $sha
-      foreach ($a in (Invoke-GhApi GET "repos/$($s.Repo)/releases/$($rel.id)/assets?per_page=100" $null)) {
-        if ($a.name -eq "selftest-shots.zip") { Invoke-GhApi DELETE "repos/$($s.Repo)/releases/assets/$($a.id)" $null | Out-Null }
-      }
-      Upload-Asset $s.Repo $rel.id $shotsZip "selftest-shots.zip" "application/zip" | Out-Null
-      Write-Host "Screenshots uploaded to the test-latest release as selftest-shots.zip."
-    } catch { Write-Host "Couldn't upload the screenshots: $($_.Exception.Message)" }
-  }
+  Set-CommitStatus $s.Repo $sha $state $(if ($code -eq 0) { "Self-test passed." } else { "Self-test failed. See the local report." }) "pc-selftest"
 }
 if ($Showcase) { Write-Host "Screenshots: $shots" }
 

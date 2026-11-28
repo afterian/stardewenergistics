@@ -28,7 +28,7 @@ run in a session launched by the script.
 
 **Every build:** `deploy\selftest.bat -Watcher on` makes the PC build watcher self-test each new `main`
 build after publishing it: a `pc-selftest` tick or cross on the commit, and the report as
-`last-selftest.txt` on the `test-latest` release. It skips a build if the game is open. Restart the watcher
+keeps the full self-test report on the build PC. It skips a build if the game is open. Restart the watcher
 (sign out and in) after merging changes to `watch.ps1`. Re-running `setup-pc.bat` turns it off again.
 
 ## Playthrough and showcase (start to finish)
@@ -49,8 +49,8 @@ Sheds across the real farm, keep-in-stock, the Prismatic Disk and an Island Upli
 
 `showcase` is the same playthrough slowly, with a screenshot (world, HUD and menus) after each step. Double-click
 `deploy\showcase.bat` (or `se_selftest showcase`). Screenshots and `index.json` captions go to
-`%LOCALAPPDATA%\StardewEnergistics\selftest\shots`, which opens at the end; with `-Publish` they're uploaded to
-the `test-latest` release as `selftest-shots.zip`. When it's done **the game stays open** on the built base so
+`%LOCALAPPDATA%\StardewEnergistics\selftest\shots`, which opens at the end. They stay on the PC (the repo
+and its releases are public). When it's done **the game stays open** on the built base so
 you can walk around (you get your backpack back plus a Network Wrench). Nothing is ever saved: if the game tries
 to save (for example you sleep), it closes instead. `-Close` closes it at the end.
 
