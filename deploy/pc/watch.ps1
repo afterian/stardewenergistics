@@ -36,6 +36,18 @@ while ($true) {
       Pop-Location
       & (Join-Path $PSScriptRoot "build-and-publish.ps1") -Source $work -Label $s.Branch *>> $log
       Log $(if ($LASTEXITCODE -eq 0) { "published $($remote.Substring(0,7))" } else { "build failed for $($remote.Substring(0,7)); waiting for the next commit" })
+      # Optional: run the in-game self-test on the new build (deploy\selftest.bat -Watcher on).
+      # Skipped while you're playing, so it never takes over the game.
+      $s = Get-Settings
+      if ($LASTEXITCODE -eq 0 -and $s.SelfTest -eq $true) {
+        if (Get-Process -Name "StardewModdingAPI", "Stardew Valley" -ErrorAction SilentlyContinue) {
+          Log "self-test skipped for $($remote.Substring(0,7)): the game is open"
+        } else {
+          Log "self-testing $($remote.Substring(0,7))"
+          & (Join-Path $PSScriptRoot "selftest.ps1") -Source $work -ZipDir (Join-Path $env:TEMP "StardewEnergistics-zip") -Commit $remote -Publish *>> $log
+          Log "self-test exit code $LASTEXITCODE for $($remote.Substring(0,7))"
+        }
+      }
       # Remember it either way, so a broken commit isn't rebuilt every minute.
       Set-Content -Path $state -Value $remote
     } else {
