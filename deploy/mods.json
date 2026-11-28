@@ -2,6 +2,6 @@
   "_comment": "Mods the PC watcher builds and the Steam Decks install. Temporary pack loader: every mod's zip goes to this repo's test-latest release (StardewEnergistics-test.zip, the others <name>-test.mod, also zips); the Decks install all of them. Add a mod: copy an entry. project = the SMAPI mod's .csproj (its manifest.json sits next to it).",
   "mods": [
     { "name": "StardewEnergistics", "repo": "afterian/stardewenergistics", "branch": "main", "project": "src/StardewEnergistics/StardewEnergistics.csproj" },
-    { "name": "StardewFoodTime",    "repo": "afterian/stardewfoodtime",    "branch": "main", "project": "src/StardewFoodTime/StardewFoodTime.csproj" }
+    { "name": "StardewFoodTime",    "repo": "afterian/stardewfoodtime",    "branch": "m4-release", "project": "src/StardewFoodTime/StardewFoodTime.csproj" }
   ]
 }
