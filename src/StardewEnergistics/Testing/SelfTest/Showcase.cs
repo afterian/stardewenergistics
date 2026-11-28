@@ -32,12 +32,14 @@ internal static class Showcase
 
     public static IEnumerable<object?> Run(SelfTestContext c)
     {
-        bool learned = !c.Player.craftingRecipes.ContainsKey(Ids.CopperWire);
-        if (learned)
-            c.Player.craftingRecipes.Add(Ids.CopperWire, 0);
 
         c.StandAt(c.T(4, 5), Game1.up);
         yield return c.Show("An empty building, before anything is built", 90);
+
+        // The quest up to the storage blueprints: Maru's journal, her first two letters, recipes learned.
+        foreach (object? step in Quest.Prologue(c))
+            yield return step;
+        c.ClearBackpack();
 
         // Wire, one tile at a time.
         var wireTiles = c.Row(0, 0, 7).Concat(new[] { c.T(7, 1), c.T(7, 2) }).Concat(c.Row(3, 3, 7).Reverse()).ToList();
@@ -91,9 +93,9 @@ internal static class Showcase
         c.StandBeside(c.T(0, 0));
         c.HoldNothing();
         c.Action(c.T(0, 0));
-        yield return c.Show("The Core's status: blocks, disks and power", 100);
-        if (Game1.activeClickableMenu != null)
-            Game1.exitActiveMenu();
+        c.Check("Core status shows", Game1.activeClickableMenu is DialogueBox, Game1.activeClickableMenu?.GetType().Name ?? "no menu");
+        yield return c.Show("The Core's status: blocks, disks and power", 100, 45);
+        c.CloseMenu();
         yield return Wait.Ticks(10);
 
         // Disks.
@@ -159,7 +161,7 @@ internal static class Showcase
         yield return Wait.Ticks(10);
         c.Check("Autocraft screen opens", Game1.activeClickableMenu?.GetType().Name == "AutocraftMenu", Game1.activeClickableMenu?.GetType().Name ?? "none");
         yield return c.Show("The Autocraft screen lists what the network can make", 90);
-        Game1.exitActiveMenu();
+        c.CloseMenu();
         yield return Wait.Ticks(10);
 
         // Autocraft 40 Copper Wire.
@@ -195,12 +197,15 @@ internal static class Showcase
         // Final look at the Terminal.
         menu = c.OpenTerminal(c.T(5, 0));
         yield return c.Show("The Terminal now shows the crafted wire and smelted bars", 120);
-        if (Game1.activeClickableMenu != null)
-            Game1.exitActiveMenu();
+        c.CloseMenu();
         c.StandAt(c.T(4, 5), Game1.up);
         yield return c.Show("The finished base", 150);
 
-        if (learned)
-            c.Player.craftingRecipes.Remove(Ids.CopperWire);
+        // The journal ticks what was built, and Maru's next letters arrive.
+        foreach (object? step in Quest.Epilogue(c, new[] { "core", "disk", "power", "generator", "chest", "machineLink", "furnace", "craftingRack", "job" }))
+            yield return step;
+        c.StandAt(c.T(4, 5), Game1.up);
+        yield return c.Show("All done: the base is left standing for you to try", 60);
+
     }
 }

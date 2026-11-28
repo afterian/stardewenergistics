@@ -56,7 +56,8 @@ namespace StardewEnergistics
             var feeds = new PowerFeedService(helper, Monitor, networks, power);
             helper.Events.GameLoop.DayStarted += (_, _) => crafting.OnDayStarted();
             // Before the other TimeChanged handlers, so the journal sees short autocraft jobs before they finish.
-            new Guide.GuideService(helper, Monitor, config, networks, power, disks, wires, progression).Register();
+            var guide = new Guide.GuideService(helper, Monitor, config, networks, power, disks, wires, progression);
+            guide.Register();
             var terminal = new TerminalController(helper, Monitor, networks, disks, power, textures, terminalNet, crafting);
             terminal.Register();
 
@@ -103,7 +104,9 @@ namespace StardewEnergistics
                 Power = power,
                 Crafting = crafting,
                 Links = links,
-                InputHandlers = new object[] { wireInput, blockInteraction },
+                Guide = guide,
+                Progression = progression,
+                InputHandlers = new object[] { guide, wireInput, blockInteraction },
             }).Register();
 
             new Multiplayer.VersionCheck(helper, Monitor, ModManifest).Register();

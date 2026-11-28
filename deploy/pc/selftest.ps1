@@ -19,7 +19,8 @@ param(
   [string]$GamePath = "",
   [int]$TimeoutMinutes = 6,
   [string]$Commit = "",          # with -Publish: the commit to mark
-  [switch]$Showcase,             # run the slow showcase (screenshots in %LOCALAPPDATA%\StardewEnergistics\selftest\shots)
+  [switch]$Showcase,             # run the slow showcase (screenshots in %LOCALAPPDATA%\StardewEnergistics\selftest\shots); the game stays open afterwards
+  [switch]$Close,                # with -Showcase: close the game at the end anyway
   [switch]$Publish,              # set a pc-selftest tick/cross on the commit and attach the report to test-latest
   [ValidateSet("", "on", "off")][string]$Watcher = ""   # on: the build watcher self-tests every new build
 )
@@ -95,16 +96,29 @@ $env:SE_SELFTEST = "1"
 $env:SE_SELFTEST_REPORT = $report
 $env:SE_SELFTEST_SAVE = $Save
 $env:SE_SELFTEST_ONLY = $Only
-Write-Host "Starting Stardew Valley for the self-test (it closes by itself; please don't touch it) ..."
+$keepOpen = $Showcase -and -not $Close
+$env:SE_SELFTEST_HOLD = if ($keepOpen) { "1" } else { "" }
+Remove-Item (Join-Path $work "selftest-crash.txt") -ErrorAction SilentlyContinue
+if ($keepOpen) {
+  Write-Host "Starting Stardew Valley for the showcase. Watch it build; when it's done the game stays open for you to try (nothing is saved; sleeping closes the game) ..."
+} else {
+  Write-Host "Starting Stardew Valley for the self-test (it closes by itself; please don't touch it) ..."
+}
 $started = Get-Date
 $proc = Start-Process -FilePath $smapi -ArgumentList @("--mods-path", "`"$mods`"") -WorkingDirectory $GamePath -PassThru
-$finished = $proc.WaitForExit($TimeoutMinutes * 60 * 1000)
+$deadline = $started.AddMinutes($TimeoutMinutes)
+$finished = $false
+while ((Get-Date) -lt $deadline) {
+  if ($proc.WaitForExit(2000)) { $finished = $true; break }
+  # Showcase: the game stays open, so stop waiting once the report is written.
+  if ($keepOpen -and (Test-Path $report) -and ((Get-Item $report).LastWriteTime -ge $started)) { $finished = $true; Start-Sleep -Seconds 2; break }
+}
 if (-not $finished) {
   Write-Host "Timed out after $TimeoutMinutes minutes; closing the game."
   Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
   Get-Process -Name "Stardew Valley" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
 }
-Remove-Item Env:SE_SELFTEST, Env:SE_SELFTEST_REPORT, Env:SE_SELFTEST_SAVE, Env:SE_SELFTEST_ONLY, Env:SE_SELFTEST_SHOTS -ErrorAction SilentlyContinue
+Remove-Item Env:SE_SELFTEST, Env:SE_SELFTEST_REPORT, Env:SE_SELFTEST_SAVE, Env:SE_SELFTEST_ONLY, Env:SE_SELFTEST_SHOTS, Env:SE_SELFTEST_HOLD -ErrorAction SilentlyContinue
 
 # Keep the SMAPI log next to the report.
 $smapiLog = Join-Path $env:APPDATA "StardewValley\ErrorLogs\SMAPI-latest.txt"
@@ -120,6 +134,8 @@ if ((Test-Path $report) -and ((Get-Item $report).LastWriteTime -ge $started)) {
   $line = ($text -split "`n" | Where-Object { $_ -like "SE-SELFTEST RESULT:*" } | Select-Object -First 1)
   if ($line) { $summary = $line.Trim() }
   $code = if ($line -like "*RESULT: PASS*") { 0 } else { 1 }
+  $crash = Join-Path $work "selftest-crash.txt"
+  if (Test-Path $crash) { Write-Host "Where it stopped (also in $crash):" -ForegroundColor Yellow; Get-Content $crash | Select-Object -First 40 | Write-Host }
 } else {
   # Leave the reason in the report file too, for the watcher and Claude.
   Set-Content -Path $report -Value "SE-SELFTEST RESULT: FAIL (did not finish)`n$summary"

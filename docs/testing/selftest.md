@@ -37,7 +37,19 @@ in the scratch building, slowly enough to follow: wire, Core, racks, power, disk
 Network View, storing and taking items at the Terminal, the Autocraft screen, an autocraft job and the Furnace
 running from storage. Each step is checked and photographed; the screenshots (with `index.json` captions) go to
 `%LOCALAPPDATA%\StardewEnergistics\selftest\shots`, which opens at the end. With `-Publish` they are also
-uploaded to the `test-latest` release as `selftest-shots.zip`. Like the self-test, it never saves.
+uploaded to the `test-latest` release as `selftest-shots.zip`. It starts with the quest: Maru's journal letter,
+the journal, and her first two blueprint letters as hearts and progress grow; it ends with the journal's goals
+ticked and her automation and autocrafting letters. When it's done **the game stays open** on the built base so
+you can walk around and try it (you get your backpack back plus a Network Wrench). Nothing is ever saved: if the
+game tries to save (for example you sleep), it closes instead. `-Close` closes it at the end.
+
+## When something fails
+
+- Every step and synthetic press is logged (`[self-test]` lines in the SMAPI log, at Debug/Trace), and a press made
+  while the player isn't free is a warning with the full state.
+- A failed check records the step it happened in and the state (location, tile, menu, dialogue, held item).
+- A scenario that stops writes `selftest-crash.txt` beside the report: scenario, last step, state, the exception with
+  its stack trace, and the last 60 self-test log lines. The PC script prints it.
 
 ## Report
 
@@ -63,6 +75,7 @@ failed checks; the last line is `SE-SELFTEST RESULT: PASS|FAIL (...)`.
 | machine-link | Unconfigured Link does nothing; configured one loads a Furnace from storage, collects the bar, reloads |
 | autocraft | Crafting Rack makes 20 Copper Wire from storage; too big a job is refused |
 | tools | A Pickaxe stores on a disk and comes back as a working tool |
+| quest | Maru's journal letter on day one (journal attached, recipe known), using the journal opens it, her T1/T2 letters wait for 2 hearts / 10 processors + Mines 20 and teach their recipes when read at the mailbox, journal goals tick (launched sessions only) |
 | save | Mod save data (SMAPI save-data API, fresh stores) and the game's own location XML keep wire, disks and block data |
 
 Not covered yet: Network Ports and linked buildings, Wireless Terminal, Shipping Links, Power Feed,

@@ -29,6 +29,9 @@ internal sealed class SelfTestRunner
     /// <summary>Launched for the self-test: load a save, run, quit (SE_SELFTEST=1).</summary>
     private readonly bool auto = Environment.GetEnvironmentVariable("SE_SELFTEST") == "1";
 
+    /// <summary>Launched mode with SE_SELFTEST_HOLD=1: leave the game open on the built base afterwards (still never saved).</summary>
+    private readonly bool hold = Environment.GetEnvironmentVariable("SE_SELFTEST_HOLD") == "1";
+
     private readonly Screenshots shots;
     private Run? run;
     private bool loadRequested;
@@ -54,6 +57,12 @@ internal sealed class SelfTestRunner
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
         helper.Events.GameLoop.Saving += (_, _) =>
         {
+            // A launched session must never write the save: close the game instead (e.g. the player slept).
+            if (auto)
+            {
+                monitor.Log($"{Marker}: the game is about to save; closing instead so your save stays as it was.", LogLevel.Warn);
+                Environment.Exit(0);
+            }
             if (run != null)
                 monitor.Log("The game is saving while the self-test runs; the scratch location is removed before the next save.", LogLevel.Warn);
         };
@@ -96,7 +105,7 @@ internal sealed class SelfTestRunner
     private void Start(IReadOnlyCollection<string> only)
     {
         var chosen = Scenarios.All.Where(s => only.Count == 0 ? !s.OnlyWhenNamed : only.Contains(s.Id)).ToList();
-        run = new Run(helper, monitor, services, chosen, throwaway: auto, shots);
+        run = new Run(helper, monitor, services, chosen, throwaway: auto, shots, ReportPath());
         monitor.Log($"{Marker}: starting {chosen.Count} scenarios.", LogLevel.Info);
     }
 
@@ -106,10 +115,16 @@ internal sealed class SelfTestRunner
         {
             if (run.Tick())
             {
-                var report = run.Finish();
+                bool keep = auto && hold;
+                var report = run.Finish(keep);
                 run = null;
                 WriteReport(report);
-                if (auto)
+                if (keep)
+                {
+                    monitor.Log($"{Marker}: finished; the game stays open on the built base. Nothing will be saved: sleeping or saving closes the game.", LogLevel.Info);
+                    Game1.addHUDMessage(new HUDMessage("Self-test done. Walk around and try it! This session is never saved.", HUDMessage.newQuest_type));
+                }
+                else if (auto)
                     Quit(report.Failed == 0 && report.Crashed == 0 ? 0 : 1);
             }
             return;
@@ -185,13 +200,15 @@ internal sealed class SelfTestRunner
         Environment.Exit(code);
     }
 
+    private string ReportPath() => Environment.GetEnvironmentVariable("SE_SELFTEST_REPORT") is { Length: > 0 } p ? p : Path.Combine(helper.DirectoryPath, "selftest-report.txt");
+
     private void WriteReport(Report report)
     {
         string text = report.ToText();
         foreach (string line in text.Split('\n'))
             monitor.Log(line, line.StartsWith("[FAIL]") || line.StartsWith("[CRASH]") ? LogLevel.Error : LogLevel.Info);
 
-        string path = Environment.GetEnvironmentVariable("SE_SELFTEST_REPORT") is { Length: > 0 } p ? p : Path.Combine(helper.DirectoryPath, "selftest-report.txt");
+        string path = ReportPath();
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
@@ -238,10 +255,14 @@ internal sealed class SelfTestRunner
         private bool warped;
 
         private readonly Screenshots shots;
+        private readonly string crashPath;
+        private ShotStep? pendingShot;
 
-        public Run(IModHelper helper, IMonitor monitor, SelfTestServices services, List<Scenario> scenarios, bool throwaway, Screenshots shots)
+        public Run(IModHelper helper, IMonitor monitor, SelfTestServices services, List<Scenario> scenarios, bool throwaway, Screenshots shots, string reportPath)
         {
             this.shots = shots;
+            crashPath = Path.Combine(Path.GetDirectoryName(reportPath) ?? ".", "selftest-crash.txt");
+            try { File.Delete(crashPath); } catch { }
             this.helper = helper;
             this.monitor = monitor;
             this.services = services;
@@ -266,6 +287,13 @@ internal sealed class SelfTestRunner
             if (waitTicks > 0)
             {
                 waitTicks--;
+                return false;
+            }
+            if (pendingShot != null)
+            {
+                shots.Request(pendingShot.Caption);
+                waitTicks = pendingShot.PauseTicks;
+                pendingShot = null;
                 return false;
             }
             if (waitUntil != null)
@@ -300,16 +328,22 @@ internal sealed class SelfTestRunner
                         waitUntil = w;
                         waitUntilTicks = 0;
                         break;
+                    case ShotStep shot:
+                        pendingShot = shot;
+                        waitTicks = shot.SettleTicks;
+                        break;
                 }
             }
             catch (ScenarioAbort e)
             {
+                WriteCrash(e.Message, null);
                 EndScenario("fail", e.Message);
                 return NextScenario();
             }
             catch (Exception e)
             {
                 ctx.Check("no exception", false, e.ToString());
+                WriteCrash(e.GetBaseException().Message, e);
                 EndScenario("crash", e.GetBaseException().Message);
                 return NextScenario();
             }
@@ -352,7 +386,10 @@ internal sealed class SelfTestRunner
         private Vector2 pendingOrigin;
 
         /// <summary>Top-left of a free, walkable block of tiles big enough for every scenario.</summary>
-        private static Vector2? FindArea(GameLocation loc)
+        private static Vector2? FindArea(GameLocation loc) => FindArea(loc, floorOnly: true) ?? FindArea(loc, floorOnly: false);
+
+        /// <param name="floorOnly">Only tiles with a floor type (not the wall band, which is walkable art in sheds).</param>
+        private static Vector2? FindArea(GameLocation loc, bool floorOnly)
         {
             var map = loc.Map.Layers[0];
             for (int y = 1; y + SelfTestContext.AreaHeight < map.LayerHeight; y++)
@@ -364,7 +401,8 @@ internal sealed class SelfTestRunner
                         for (int dx = 0; dx < SelfTestContext.AreaWidth && ok; dx++)
                         {
                             var t = new Vector2(x + dx, y + dy);
-                            ok = loc.isTilePassable(t) && !loc.isWaterTile(x + dx, y + dy) && loc.getTileIndexAt(x + dx, y + dy, "Buildings") < 0;
+                            ok = loc.isTilePassable(t) && !loc.isWaterTile(x + dx, y + dy) && loc.getTileIndexAt(x + dx, y + dy, "Buildings") < 0
+                                && (!floorOnly || loc.doesTileHaveProperty(x + dx, y + dy, "Type", "Back") != null);
                         }
                     if (ok)
                         return new Vector2(x, y);
@@ -393,6 +431,7 @@ internal sealed class SelfTestRunner
             try
             {
                 ctx.Reset();
+                ctx.Slow = s.OnlyWhenNamed;
                 steps = Prelude(ctx, s).GetEnumerator();
             }
             catch (Exception e)
@@ -417,6 +456,32 @@ internal sealed class SelfTestRunner
                 yield return step;
         }
 
+        /// <summary>
+        /// Writes selftest-crash.txt beside the report: which scenario and step stopped, the exception with its
+        /// stack trace, the player and menu state, and the scenario's recent log lines. Appends if several stop.
+        /// </summary>
+        private void WriteCrash(string why, Exception? e)
+        {
+            try
+            {
+                var sb = new StringBuilder();
+                sb.Append($"=== {DateTime.Now:yyyy-MM-dd HH:mm:ss} scenario '{ctx?.Scenario}' stopped: {why}\n");
+                sb.Append($"Last step: {ctx?.LastStep}\n");
+                sb.Append($"State: {ctx?.State()}\n");
+                if (e != null)
+                    sb.Append($"Exception:\n{e}\n");
+                sb.Append("Recent self-test log:\n");
+                foreach (string line in ctx?.Trail ?? new Queue<string>())
+                    sb.Append("  " + line + "\n");
+                File.AppendAllText(crashPath, sb.ToString() + "\n");
+                monitor.Log($"[self-test] {ctx?.Scenario} stopped at '{ctx?.LastStep}'. Details: {crashPath}", LogLevel.Error);
+            }
+            catch (Exception ex)
+            {
+                monitor.Log($"[self-test] couldn't write {crashPath}: {ex.Message}", LogLevel.Warn);
+            }
+        }
+
         private void EndScenario(string? status, string detail)
         {
             var s = scenarios[index];
@@ -430,12 +495,29 @@ internal sealed class SelfTestRunner
         }
 
         /// <summary>Puts the player, the backpack and the world back as they were, and builds the report.</summary>
-        public Report Finish()
+        public Report Finish(bool keep = false)
         {
+            if (keep)
+            {
+                // Leave the base standing for the player to look at; give the backpack back plus a wrench.
+                try
+                {
+                    ctx?.CloseMenu();
+                    Game1.player.Items.OverwriteWith(homeItems);
+                    Game1.player.addItemToInventoryBool(ItemRegistry.Create("(O)" + Ids.NetworkWrench));
+                    Game1.player.Stamina = homeStamina;
+                    services.Networks.Clear();
+                    shots.WriteIndex();
+                }
+                catch (Exception e)
+                {
+                    outcomes.Add(("cleanup", "crash", e.ToString()));
+                }
+                return new Report(started, DateTime.Now, results, outcomes, scenarios.Count, throwaway);
+            }
             try
             {
-                if (Game1.activeClickableMenu != null)
-                    Game1.exitActiveMenu();
+                ctx?.CloseMenu();
                 ctx?.Reset();
                 if (ctx != null)
                 {

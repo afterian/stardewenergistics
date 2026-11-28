@@ -27,6 +27,8 @@ internal sealed class SelfTestServices
     public PowerService Power { get; init; } = null!;
     public CraftingService Crafting { get; init; } = null!;
     public MachineLinkService Links { get; init; } = null!;
+    public Guide.GuideService Guide { get; init; } = null!;
+    public Progression.ProgressionService Progression { get; init; } = null!;
 
     /// <summary>Objects with an OnButtonPressed handler, in the order ModEntry registers them.</summary>
     public IReadOnlyList<object> InputHandlers { get; init; } = System.Array.Empty<object>();
@@ -53,6 +55,9 @@ internal static class Wait
 
 internal sealed record WaitUntil(Func<bool> Condition, string What, int TimeoutTicks);
 
+/// <summary>Showcase step: wait for the screen to settle, take a screenshot, then pause so a person can follow.</summary>
+internal sealed record ShotStep(string Caption, int SettleTicks, int PauseTicks);
+
 /// <summary>
 /// What a scenario works with: a scratch location, the player, synthetic input and checks.
 /// Everything is done through the same code paths a player's actions take: the game's placement,
@@ -74,7 +79,7 @@ internal sealed class SelfTestContext
         Origin = origin;
         Throwaway = throwaway;
         this.results = results;
-        Input = new SyntheticInput(helper, services.InputHandlers);
+        Input = new SyntheticInput(helper, services.InputHandlers, this);
     }
 
     public IModHelper Helper { get; }
@@ -102,10 +107,64 @@ internal sealed class SelfTestContext
     /// Showcase: pause so a person can follow along, and save a screenshot with this caption.
     /// Yield the result: <c>yield return c.Show("...")</c>.
     /// </summary>
-    public object Show(string caption, int pauseTicks = 75)
+    public object? Show(string caption, int pauseTicks = 75, int settleTicks = 20)
     {
-        Shots?.Request(caption);
-        return Wait.Ticks(pauseTicks);
+        if (!Slow)
+            return null;
+        Step("screenshot: " + caption);
+        return new ShotStep(caption, settleTicks, pauseTicks);
+    }
+
+    /// <summary>True for the showcase: pause at each <see cref="Show"/> and take screenshots.</summary>
+    public bool Slow { get; set; }
+
+    // ---- Diagnostics ----
+
+    /// <summary>The last few self-test log lines, for the crash report.</summary>
+    public Queue<string> Trail { get; } = new();
+
+    /// <summary>The step now running (in the crash report and failed checks).</summary>
+    public string LastStep { get; private set; } = "";
+
+    private int stepNumber;
+
+    /// <summary>Logs what the scenario is about to do, so a failure says where it happened.</summary>
+    public void Step(string what)
+    {
+        LastStep = what;
+        Log($"step {++stepNumber}: {what}", LogLevel.Debug);
+    }
+
+    public void Log(string line, LogLevel level = LogLevel.Trace)
+    {
+        string text = $"[self-test] {Scenario}: {line}";
+        monitor.Log(text, level);
+        Trail.Enqueue($"{DateTime.Now:HH:mm:ss.fff} {line}");
+        while (Trail.Count > 60)
+            Trail.Dequeue();
+    }
+
+    /// <summary>Everything that decides whether the game takes a press: where the player is, menus, dialogue.</summary>
+    public string State()
+    {
+        var held = Player.CurrentItem;
+        return $"location={Game1.currentLocation?.NameOrUniqueName}, tile={Rel(Player.Tile)}, facing={Player.FacingDirection}, "
+            + $"playerFree={Context.IsPlayerFree}, canMove={Player.CanMove}, menu={Game1.activeClickableMenu?.GetType().Name ?? "none"}, "
+            + $"dialogueUp={Game1.dialogueUp}, event={Game1.eventUp}, warping={Game1.isWarping}, fade={Game1.globalFade}, "
+            + $"held={(held == null ? "nothing" : held.QualifiedItemId + " x" + held.Stack)}";
+    }
+
+    /// <summary>Closes any menu the way the game does, including dialogue boxes (which also lock the player).</summary>
+    public void CloseMenu()
+    {
+        var menu = Game1.activeClickableMenu;
+        if (menu is DialogueBox box)
+            box.closeDialogue();
+        else
+            menu?.exitThisMenuNoSound();
+        Game1.activeClickableMenu = null;
+        Game1.dialogueUp = false;
+        Player.CanMove = true;
     }
 
     /// <summary>The scenario now running (set by the runner).</summary>
@@ -125,8 +184,10 @@ internal sealed class SelfTestContext
 
     public bool Check(string name, bool passed, string detail = "")
     {
+        if (!passed)
+            detail = (detail.Length > 0 ? detail + "; " : "") + $"during '{LastStep}'; {State()}";
         results.Add(new CheckResult(Scenario, name, passed, detail));
-        monitor.Log($"[self-test] {(passed ? "PASS" : "FAIL")} {Scenario}: {name}{(detail.Length > 0 ? " (" + detail + ")" : "")}", passed ? LogLevel.Trace : LogLevel.Warn);
+        Log($"{(passed ? "PASS" : "FAIL")} {name}{(detail.Length > 0 ? " (" + detail + ")" : "")}", passed ? LogLevel.Trace : LogLevel.Warn);
         return passed;
     }
 
@@ -148,8 +209,7 @@ internal sealed class SelfTestContext
     /// <summary>Empties the scratch area: objects, wire, debris, menus, HUD messages and the backpack.</summary>
     public void Reset()
     {
-        if (Game1.activeClickableMenu != null)
-            Game1.exitActiveMenu();
+        CloseMenu();
         Loc.objects.Clear();
         Loc.debris.Clear();
         Loc.terrainFeatures.Clear();

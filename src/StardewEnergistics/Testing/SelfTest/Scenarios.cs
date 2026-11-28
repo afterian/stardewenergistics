@@ -61,6 +61,7 @@ internal static class Scenarios
         new("autocraft", "Crafting Rack autocrafts Copper Wire", Autocraft),
         new("tools", "Plain tools go on disks through the Terminal", Tools),
         new("save", "Save data and the game's own save format keep everything", Save),
+        new("quest", "Maru's journal letter, tier letters teach recipes, journal goals tick", Quest.Run, ThrowawayOnly: true),
         new("showcase", "Build a whole working base slowly, with screenshots", Showcase.Run, OnlyWhenNamed: true),
     };
 
@@ -240,7 +241,7 @@ internal static class Scenarios
         c.CheckEqual("withdraw one: no kinds used", 0, disk.KindsUsed);
 
         // With no disks at all, a stored item comes straight back with a reason.
-        Game1.exitActiveMenu();
+        c.CloseMenu();
         c.StandBeside(c.T(1, 0));
         c.HoldNothing();
         c.Action(c.T(1, 0)); // take the disk out
@@ -252,7 +253,7 @@ internal static class Scenarios
         c.ClickInventorySlot(menu!, slot);
         c.CheckEqual("no disks: Stone comes back (exactly once)", 50, c.Carried(Stone));
         c.Check("no disks: says why", c.Showed(c.T("terminal.noDisks")), c.Messages());
-        Game1.exitActiveMenu();
+        c.CloseMenu();
     }
 
     private static IEnumerable<object?> Capacity(SelfTestContext c)
@@ -302,7 +303,7 @@ internal static class Scenarios
         c.Check("items full: says why", c.Showed(c.T("terminal.full")), c.Messages());
 
         // Withdrawing frees item space at once.
-        Game1.exitActiveMenu();
+        c.CloseMenu();
         menu = c.OpenTerminal(term);
         c.ClickStoredItem(menu!, Kinds[1]);
         c.Check("withdraw frees item space", disk.TotalItems < disk.Spec.MaxItems, $"{disk.TotalItems}/{disk.Spec.MaxItems}");
@@ -312,7 +313,7 @@ internal static class Scenarios
         c.Player.Items[slot] = ItemRegistry.Create(Kinds[1], 5);
         c.ClickInventorySlot(menu!, slot);
         c.CheckEqual("freed space: 5 more stored", storedBefore + 5, SelfTestContext.Stored(c.StorageAt(term), Kinds[1]));
-        Game1.exitActiveMenu();
+        c.CloseMenu();
     }
 
     private static IEnumerable<object?> Targeting(SelfTestContext c)
@@ -440,7 +441,7 @@ internal static class Scenarios
         c.ClickStoredItem(menu!, Stone);
         c.CheckEqual("withdrawn from the chest", 25, c.Carried(Stone));
         c.CheckEqual("chest is empty again", 0, chest.Items.Count(i => i != null));
-        Game1.exitActiveMenu();
+        c.CloseMenu();
 
         // Wrench takes the Link off and drops it.
         c.StandBeside(chestTile);
@@ -602,7 +603,7 @@ internal static class Scenarios
         c.Check("Pickaxe is listed", c.ClickStoredItem(menu!, id));
         c.CheckEqual("Pickaxe withdrawn", 1, c.Carried(id));
         c.Check("Pickaxe is a working tool again", c.CarriedItems(id).FirstOrDefault() is Pickaxe);
-        Game1.exitActiveMenu();
+        c.CloseMenu();
     }
 
     private static IEnumerable<object?> Save(SelfTestContext c)
