@@ -275,11 +275,23 @@ internal sealed class TerminalMenu : IClickableMenu
                 if (leftover != null)
                 {
                     TerminalItems.Give(leftover);
-                    Game1.showRedMessage(i18n.Get("terminal.full"));
+                    Game1.showRedMessage(i18n.Get(WhyNotStored(leftover)));
                 }
                 Reload();
             });
         }
+    }
+
+    /// <summary>Why an item didn't go into storage, so the player knows what to fix.</summary>
+    private string WhyNotStored(Item item)
+    {
+        if (!StardewEnergistics.Storage.StardewItemKeys.TryGetKey(item, out _))
+            return "terminal.cantStore";
+        if (status is { Disks: 0 })
+            return "terminal.noDisks";
+        return status != null && status.KindsMax > 0 && status.KindsUsed >= status.KindsMax
+            ? "terminal.kindsFull"
+            : "terminal.full";
     }
 
     public override void performHoverAction(int x, int y)

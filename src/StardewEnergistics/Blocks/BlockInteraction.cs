@@ -121,7 +121,7 @@ internal sealed class BlockInteraction
         {
             case BlockKind.StorageRack:
                 helper.Input.Suppress(e.Button);
-                StorageRack(obj, held);
+                StorageRack(location, tile, obj, held);
                 break;
             case BlockKind.PowerRack:
                 helper.Input.Suppress(e.Button);
@@ -322,7 +322,7 @@ internal sealed class BlockInteraction
             });
     }
 
-    private void StorageRack(SObject rack, SObject? held)
+    private void StorageRack(GameLocation location, Vector2 tile, SObject rack, SObject? held)
     {
         var slots = RackSlots.Get(rack, Ids.Data.RackDisks);
         if (DiskStore.IsDisk(held))
@@ -340,6 +340,8 @@ internal sealed class BlockInteraction
             Game1.playSound("Ship");
             Hud(DescribeDisk(contents, held!.DisplayName));
             networks.Invalidate(Game1.currentLocation);
+            if (networks.For(location).NetworkAt(tile) is not { Core: not null })
+                Game1.showRedMessage(T("rack.notTouching"));
             return;
         }
 
