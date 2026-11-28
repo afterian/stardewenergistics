@@ -41,5 +41,23 @@ public class GateEvaluatorTests
     }
 
     [Fact]
+    public void SpendingTheIridiumBarAfterBuildingT5DoesNotLockT6()
+    {
+        // Found by the play-tester: the Iridium Bar went into an Iridium Disk, and Maru's T6 letter never came.
+        var s = Snap(8, 120, 25, 10, iridium: false, island: true, walnut: true, prismatic: true,
+            built: new[] { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation, TierId.T4Autocrafting, TierId.T5LinkedBuildings });
+        Assert.Contains(TierId.T6WholeFarm, new GateEvaluator().Unlocked(s));
+        Assert.True(GateRequirements.AllMet(TierId.T6WholeFarm, s));
+    }
+
+    [Fact]
+    public void LosingHeartsAfterBuildingKeepsLaterTiersOpen()
+    {
+        var s = Snap(hearts: 1, mine: 120, processors: 10, built: new[] { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation });
+        Assert.Contains(TierId.T4Autocrafting, new GateEvaluator().Unlocked(s with { MaruHearts = 6 }));
+        Assert.Contains(TierId.T3Automation, new GateEvaluator().Unlocked(s));
+    }
+
+    [Fact]
     public void GatesOffUnlocksEverything() => Assert.Equal(6, new GateEvaluator(gatesEnabled: false).Unlocked(Snap()).Count);
 }

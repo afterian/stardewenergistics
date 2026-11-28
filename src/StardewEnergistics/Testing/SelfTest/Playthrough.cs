@@ -42,10 +42,10 @@ internal static class Playthrough
     private const string Stone = "(O)390", Wood = "(O)388", Parsnip = "(O)24";
     private const string Furnace = "(BC)13", ChestQ = "(BC)130", MiniBin = "(BC)248", LightningRod = "(BC)9";
 
-    /// <summary>Ten kinds for the "ten kinds stored" goal (with Parsnips to take back out).</summary>
+    /// <summary>Eleven kinds, so ten are left for the "ten kinds stored" goal after the Parsnips come back out.</summary>
     private static readonly (string Id, int Count)[] TenKinds =
     {
-        (Stone, 300), (Wood, 150), ("(O)330", 40), (CopperOre, 30), (Coal, 20), ("(O)380", 20), ("(O)384", 10), (Fiber, 30), ("(O)92", 15), (Parsnip, 25),
+        (Stone, 300), (Wood, 150), ("(O)330", 40), (CopperOre, 30), (Coal, 20), ("(O)380", 20), ("(O)384", 10), (Fiber, 30), ("(O)92", 15), ("(O)86", 5), (Parsnip, 25),
     };
 
     // Layout in the scratch building (x, y from the area's top-left):
@@ -81,12 +81,12 @@ internal static class Playthrough
     /// <param name="unlessBuilt">Skip the check if this save's own networks already count as this tier built.</param>
     private static void NoLetterYet(SelfTestContext c, TierId tier, string because, TierId? unlessBuilt = null)
     {
-        Quest.Morning(c, PowerPass);
         if (unlessBuilt is { } b && Progression.ProgressionService.TiersBuilt().Contains(b))
         {
             c.Log($"skipped '{tier} letter waits while {because}': this save's own networks already count as {b} built ({Gates(c, tier)})", LogLevel.Info);
             return;
         }
+        Quest.Morning(c, PowerPass);
         c.Check($"{tier} letter waits while {because}", !Quest.LetterCame(c, tier), Gates(c, tier));
     }
 
@@ -222,8 +222,10 @@ internal static class Playthrough
 
     private static IEnumerable<object?> FirstNetwork(SelfTestContext c)
     {
-        Quest.SetMaruHearts(c, 4);
+        Quest.SetMaruHearts(c, 3);
         c.Player.deepestMineLevel = 80;
+        NoLetterYet(c, TierId.T3Automation, "Maru is at 3 hearts");
+        Quest.SetMaruHearts(c, 4);
         NoLetterYet(c, TierId.T3Automation, "no storage network is built yet", unlessBuilt: TierId.T2SimpleStorage);
 
         foreach (var (id, times) in new[] { (Ids.ComputerCore, 1), (Ids.StorageRack, 2), (Ids.PowerRack, 1), (Ids.CoalGenerator, 1),
@@ -303,10 +305,10 @@ internal static class Playthrough
             yield return Wait.Ticks(c.Slow ? 8 : 0);
         }
         var storage = c.StorageAt(c.T(5, 0))!;
-        c.CheckEqual("ten kinds stored", 10, TenKinds.Count(k => SelfTestContext.Stored(storage, k.Id) > 0));
+        c.CheckEqual("eleven kinds stored", TenKinds.Length, TenKinds.Count(k => SelfTestContext.Stored(storage, k.Id) > 0));
         c.Check("each kind is on the network", TenKinds.All(k => SelfTestContext.Stored(storage, k.Id) > 0),
             "not stored: " + string.Join(", ", TenKinds.Where(k => SelfTestContext.Stored(storage, k.Id) == 0).Select(k => $"{k.Id} (still carried {c.Carried(k.Id)}, slot {c.SlotOf(k.Id)})")) + "; " + c.Messages());
-        yield return c.Show("Everything stored: ten kinds on the network", 90);
+        yield return c.Show("Everything stored: eleven kinds on the network", 90);
         c.ClickStoredItem(menu!, Parsnip);
         c.CheckEqual("25 Parsnips withdrawn", 25, c.Carried(Parsnip));
         yield return c.Show("Parsnips taken back out with one click");
@@ -321,10 +323,7 @@ internal static class Playthrough
         yield return Wait.Ticks(5);
         yield return c.Show("Network View while holding the Network Wrench (one tile hidden)");
 
-        Quest.SetMaruHearts(c, 3);
         foreach (object? s in ChapterDone(c, 2)) yield return s;
-        c.Check($"{TierId.T3Automation} letter waits while Maru is at 3 hearts", !Quest.LetterCame(c, TierId.T3Automation), Gates(c, TierId.T3Automation));
-        Quest.SetMaruHearts(c, 4);
         foreach (object? s in LetterArrives(c, TierId.T3Automation, "A working storage network, Mines 80, 4 hearts: automation blueprints")) yield return s;
     }
 
@@ -531,7 +530,9 @@ internal static class Playthrough
             c.Hold(O(Ids.CopperWire), wire.Count + 10);
             c.Input.Press(SButton.MouseLeft, t);
         }
-        c.Check("wire laid between the Ports", wire.All(t => c.S.Wires.For(farm).Has(SelfTestContext.P(t))));
+        c.Check("wire laid between the Ports", wire.All(t => c.S.Wires.For(farm).Has(SelfTestContext.P(t))),
+            "missing: " + string.Join(", ", wire.Where(t => !c.S.Wires.For(farm).Has(SelfTestContext.P(t))).Select(t =>
+                $"{t} (object {farm.objects.GetValueOrDefault(t)?.QualifiedItemId ?? "none"}, terrain {farm.terrainFeatures.GetValueOrDefault(t)?.GetType().Name ?? "none"}, passable {farm.isTilePassable(t)})")) + "; " + c.Messages());
         c.S.Networks.Clear();
         c.StandAt(ports[0] + new Vector2(0, 1), Game1.up);
         c.HoldFromBackpack(O(Ids.NetworkWrench));

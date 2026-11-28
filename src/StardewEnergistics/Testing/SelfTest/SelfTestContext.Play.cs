@@ -373,6 +373,9 @@ internal sealed partial class SelfTestContext
                     continue;
                 if (n != to && !(IsClearable(loc, n) && AwayFromNetworks(loc, n, own)))
                     continue;
+                // Pointing just above a big craftable means the machine itself (its top half), so wire can't go there.
+                if (n != to && !loc.objects.ContainsKey(n) && loc.objects.TryGetValue(n + new Vector2(0, 1), out var below) && below.bigCraftable.Value)
+                    continue;
                 prev[n] = at;
                 queue.Enqueue(n);
             }
