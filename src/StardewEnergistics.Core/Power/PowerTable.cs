@@ -10,7 +10,7 @@ namespace StardewEnergistics.Core.Power;
 public sealed record PowerTable(
     IReadOnlyDictionary<BlockKind, double> DailyUse,
     int BatteryPower = 100,
-    int CoalPower = 1,
+    int CoalPower = 5,
     int HardwoodPower = 1)
 {
     public static readonly IReadOnlyDictionary<BlockKind, double> DefaultUse = new Dictionary<BlockKind, double>

@@ -10,6 +10,7 @@ using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Menus;
+using StardewValley.Mods;
 using SObject = StardewValley.Object;
 
 namespace StardewEnergistics.UI;
@@ -27,11 +28,11 @@ internal sealed class LinkSettingsMenu : IClickableMenu
 
     private readonly ITranslationHelper i18n;
     private readonly Func<string, Texture2D> sprite;
-    private readonly SObject target;
+    private readonly ModDataDictionary target;
     private readonly bool shipping;
     private readonly string title;
-    private readonly Action<SObject> onRemove;
-    private readonly Action<SObject, LinkSettings> onSave;
+    private readonly Action<ModDataDictionary> onRemove;
+    private readonly Action<ModDataDictionary, LinkSettings> onSave;
     private readonly InventoryMenu inventory;
 
     private List<InputRule> inputs;
@@ -42,8 +43,8 @@ internal sealed class LinkSettingsMenu : IClickableMenu
     private readonly List<(ClickableComponent Button, Action<bool> Click, string? Label, int Icon)> buttons = new();
     private Item? hoverItem;
 
-    public LinkSettingsMenu(ITranslationHelper i18n, Func<string, Texture2D> sprite, SObject target, bool shipping, string title,
-        LinkSettings settings, Action<SObject, LinkSettings> onSave, Action<SObject> onRemove)
+    public LinkSettingsMenu(ITranslationHelper i18n, Func<string, Texture2D> sprite, ModDataDictionary target, bool shipping, string title,
+        LinkSettings settings, Action<ModDataDictionary, LinkSettings> onSave, Action<ModDataDictionary> onRemove)
         : base(0, 0, 0, 0, showUpperRightCloseButton: true)
     {
         this.i18n = i18n;

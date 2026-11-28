@@ -41,7 +41,9 @@ internal sealed class ShippingLinkService
         {
             foreach (var n in loc.Graph.Networks.Where(n => loc.IsActive(n) && power.IsPowered(loc, n)))
             {
-                foreach (var link in loc.ObjectsOf(n, BlockKind.ShippingLink))
+                var links = loc.ObjectsOf(n, BlockKind.ShippingLink).Select(o => o.modData)
+                    .Concat(loc.BinsOf(n).Select(b => b.modData));
+                foreach (var link in links)
                 {
                     var settings = MachineLinkService.SettingsOf(link);
                     if (!settings.Configured)
@@ -66,7 +68,7 @@ internal sealed class ShippingLinkService
                             }
                         }
                     }
-                    link.modData[Ids.Data.LinkState] = "1";
+                    link[Ids.Data.LinkState] = "1";
                 }
             }
         }

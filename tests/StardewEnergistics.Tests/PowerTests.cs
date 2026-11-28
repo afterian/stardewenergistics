@@ -74,8 +74,8 @@ public class PowerTests
     [Fact]
     public void CoalValueIsConfigurable()
     {
-        var oneEach = ledger.AddFuel(PowerState.Empty, PowerTable.Default, coal: 10, hardwood: 2);
-        Assert.Equal(12, oneEach.Fuel);
+        var defaults = ledger.AddFuel(PowerState.Empty, PowerTable.Default, coal: 10, hardwood: 2);
+        Assert.Equal(52, defaults.Fuel); // Coal 5, Hardwood 1
 
         var tenEach = ledger.AddFuel(PowerState.Empty, PowerTable.Default with { CoalPower = 10 }, coal: 10, hardwood: 0);
         Assert.Equal(100, tenEach.Fuel);

@@ -68,6 +68,9 @@ internal sealed class BlockInteraction
             OpenWireless(location);
             return;
         }
+        if (HandleMainBin(e.Button, location, tile))
+            return;
+
         if (FindTarget(location, e.Cursor.GrabTile) is not { } found)
             return;
         tile = found.Tile;
@@ -244,6 +247,40 @@ internal sealed class BlockInteraction
         return false;
     }
 
+    /// <summary>A Shipping Link on the farm's main Shipping Bin: use the Link on the bin, open its settings with the wrench.</summary>
+    private bool HandleMainBin(SButton button, GameLocation location, Vector2 tile)
+    {
+        var held = Game1.player.ActiveObject;
+        if (!IsHeld(held, Ids.ShippingLink) && !IsHeld(held, Ids.NetworkWrench))
+            return false;
+        if (location.getBuildingAt(tile) is not StardewValley.Buildings.ShippingBin bin)
+            return false;
+
+        bool linked = bin.modData.ContainsKey(Ids.Data.ShippingLink);
+        if (IsHeld(held, Ids.ShippingLink))
+        {
+            helper.Input.Suppress(button);
+            if (linked)
+            {
+                Hud(T("link.already"));
+                return true;
+            }
+            bin.modData[Ids.Data.ShippingLink] = "1";
+            bin.modData[Ids.Data.LinkState] = MachineLinkService.NotSetUp.ToString();
+            Game1.player.reduceActiveItemByOne();
+            networks.Invalidate(location);
+            Game1.playSound("hammer");
+            Hud(T("link.added.bin"));
+            return true;
+        }
+
+        if (!linked)
+            return false;
+        helper.Input.Suppress(button);
+        OpenSettingsMenu(location, tile, bin.modData, shipping: true, T("link.title.shipping"));
+        return true;
+    }
+
     private void OpenLinkSettings(GameLocation location, Vector2 tile, SObject obj, bool shipping)
     {
         string title;
@@ -255,23 +292,29 @@ internal sealed class BlockInteraction
             title = T("link.title.machine", new { machine = obj.DisplayName, count });
         }
 
+        OpenSettingsMenu(location, tile, obj.modData, shipping, title);
+    }
+
+    /// <summary>The Link settings screen for the Link whose data is <paramref name="data"/> (on an object or the main bin).</summary>
+    private void OpenSettingsMenu(GameLocation location, Vector2 tile, StardewValley.Mods.ModDataDictionary data, bool shipping, string title)
+    {
         Game1.activeClickableMenu = new LinkSettingsMenu(
-            helper.Translation, textures.Get, obj, shipping, title, MachineLinkService.SettingsOf(obj),
+            helper.Translation, textures.Get, data, shipping, title, MachineLinkService.SettingsOf(data),
             onSave: (target, settings) =>
             {
                 MachineLinkService.SetSettings(target, settings);
                 if (!settings.Configured)
-                    target.modData[Ids.Data.LinkState] = MachineLinkService.NotSetUp.ToString();
-                else if (target.modData.TryGetValue(Ids.Data.LinkState, out string? st) && st == MachineLinkService.NotSetUp.ToString())
-                    target.modData[Ids.Data.LinkState] = MachineLinkService.Idle.ToString();
+                    target[Ids.Data.LinkState] = MachineLinkService.NotSetUp.ToString();
+                else if (target.TryGetValue(Ids.Data.LinkState, out string? st) && st == MachineLinkService.NotSetUp.ToString())
+                    target[Ids.Data.LinkState] = MachineLinkService.Idle.ToString();
             },
             onRemove: target =>
             {
-                string item = target.modData.ContainsKey(Ids.Data.ShippingLink) ? Ids.ShippingLink : Ids.MachineLink;
-                target.modData.Remove(Ids.Data.MachineLink);
-                target.modData.Remove(Ids.Data.ShippingLink);
-                target.modData.Remove(Ids.Data.LinkSettings);
-                target.modData.Remove(Ids.Data.LinkState);
+                string item = target.ContainsKey(Ids.Data.ShippingLink) ? Ids.ShippingLink : Ids.MachineLink;
+                target.Remove(Ids.Data.MachineLink);
+                target.Remove(Ids.Data.ShippingLink);
+                target.Remove(Ids.Data.LinkSettings);
+                target.Remove(Ids.Data.LinkState);
                 Game1.createItemDebris(ItemRegistry.Create("(O)" + item), tile * 64 + new Vector2(32, 32), -1, location);
                 networks.Invalidate(location);
                 Game1.playSound("hammer");
