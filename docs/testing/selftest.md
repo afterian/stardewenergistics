@@ -27,7 +27,7 @@ run in a session launched by the script.
 
 **Every build:** `deploy\selftest.bat -Watcher on` makes the PC build watcher self-test each new `main`
 build after publishing it: a `pc-selftest` tick or cross on the commit, and the report as
-`last-selftest.txt` on the `test-latest` release. It skips a build if the game is open. Restart the watcher
+keeps the full self-test report on the build PC. It skips a build if the game is open. Restart the watcher
 (sign out and in) after merging changes to `watch.ps1`. Re-running `setup-pc.bat` turns it off again.
 
 ## Report

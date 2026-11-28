@@ -42,10 +42,10 @@ Living (online, editable) copies of the plan and art list: https://claude.ai/art
 
 ## Environment
 
-- **Project folder:** `E:\Projects\stardewenergistics\` on the user's Windows PC (also the git repo root).
+- **Project folder:** the local Stardew Energistics checkout (also the git repo root).
 - **User:** has never made a Stardew mod. Wants Claude to write code, test, and deploy. Explain steps simply; give exact clicks/commands.
 - **Test devices:** Windows PC (build + local test, split-screen co-op for MP) and two Steam Decks (native Linux SMAPI) for real MP testing.
-- **Deploy pipeline (written, untested end to end):** `deploy/setup-pc.bat` sets up a hidden PC watcher (scheduled task at sign-in, no admin) that polls GitHub every minute, builds each new `main` commit (the mod can't build on GitHub's servers without the game DLLs), and uploads it to release `test-latest` with version `x.y.z-build.N`, a `pc-build` commit status and `last-build-log.txt` (read that for build errors). Decks run `~/stardew-energistics/launch.sh %command%`, which installs the newest zip on every launch (offline-safe, keeps `config.json`), self-updates, and starts through SMAPI; `deck/install.sh` also installs SMAPI. `deploy/publish-test.bat` publishes any branch by hand. Guide: `docs/steam-deck-setup.md`.
+- **Deploy pipeline (written, untested end to end):** `deploy/setup-pc.bat` sets up a hidden PC watcher (scheduled task at sign-in, no admin) that polls GitHub every minute, builds each new `main` commit (the mod can't build on GitHub's servers without the game DLLs), and uploads it to release `test-latest` with version `x.y.z-build.N`, a `pc-build` commit status (raw build logs stay local). Decks run `~/stardew-energistics/launch.sh %command%`, which installs the newest zip on every launch (offline-safe, keeps `config.json`), self-updates, and starts through SMAPI; `deck/install.sh` also installs SMAPI. `deploy/publish-test.bat` publishes any branch by hand. Guide: `docs/steam-deck-setup.md`.
 
 ## Proposed repo layout (create in M0)
 
