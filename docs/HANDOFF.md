@@ -12,7 +12,7 @@ A Stardew Valley SMAPI (C#) mod inspired by Minecraft's Applied Energistics 2. T
 2. `docs/design-plan.md` — the full approved design (mechanics, tiers, 26-item catalog, architecture, roadmap). **Source of truth.**
 3. `docs/implementation-plan.md` — code-level plan: solution layout, Core contracts, parallel lanes A–G, spikes, milestone tasks, how code depends on art.
 4. `docs/art-asset-list.md` — 36 art files with sizes, frames, descriptions. Art is made in parallel with another tool. Final art so far (Maru purple-and-oak style, `docs/artwork-pipeline.md`): Computer Core, Network Terminal, Copper Wire tiles (normal + Network View) and Heavy Cable tiles; the other 31 still use placeholders. The Terminal shows its "on" frame while its network is powered.
-5. `docs/steam-deck-setup.md` — step-by-step PC runner + Steam Deck setup; `deploy/README.md` lists the scripts.
+5. Deck setup and the build watcher live in [Stardew Mod Master](https://github.com/afterian/stardewmodmaster); `deploy/README.md` lists what is left here (self-test, two hand-off files).
 6. `research/MODDING_AND_ASSET_SPECS.md` — earlier research on sprite sizes and data assets. Note: it suggests a Content Patcher prototype; the approved plan is a single C# SMAPI mod that injects its own content.
 
 Living (online, editable) copies of the plan and art list: https://claude.ai/artifact/XZ6h7hFyLrDj7a15X1MQ1d and https://claude.ai/artifact/48iRmHg7rUvvhcSvZQv4DP. If they differ from the files here, ask the user which wins.
@@ -45,7 +45,7 @@ Living (online, editable) copies of the plan and art list: https://claude.ai/art
 - **Project folder:** the local Stardew Energistics checkout (also the git repo root).
 - **User:** has never made a Stardew mod. Wants Claude to write code, test, and deploy. Explain steps simply; give exact clicks/commands.
 - **Test devices:** Windows PC (build + local test, split-screen co-op for MP) and two Steam Decks (native Linux SMAPI) for real MP testing.
-- **Deploy pipeline (working on the PC and both Decks):** `deploy/setup-pc.bat` sets up a hidden PC watcher (scheduled task at sign-in, no admin) that polls GitHub every minute, builds each new `main` commit (the mod can't build on GitHub's servers without the game DLLs), and uploads it to release `test-latest` with version `x.y.z-build.N`, a `pc-build` commit status (raw build logs stay local). Decks run `~/stardew-energistics/launch.sh %command%`, which installs the newest zip on every launch (offline-safe, keeps `config.json`), self-updates, and starts through SMAPI; `deck/install.sh` also installs SMAPI. `deploy/publish-test.bat` publishes any branch by hand. Guide: `docs/steam-deck-setup.md`. Temporary pack loader: `deploy/mods.json` lists other mods (Stardew Food Time) that the same watcher builds and the Decks install from the same release.
+- **Deploy pipeline (moved 2026-11-28):** Stardew Mod Master (`afterian/stardewmodmaster`) owns the PC build watcher, the Deck installer and launcher, and the pack's mod list; its watcher builds this repo's `main` and publishes it to Mod Master's `test-latest` release. This repo keeps only the self-test scripts and two hand-off files: `deploy/deck/launch.sh` (old Deck launchers update into it and run the Mod Master launcher) and `deploy/pc/build-and-publish.ps1` (turns the old "Stardew Energistics build watcher" task off). Delete both once every Deck has run the Mod Master installer.
 
 ## Proposed repo layout (create in M0)
 
@@ -55,7 +55,7 @@ src/StardewEnergistics/            SMAPI mod (net6.0, Pathoschild.Stardew.ModBui
   ModEntry.cs, manifest.json, assets/ (placeholder sprites until artwork/exports/ lands)
 src/StardewEnergistics.Core/       game-independent logic: wire graph, storage index, power, recipe planner
 tests/StardewEnergistics.Tests/    xUnit tests for Core (run without the game)
-deploy/                            Steam Deck + publish scripts (exists)
+deploy/                            self-test scripts + hand-offs to Stardew Mod Master
 docs/, research/, artwork/         (exist)
 ```
 
@@ -69,13 +69,13 @@ The detailed task breakdown per milestone and lane is in `docs/implementation-pl
 2. Walk the user through PC setup: .NET 6 SDK, Visual Studio 2022 Community or Rider, SMAPI, Git, GitHub CLI (`gh auth login`). Record versions in `docs/decisions.md`.
 3. Scaffold the solution above; `ModEntry` logs "Stardew Energistics loaded"; add `manifest.json` with `UpdateKeys: []`.
 4. Build on the PC; confirm it loads in SMAPI.
-5. Set up the PC runner and both Decks per `docs/steam-deck-setup.md`; confirm both Decks load the mod. M0 done.
+5. Set up the PC runner and both Decks (now through Stardew Mod Master); confirm both Decks load the mod. M0 done.
 6. Start M1: Processor Press + processors, Copper Wire and Heavy Cable layer with 4-bit auto-tiling, Wrench cover/paint, save/load. Use placeholder art.
 
 ## Working agreements
 
 - Follow `docs/design-plan.md`; propose changes to the user rather than silently diverging. Record every confirmed decision in `docs/decisions.md`.
-- Each milestone ends with a playable build, a `publish-test` to the Decks, and the milestone's "Done when" check.
+- Each milestone ends with a playable build, a build on the Decks (via Stardew Mod Master), and the milestone's "Done when" check.
 - Bugs: ask the user for the SMAPI log link from https://smapi.io/log.
 - Don't copy AE2 code or textures (AE2 code LGPL-3.0, API MIT, textures CC BY-NC-SA 3.0); reading it for ideas is fine.
 

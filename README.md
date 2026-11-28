@@ -1,6 +1,6 @@
 # Stardew Energistics
 
-**[Steam Deck installer](deploy/deck/Install-Stardew-Energistics.desktop)**: on the Deck in Desktop Mode, open this link and tap the **Download raw file** button (arrow icon, top right of the file), then double-click the file in Downloads. Full steps: [Steam Deck setup](docs/steam-deck-setup.md).
+**Steam Decks:** the mod is installed and updated together with the rest of the pack by [Stardew Mod Master](https://github.com/afterian/stardewmodmaster). This repo is just the Energistics mod, so it also works on its own.
 
 A Stardew Valley SMAPI mod inspired by Applied Energistics 2: wire your farm into computer networks for storage, machine automation and crafting. Design approved 2026-11-27; implementation starts at milestone M0.
 
@@ -9,7 +9,7 @@ A Stardew Valley SMAPI mod inspired by Applied Energistics 2: wire your farm int
 - [Implementation plan](docs/implementation-plan.md): code layout, milestones and parallel workstreams.
 - [Art asset list](docs/art-asset-list.md): 36 sprites with sizes and descriptions.
 - [Decisions](docs/decisions.md): confirmed choices and open questions.
-- [Steam Deck test deploys](deploy/README.md): publish from the PC, Decks auto-update on launch.
+- [Deploy scripts](deploy/README.md): the in-game self-test; Deck builds now come from Stardew Mod Master.
 - [Research](research/README.md): modding references, compatibility notes, and experiments.
 - [Artwork](artwork/README.md): references, concepts, editable source art, and game-ready exports.
 

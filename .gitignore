@@ -22,7 +22,6 @@ artwork/**/*.zip
 # Local secrets / config
 .env
 *.local.json
-deploy/deck/config
 
 # OS junk
 Thumbs.db
