@@ -394,6 +394,7 @@ internal sealed class BlockInteraction
             ResetPoweredFlag(location, rack.TileLocation);
         }
         Hud(T("power.rack", new { count = charge.Count, charge = charge.Sum() }));
+        WarnIfNotConnected(location, rack.TileLocation);
     }
 
     private void Generator(GameLocation location, SObject gen, SObject? held)
@@ -415,6 +416,21 @@ internal sealed class BlockInteraction
             ResetPoweredFlag(location, gen.TileLocation);
         }
         Hud(T("power.generator", new { fuel }));
+        WarnIfNotConnected(location, gen.TileLocation);
+    }
+
+    /// <summary>Power added to a block that isn't joined to a Computer Core does nothing: say why.</summary>
+    private void WarnIfNotConnected(GameLocation location, Vector2 tile)
+    {
+        var loc = networks.For(location);
+        var n = loc.NetworkAt(tile);
+        if (n == null || !loc.IsActive(n))
+        {
+            Game1.showRedMessage(T("power.notConnected"));
+            return;
+        }
+        if (!power.IsPowered(loc, n) && networks.Home(loc, n) is { } home)
+            Hud(power.Describe(home.Loc, home.Net));
     }
 
     /// <summary>After adding power mid-day, let the network re-check whether it has enough.</summary>
