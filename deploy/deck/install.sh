@@ -53,20 +53,32 @@ fetch() {  # fetch <repo path> <output file>
     "https://api.github.com/repos/$REPO/contents/$1" -o "$2"
 }
 
-# --- 2. Find the game --------------------------------------------------------
+# --- 2. Find the game (internal storage or SD card)
+steam_libraries() {
+  # Every Steam library on this Deck (internal, SD card, USB), from Steam's own list.
+  local f p
+  for f in "$HOME/.local/share/Steam/steamapps/libraryfolders.vdf" "$HOME/.steam/steam/steamapps/libraryfolders.vdf"; do
+    [ -f "$f" ] || continue
+    sed -n 's/^[[:space:]]*"path"[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$f" | sed 's/\\\\/\\/g'
+  done
+  echo "$HOME/.local/share/Steam"
+  echo "$HOME/.steam/steam"
+  for p in /run/media/*/steamapps /run/media/*/*/steamapps /run/media/*/*/*/steamapps; do
+    [ -d "$p" ] && dirname "$p"
+  done
+}
+
+# --- --------------------------------------------------------
 say "Looking for Stardew Valley"
 # Pick the folder that really has the game in it (an empty leftover folder can
 # exist on internal storage when the game is on the SD card). Prefer one with SMAPI.
 GAME=""
-for d in "$HOME/.local/share/Steam/steamapps/common/Stardew Valley" \
-         "$HOME/.steam/steam/steamapps/common/Stardew Valley" \
-         /run/media/*/steamapps/common/"Stardew Valley" \
-         /run/media/*/*/steamapps/common/"Stardew Valley" \
-         /run/media/*/*/*/steamapps/common/"Stardew Valley"; do
+while IFS= read -r lib; do
+  d="$lib/steamapps/common/Stardew Valley"
   [ -f "$d/Stardew Valley.dll" ] || [ -e "$d/StardewValley" ] || [ -f "$d/Stardew Valley.exe" ] || continue
   if [ -e "$d/StardewModdingAPI" ] || [ -f "$d/StardewModdingAPI.dll" ]; then GAME="$d"; break; fi
   [ -n "$GAME" ] || GAME="$d"
-done
+done < <(steam_libraries)
 [ -n "$GAME" ] || fail "Stardew Valley isn't installed yet. Install it in Steam, start it once, quit, then run the installer again."
 echo "Found: $GAME"
 if [ -f "$GAME/Stardew Valley.exe" ] && [ ! -e "$GAME/StardewValley" ]; then
