@@ -29,6 +29,8 @@ public enum GoalKind
 {
     /// <summary>Open the journal once.</summary>
     OpenJournal,
+    /// <summary>Talk to Maru once.</summary>
+    TalkToMaru,
     MaruHearts,
     CopperProcessors,
     /// <summary>Read Maru's letter for <see cref="GuideGoal.Tier"/>.</summary>
@@ -44,6 +46,7 @@ public enum GoalKind
 public sealed record GuideGoal(GoalKind Kind, int Amount = 0, string? Item = null, TierId? Tier = null, WorldFlag? Flag = null)
 {
     public static GuideGoal Open() => new(GoalKind.OpenJournal);
+    public static GuideGoal Talk() => new(GoalKind.TalkToMaru);
     public static GuideGoal Hearts(int n) => new(GoalKind.MaruHearts, Amount: n);
     public static GuideGoal Processors(int n) => new(GoalKind.CopperProcessors, Amount: n);
     public static GuideGoal Letter(TierId t) => new(GoalKind.ReadLetter, Tier: t);
@@ -92,7 +95,7 @@ public static class GuideBook
 
         // 0 Prologue: meet Maru.
         Q("open", GuideGoal.Open(), JournalKey);
-        Q("maru", GuideGoal.Hearts(2));
+        Q("maru", GuideGoal.Talk());
         Chapter(null, null, 0);
 
         // 1 Components.

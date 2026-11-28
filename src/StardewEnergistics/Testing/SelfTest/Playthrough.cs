@@ -179,10 +179,12 @@ internal static class Playthrough
         yield return c.Show("The Tinkerer's Journal, open on its first page", 110);
         c.CloseMenu();
 
-        Quest.SetMaruHearts(c, 1);
-        NoLetterYet(c, TierId.T1Components, "Maru is at 1 heart");
-        Quest.SetMaruHearts(c, 2);
-        foreach (object? s in LetterArrives(c, TierId.T1Components, "2 hearts with Maru: her first blueprints")) yield return s;
+        Quest.SetMaruHearts(c, 0);
+        NoLetterYet(c, TierId.T1Components, "the farmer hasn't talked to Maru");
+        Quest.TalkToMaru(c);
+        Quest.Refresh(c);
+        c.Check("journal goal 'maru' ticks after one chat", Quest.Done(c).Contains("maru"), string.Join(",", Quest.Done(c)));
+        foreach (object? s in LetterArrives(c, TierId.T1Components, "One chat with Maru: her first blueprints")) yield return s;
         foreach (object? s in ChapterDone(c, 0)) yield return s;
     }
 
@@ -214,8 +216,11 @@ internal static class Playthrough
         p.deepestMineLevel = 19;
         NoLetterYet(c, TierId.T2SimpleStorage, "the Mines are only at floor 19 of 20");
         p.deepestMineLevel = 20;
+        Quest.SetMaruHearts(c, 1);
+        NoLetterYet(c, TierId.T2SimpleStorage, "Maru is at 1 heart of 2");
+        Quest.SetMaruHearts(c, 2);
         foreach (object? s in ChapterDone(c, 1)) yield return s;
-        foreach (object? s in LetterArrives(c, TierId.T2SimpleStorage, "10 processors and Mines floor 20: storage blueprints")) yield return s;
+        foreach (object? s in LetterArrives(c, TierId.T2SimpleStorage, "10 processors, Mines floor 20, 2 hearts: storage blueprints")) yield return s;
     }
 
     // ---- Chapter 2: the first network ----
@@ -223,10 +228,10 @@ internal static class Playthrough
     private static IEnumerable<object?> FirstNetwork(SelfTestContext c)
     {
         c.TidyBackpack();
-        Quest.SetMaruHearts(c, 3);
-        c.Player.deepestMineLevel = 80;
-        NoLetterYet(c, TierId.T3Automation, "Maru is at 3 hearts");
         Quest.SetMaruHearts(c, 4);
+        c.Player.deepestMineLevel = 80;
+        NoLetterYet(c, TierId.T3Automation, "Maru is at 4 hearts of 5");
+        Quest.SetMaruHearts(c, 5);
         NoLetterYet(c, TierId.T3Automation, "no storage network is built yet", unlessBuilt: TierId.T2SimpleStorage);
 
         foreach (var (id, times) in new[] { (Ids.ComputerCore, 1), (Ids.StorageRack, 2), (Ids.PowerRack, 1), (Ids.CoalGenerator, 1),
@@ -325,7 +330,7 @@ internal static class Playthrough
         yield return c.Show("Network View while holding the Network Wrench (one tile hidden)");
 
         foreach (object? s in ChapterDone(c, 2)) yield return s;
-        foreach (object? s in LetterArrives(c, TierId.T3Automation, "A working storage network, Mines 80, 4 hearts: automation blueprints")) yield return s;
+        foreach (object? s in LetterArrives(c, TierId.T3Automation, "A working storage network, Mines 80, 5 hearts: automation blueprints")) yield return s;
     }
 
     // ---- Chapter 3: automation ----
@@ -333,8 +338,9 @@ internal static class Playthrough
     private static IEnumerable<object?> Automation(SelfTestContext c)
     {
         c.TidyBackpack();
-        Quest.SetMaruHearts(c, 6);
+        Quest.SetMaruHearts(c, 7);
         c.Player.deepestMineLevel = 120;
+        Quest.SetMaruHearts(c, 7);
         NoLetterYet(c, TierId.T4Autocrafting, "no Machine Link is set up yet", unlessBuilt: TierId.T3Automation);
 
         var pressTile = c.T(PressAt.X, PressAt.Y);
@@ -393,7 +399,7 @@ internal static class Playthrough
         c.InsertDisk(c.T(2, 0), gold!);
 
         foreach (object? s in ChapterDone(c, 3)) yield return s;
-        foreach (object? s in LetterArrives(c, TierId.T4Autocrafting, "A Machine Link at work, Mines 120, 6 hearts: autocrafting blueprints")) yield return s;
+        foreach (object? s in LetterArrives(c, TierId.T4Autocrafting, "A Machine Link at work, Mines 120, 7 hearts: autocrafting blueprints")) yield return s;
     }
 
     // ---- Chapter 4: autocrafting ----

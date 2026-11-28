@@ -6,19 +6,24 @@ public class GateEvaluatorTests
 {
     private static ProgressSnapshot Snap(int hearts = 0, int mine = 0, int skull = 0, int processors = 0, bool iridium = false,
         bool island = false, bool walnut = false, bool prismatic = false, params TierId[] built) =>
-        new(hearts, mine, skull, processors, iridium, island, walnut, prismatic, new HashSet<TierId>(built));
+        new(hearts, mine, skull, processors, iridium, island, walnut, prismatic, new HashSet<TierId>(built), TalkedToMaru: hearts > 0);
 
     [Fact]
     public void NewFarmHasNothing() => Assert.Empty(new GateEvaluator().Unlocked(Snap()));
 
     [Fact]
-    public void MaruTwoHeartsUnlocksComponents() =>
-        Assert.Equal(new[] { TierId.T1Components }, new GateEvaluator().Unlocked(Snap(hearts: 2)));
+    public void TalkingToMaruOnceUnlocksComponents() =>
+        Assert.Equal(new[] { TierId.T1Components }, new GateEvaluator().Unlocked(Snap() with { TalkedToMaru = true }));
 
     [Fact]
-    public void T2NeedsTenProcessorsAndMineTwenty()
+    public void ComponentsWaitUntilYouTalkToMaru() =>
+        Assert.Empty(new GateEvaluator().Unlocked(Snap(mine: 120, processors: 50) with { TalkedToMaru = false }));
+
+    [Fact]
+    public void T2NeedsTenProcessorsMineTwentyAndTwoHearts()
     {
         var g = new GateEvaluator();
+        Assert.DoesNotContain(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 1, mine: 20, processors: 10)));
         Assert.DoesNotContain(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 2, mine: 20, processors: 9)));
         Assert.DoesNotContain(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 2, mine: 19, processors: 10)));
         Assert.Contains(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 2, mine: 20, processors: 10)));
@@ -28,8 +33,9 @@ public class GateEvaluatorTests
     public void T3NeedsT2Built()
     {
         var g = new GateEvaluator();
-        Assert.DoesNotContain(TierId.T3Automation, g.Unlocked(Snap(hearts: 4, mine: 80, processors: 10)));
-        Assert.Contains(TierId.T3Automation, g.Unlocked(Snap(hearts: 4, mine: 80, processors: 10, built: TierId.T2SimpleStorage)));
+        Assert.DoesNotContain(TierId.T3Automation, g.Unlocked(Snap(hearts: 5, mine: 80, processors: 10)));
+        Assert.DoesNotContain(TierId.T3Automation, g.Unlocked(Snap(hearts: 4, mine: 80, processors: 10, built: TierId.T2SimpleStorage)));
+        Assert.Contains(TierId.T3Automation, g.Unlocked(Snap(hearts: 5, mine: 80, processors: 10, built: TierId.T2SimpleStorage)));
     }
 
     [Fact]
@@ -59,7 +65,8 @@ public class GateEvaluatorTests
             with { LettersSent = new HashSet<TierId> { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation } };
         Assert.Contains(TierId.T3Automation, new GateEvaluator().Unlocked(s));
         Assert.DoesNotContain(TierId.T4Autocrafting, new GateEvaluator().Unlocked(s));
-        Assert.Contains(TierId.T4Autocrafting, new GateEvaluator().Unlocked(s with { MaruHearts = 6 }));
+        Assert.DoesNotContain(TierId.T4Autocrafting, new GateEvaluator().Unlocked(s with { MaruHearts = 6 }));
+        Assert.Contains(TierId.T4Autocrafting, new GateEvaluator().Unlocked(s with { MaruHearts = 7 }));
     }
 
     [Fact]

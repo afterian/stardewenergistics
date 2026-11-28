@@ -48,6 +48,7 @@ Confirmed decisions log. The full design is in `docs/design-plan.md`; status and
 - Wire under placed machines (user, 2026-11-28): wire can be laid onto a tile that already has a machine or chest (pointing at either half of a tall one); it draws under the item. Adjacency stays as well.
 - Autocraft sets ingredients aside (user, 2026-11-28): when a job starts, its ingredients from stock leave network storage and are held on the job with the parts it makes; Terminals, Machine Links and other jobs can't use them. Leftovers and a cancelled job's items go back to storage.
 - Qi Gem recipes spend the balance (Claude, 2026-11-28, found by the play-tester): the game never keeps Qi Gems in the backpack (picking them up adds to the Qi Gem balance), so the Advanced Crafting Rack (5) and Prismatic Disk (10) could never be crafted. The crafting menu now counts and spends the player's Qi Gem balance for them.
+- First letter after one chat with Maru (user, 2026-11-28): talking to Maru once (any friendship points) is enough for the T1 letter, mailed the next morning. To make up for it the later gates rise (Claude's numbers): T2 also needs Maru 2 hearts, T3 5 hearts (was 4), T4 7 hearts (was 6). T5 stays at 8 hearts because that's the most a player can reach without giving her a bouquet. Mine and Skull Cavern depths are unchanged.
 
 ## Open
 

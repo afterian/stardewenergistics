@@ -32,6 +32,7 @@ public static class GuideProgress
     public static bool IsMet(GuideGoal g, GuideFacts f) => g.Kind switch
     {
         GoalKind.OpenJournal => f.JournalOpened,
+        GoalKind.TalkToMaru => f.Progress.TalkedToMaru,
         GoalKind.MaruHearts => f.Progress.MaruHearts >= g.Amount,
         GoalKind.CopperProcessors => f.Progress.CopperProcessorsCrafted >= g.Amount,
         GoalKind.ReadLetter => g.Tier is { } t && f.LettersRead.Contains(t),

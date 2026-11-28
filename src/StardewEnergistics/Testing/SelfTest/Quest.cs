@@ -45,6 +45,23 @@ internal static class Quest
         if (!c.Player.friendshipData.TryGetValue("Maru", out var f))
             c.Player.friendshipData["Maru"] = f = new Friendship();
         f.Points = hearts * 250;
+        if (hearts == 0)
+        {
+            // A farmer who has never spoken to Maru.
+            f.TalkedToToday = false;
+            f.GiftsToday = 0;
+        }
+    }
+
+    /// <summary>Talks to Maru once, as the game does: 20 friendship points and "talked today".</summary>
+    public static void TalkToMaru(SelfTestContext c)
+    {
+        c.Step("talk to Maru");
+        if (!c.Player.friendshipData.TryGetValue("Maru", out var f))
+            c.Player.friendshipData["Maru"] = f = new Friendship();
+        if (!f.TalkedToToday)
+            f.Points += 20;
+        f.TalkedToToday = true;
     }
 
     /// <summary>
@@ -138,7 +155,7 @@ internal static class Quest
         // Day one: Maru mails the journal.
         Morning(c);
         c.Check("day one: journal recipe known", p.craftingRecipes.ContainsKey(Ids.QuestJournal));
-        c.Check("day one: no blueprints yet (Maru under 2 hearts)", !p.mailbox.Contains(ContentInjector.MailId(TierId.T1Components)));
+        c.Check("day one: no blueprints yet (not talked to Maru)", !p.mailbox.Contains(ContentInjector.MailId(TierId.T1Components)));
         var letter = ReadMail(c, ContentInjector.GuideMailId);
         c.CheckEqual("the journal came with the letter", 1, c.Carried("(O)" + Ids.QuestJournal));
         yield return c.Show("Day one: Maru's letter with the Tinkerer's Journal", 110, 40);
@@ -157,25 +174,26 @@ internal static class Quest
         yield return c.Show("The Tinkerer's Journal, open on the first goal", 110);
         c.CloseMenu();
 
-        // Two hearts with Maru: the first blueprints.
-        SetMaruHearts(c, 2);
+        // Talk to Maru once: the first blueprints next morning.
+        TalkToMaru(c);
         Morning(c);
         letter = ReadMail(c, ContentInjector.MailId(TierId.T1Components));
         CheckRecipes(c, TierId.T1Components);
-        yield return c.Show("2 hearts with Maru: her first blueprints (Processor Press, processors, wire)", 110, 40);
+        yield return c.Show("One chat with Maru: her first blueprints (Processor Press, processors, wire)", 110, 40);
         c.CloseMenu();
         Refresh(c);
         c.Check("journal goals 'maru' and 'letter1' ticked", Done(c).Contains("maru") && Done(c).Contains("letter1"), string.Join(",", Done(c)));
 
-        // Ten Copper Processors pressed and Mines floor 20: storage blueprints.
+        // Ten Copper Processors pressed, Mines floor 20 and 2 hearts: storage blueprints.
         p.stats.Set(Ids.StatCopperProcessors, 10);
+        SetMaruHearts(c, 2);
         Morning(c);
         c.Check("T2 waits for Mines floor 20", !p.mailbox.Contains(ContentInjector.MailId(TierId.T2SimpleStorage)));
         p.deepestMineLevel = 20;
         Morning(c);
         letter = ReadMail(c, ContentInjector.MailId(TierId.T2SimpleStorage));
         CheckRecipes(c, TierId.T2SimpleStorage);
-        yield return c.Show("10 processors and Mines floor 20: storage blueprints (Core, racks, Terminal, disks)", 110, 40);
+        yield return c.Show("10 processors, Mines floor 20, 2 hearts: storage blueprints (Core, racks, Terminal, disks)", 110, 40);
         c.CloseMenu();
         Refresh(c);
         c.Check("journal goals 'tenChips' and 'letter2' ticked", Done(c).Contains("tenChips") && Done(c).Contains("letter2"), string.Join(",", Done(c)));
@@ -197,7 +215,7 @@ internal static class Quest
             yield break;
 
         // The base counts as built tiers; with more hearts and depth, Maru's later letters arrive.
-        SetMaruHearts(c, 6);
+        SetMaruHearts(c, 7);
         c.Player.deepestMineLevel = 120;
         Morning(c);
         Morning(c); // T4 needs T3 marked built first, which the first morning records

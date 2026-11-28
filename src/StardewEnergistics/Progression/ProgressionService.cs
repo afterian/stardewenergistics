@@ -53,7 +53,15 @@ internal sealed class ProgressionService
         QiWalnutRoomOpen: Game1.netWorldState.Value.GoldenWalnutsFound >= 100,
         HasPrismaticShard: player.Items.ContainsId("(O)74"),
         TiersBuilt: TiersBuilt(),
-        LettersSent: ContentInjector.TiersWithMail.Where(t => player.hasOrWillReceiveMail(ContentInjector.MailId(t))).ToHashSet());
+        LettersSent: ContentInjector.TiersWithMail.Where(t => player.hasOrWillReceiveMail(ContentInjector.MailId(t))).ToHashSet(),
+        TalkedToMaru: TalkedTo(player, "Maru"));
+
+    /// <summary>
+    /// True once the player has talked to (or gifted) this villager: talking gives friendship points, so any points count.
+    /// Points can fade back to 0 over many idle days, but Maru's letter is sent the morning after the talk and then stays.
+    /// </summary>
+    public static bool TalkedTo(Farmer player, string npc) =>
+        player.friendshipData.TryGetValue(npc, out var f) && (f.Points > 0 || f.TalkedToToday || f.GiftsToday > 0);
 
     public void OnDayStarted()
     {
