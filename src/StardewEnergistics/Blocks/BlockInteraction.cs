@@ -51,7 +51,12 @@ internal sealed class BlockInteraction
 
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
-        if (!Context.IsPlayerFree || !e.Button.IsActionButton() || helper.Input.IsSuppressed(e.Button))
+        if (!Context.IsPlayerFree || helper.Input.IsSuppressed(e.Button))
+            return;
+        // Controllers often "use" a held item with the tool button (X) instead of the action button (A).
+        bool useButton = e.Button.IsUseToolButton() && Game1.player.CurrentTool == null
+            && !IsHeld(Game1.player.ActiveObject, Ids.NetworkWrench) && IsOurAttachable(Game1.player.ActiveObject);
+        if (!e.Button.IsActionButton() && !useButton)
             return;
 
         var location = Game1.currentLocation;
@@ -63,13 +68,16 @@ internal sealed class BlockInteraction
             OpenWireless(location);
             return;
         }
-        if (!location.objects.TryGetValue(tile, out var obj))
-        {
-            // Big craftables are two tiles tall; clicking the top half targets the tile below.
-            tile = new Vector2(tile.X, tile.Y + 1);
-            if (!location.objects.TryGetValue(tile, out obj) || !obj.bigCraftable.Value)
-                return;
-        }
+        if (HandleMainBin(e.Button, location, tile))
+            return;
+
+        if (FindTarget(location, e.Cursor.GrabTile) is not { } found)
+            return;
+        tile = found.Tile;
+        var obj = found.Obj;
+        // With the tool button, only act on our own blocks (and our attachments' targets); leave vanilla use alone.
+        if (!e.Button.IsActionButton() && BlockIds.KindOf(obj) == null && !Game1.player.ActiveObject!.QualifiedItemId.StartsWith("(O)" + Ids.Prefix))
+            return;
 
         var held = Game1.player.ActiveObject;
 
@@ -143,6 +151,55 @@ internal sealed class BlockInteraction
         }
     }
 
+    /// <summary>
+    /// The object the player means: the tile under the cursor (or the base of a big craftable whose top half
+    /// was clicked), else the tile the player faces. If neither has anything, look at the 8 tiles around the
+    /// player (facing side first), like the game does for controllers, but only accept our own blocks or a
+    /// target for the mod item in hand, so vanilla interactions aren't taken over.
+    /// </summary>
+    private static (Vector2 Tile, SObject Obj)? FindTarget(GameLocation location, Vector2 cursorTile)
+    {
+        foreach (var t in new[] { cursorTile, Game1.player.GetGrabTile() })
+        {
+            if (At(location, t) is { } hit)
+                return hit;
+        }
+
+        // Only controllers target nearby tiles; a mouse click means the clicked tile.
+        if (Game1.lastCursorMotionWasMouse && Game1.mouseCursorTransparency > 0)
+            return null;
+
+        var held = Game1.player.ActiveObject;
+        var me = Game1.player.Tile;
+        var facing = Game1.player.GetGrabTile() - me;
+        var around = new List<Vector2>();
+        for (int dx = -1; dx <= 1; dx++)
+            for (int dy = -1; dy <= 1; dy++)
+                if (dx != 0 || dy != 0)
+                    around.Add(new Vector2(dx, dy));
+        foreach (var d in around.OrderBy(d => Vector2.DistanceSquared(d, facing)))
+        {
+            if (At(location, me + d) is { } hit && (BlockIds.KindOf(hit.Obj) != null || (IsOurAttachable(held) && held!.QualifiedItemId.StartsWith("(O)" + Ids.Prefix))))
+                return hit;
+        }
+        return null;
+    }
+
+    private static (Vector2 Tile, SObject Obj)? At(GameLocation location, Vector2 t)
+    {
+        if (location.objects.TryGetValue(t, out var obj))
+            return (t, obj);
+        var below = new Vector2(t.X, t.Y + 1);
+        if (location.objects.TryGetValue(below, out obj) && obj.bigCraftable.Value)
+            return (below, obj);
+        return null;
+    }
+
+    /// <summary>Held items this mod puts into or onto things.</summary>
+    private static bool IsOurAttachable(SObject? held) => held != null && (
+        held.QualifiedItemId.StartsWith("(O)" + Ids.Prefix)
+        || held.QualifiedItemId is "(O)" + VanillaIds.BatteryPack or "(O)" + VanillaIds.Coal or "(O)" + VanillaIds.Hardwood);
+
     private const string MiniShippingBin = "(BC)248";
 
     private static bool IsHeld(SObject? held, string id) => held?.QualifiedItemId == "(O)" + id;
@@ -190,6 +247,40 @@ internal sealed class BlockInteraction
         return false;
     }
 
+    /// <summary>A Shipping Link on the farm's main Shipping Bin: use the Link on the bin, open its settings with the wrench.</summary>
+    private bool HandleMainBin(SButton button, GameLocation location, Vector2 tile)
+    {
+        var held = Game1.player.ActiveObject;
+        if (!IsHeld(held, Ids.ShippingLink) && !IsHeld(held, Ids.NetworkWrench))
+            return false;
+        if (location.getBuildingAt(tile) is not StardewValley.Buildings.ShippingBin bin)
+            return false;
+
+        bool linked = bin.modData.ContainsKey(Ids.Data.ShippingLink);
+        if (IsHeld(held, Ids.ShippingLink))
+        {
+            helper.Input.Suppress(button);
+            if (linked)
+            {
+                Hud(T("link.already"));
+                return true;
+            }
+            bin.modData[Ids.Data.ShippingLink] = "1";
+            bin.modData[Ids.Data.LinkState] = MachineLinkService.NotSetUp.ToString();
+            Game1.player.reduceActiveItemByOne();
+            networks.Invalidate(location);
+            Game1.playSound("hammer");
+            Hud(T("link.added.bin"));
+            return true;
+        }
+
+        if (!linked)
+            return false;
+        helper.Input.Suppress(button);
+        OpenSettingsMenu(location, tile, bin.modData, shipping: true, T("link.title.shipping"));
+        return true;
+    }
+
     private void OpenLinkSettings(GameLocation location, Vector2 tile, SObject obj, bool shipping)
     {
         string title;
@@ -201,23 +292,29 @@ internal sealed class BlockInteraction
             title = T("link.title.machine", new { machine = obj.DisplayName, count });
         }
 
+        OpenSettingsMenu(location, tile, obj.modData, shipping, title);
+    }
+
+    /// <summary>The Link settings screen for the Link whose data is <paramref name="data"/> (on an object or the main bin).</summary>
+    private void OpenSettingsMenu(GameLocation location, Vector2 tile, StardewValley.Mods.ModDataDictionary data, bool shipping, string title)
+    {
         Game1.activeClickableMenu = new LinkSettingsMenu(
-            helper.Translation, textures.Get, obj, shipping, title, MachineLinkService.SettingsOf(obj),
+            helper.Translation, textures.Get, data, shipping, title, MachineLinkService.SettingsOf(data),
             onSave: (target, settings) =>
             {
                 MachineLinkService.SetSettings(target, settings);
                 if (!settings.Configured)
-                    target.modData[Ids.Data.LinkState] = MachineLinkService.NotSetUp.ToString();
-                else if (target.modData.TryGetValue(Ids.Data.LinkState, out string? st) && st == MachineLinkService.NotSetUp.ToString())
-                    target.modData[Ids.Data.LinkState] = MachineLinkService.Idle.ToString();
+                    target[Ids.Data.LinkState] = MachineLinkService.NotSetUp.ToString();
+                else if (target.TryGetValue(Ids.Data.LinkState, out string? st) && st == MachineLinkService.NotSetUp.ToString())
+                    target[Ids.Data.LinkState] = MachineLinkService.Idle.ToString();
             },
             onRemove: target =>
             {
-                string item = target.modData.ContainsKey(Ids.Data.ShippingLink) ? Ids.ShippingLink : Ids.MachineLink;
-                target.modData.Remove(Ids.Data.MachineLink);
-                target.modData.Remove(Ids.Data.ShippingLink);
-                target.modData.Remove(Ids.Data.LinkSettings);
-                target.modData.Remove(Ids.Data.LinkState);
+                string item = target.ContainsKey(Ids.Data.ShippingLink) ? Ids.ShippingLink : Ids.MachineLink;
+                target.Remove(Ids.Data.MachineLink);
+                target.Remove(Ids.Data.ShippingLink);
+                target.Remove(Ids.Data.LinkSettings);
+                target.Remove(Ids.Data.LinkState);
                 Game1.createItemDebris(ItemRegistry.Create("(O)" + item), tile * 64 + new Vector2(32, 32), -1, location);
                 networks.Invalidate(location);
                 Game1.playSound("hammer");

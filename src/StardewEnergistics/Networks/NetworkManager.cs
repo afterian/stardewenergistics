@@ -7,6 +7,7 @@ using StardewEnergistics.World;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Buildings;
 using SObject = StardewValley.Object;
 
 namespace StardewEnergistics.Networks;
@@ -14,12 +15,13 @@ namespace StardewEnergistics.Networks;
 /// <summary>A location's networks plus the game objects behind each block.</summary>
 internal sealed class LocationNetworks
 {
-    public LocationNetworks(NetworkManager manager, GameLocation location, NetworkGraph graph, Dictionary<string, SObject> objects)
+    public LocationNetworks(NetworkManager manager, GameLocation location, NetworkGraph graph, Dictionary<string, SObject> objects, Dictionary<string, Building> bins)
     {
         Manager = manager;
         Location = location;
         Graph = graph;
         Objects = objects;
+        Bins = bins;
     }
 
     public NetworkManager Manager { get; }
@@ -31,13 +33,20 @@ internal sealed class LocationNetworks
     /// <summary>Block ID → placed object.</summary>
     public Dictionary<string, SObject> Objects { get; }
 
+    /// <summary>Block ID → main Shipping Bin building with a Shipping Link (one block per wired tile beside it).</summary>
+    public Dictionary<string, Building> Bins { get; }
+
     public SObject ObjectOf(BlockNode b) => Objects[b.Id];
+
+    /// <summary>Main Shipping Bins with a Shipping Link on this network (each once).</summary>
+    public IEnumerable<Building> BinsOf(Network n) =>
+        n.OfKind(BlockKind.ShippingLink).Where(b => Bins.ContainsKey(b.Id)).Select(b => Bins[b.Id]).Distinct();
 
     /// <summary>The network of the block on a tile (ignoring blocks of other kinds), or null.</summary>
     public Network? NetworkAt(Vector2 tile) => Graph.NetworkAt(new TilePos((int)tile.X, (int)tile.Y));
 
     public IEnumerable<SObject> ObjectsOf(Network n, BlockKind kind) =>
-        n.OfKind(kind).OrderBy(b => b.Pos.Y).ThenBy(b => b.Pos.X).Select(ObjectOf);
+        n.OfKind(kind).Where(b => Objects.ContainsKey(b.Id)).OrderBy(b => b.Pos.Y).ThenBy(b => b.Pos.X).Select(ObjectOf);
 
     /// <summary>True if the network can run: it has its own Core, or a Network Port joins it to one.</summary>
     public bool IsActive(Network n) => n.Working || Manager.GroupOf(n)?.Working == true;
@@ -50,10 +59,11 @@ internal sealed class LocationNetworks
 internal sealed class NetworkManager
 {
     private readonly WireLayerStore wires;
-    private readonly NetworkGraphBuilder builder = new(ConnectionRule.OwnTile);
+    private readonly NetworkGraphBuilder builder;
     private readonly Dictionary<string, LocationNetworks> cache = new();
-    public NetworkManager(WireLayerStore wires)
+    public NetworkManager(WireLayerStore wires, ConnectionRule rule = ConnectionRule.OwnTileOrNeighbours)
     {
+        builder = new NetworkGraphBuilder(rule);
         this.wires = wires;
         wires.TileChanged += (key, _) =>
         {
@@ -75,7 +85,7 @@ internal sealed class NetworkManager
         this.helper = helper;
         this.modId = modId;
         helper.Events.World.ObjectListChanged += (_, e) => InvalidateLocal(e.Location);
-        helper.Events.World.BuildingListChanged += (_, _) => links = null; // Ports may now sit beside another building
+        helper.Events.World.BuildingListChanged += (_, _) => Clear(); // Ports and the Shipping Bin may have moved
         helper.Events.GameLoop.SaveLoaded += (_, _) => Clear();
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => Clear();
 
@@ -155,7 +165,23 @@ internal sealed class NetworkManager
             objects[id] = obj;
         }
 
-        var result = new LocationNetworks(this, location, builder.Build(layer, blocks), objects);
+        // A Shipping Link on the main Shipping Bin joins through wire on any tile right beside the bin.
+        var bins = new Dictionary<string, Building>();
+        foreach (var building in location.buildings)
+        {
+            if (building is not ShippingBin || !building.modData.ContainsKey(Ids.Data.ShippingLink))
+                continue;
+            foreach (var p in TilesBeside(building))
+            {
+                if (layer.Get(p) == null)
+                    continue;
+                string id = $"{key}@bin{building.tileX.Value},{building.tileY.Value}:{p.X},{p.Y}";
+                blocks.Add(new BlockNode(id, BlockKind.ShippingLink, p));
+                bins[id] = building;
+            }
+        }
+
+        var result = new LocationNetworks(this, location, builder.Build(layer, blocks), objects, bins);
         cache[key] = result;
         return result;
     }
@@ -207,8 +233,24 @@ internal sealed class NetworkManager
         return primary != null && byId.TryGetValue(primary, out var home) ? home : null;
     }
 
+    /// <summary>The tiles directly beside a building's footprint (not the corners).</summary>
+    public static IEnumerable<TilePos> TilesBeside(Building b)
+    {
+        int bx = b.tileX.Value, by = b.tileY.Value, w = b.tilesWide.Value, h = b.tilesHigh.Value;
+        for (int x = bx; x < bx + w; x++)
+        {
+            yield return new TilePos(x, by - 1);
+            yield return new TilePos(x, by + h);
+        }
+        for (int y = by; y < by + h; y++)
+        {
+            yield return new TilePos(bx - 1, y);
+            yield return new TilePos(bx + w, y);
+        }
+    }
+
     /// <summary>The building a Network Port at this farm tile sits beside, if any.</summary>
-    public static StardewValley.Buildings.Building? BuildingBeside(GameLocation outdoors, Vector2 tile)
+    public static Building? BuildingBeside(GameLocation outdoors, Vector2 tile)
     {
         int x = (int)tile.X, y = (int)tile.Y;
         foreach (var b in outdoors.buildings)

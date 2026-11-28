@@ -30,6 +30,8 @@ namespace StardewEnergistics
         {
             Monitor.Log("Stardew Energistics loaded", LogLevel.Info);
             config = helper.ReadConfig<ModConfig>();
+            if (config.Upgrade())
+                helper.WriteConfig(config);
             var harmony = new Harmony(ModManifest.UniqueID);
 
             var textures = new TextureRegistry(helper, Monitor);
@@ -43,7 +45,7 @@ namespace StardewEnergistics
             wireSync = new WireSync(helper, Monitor, wires, ModManifest.UniqueID);
             wireSync.Register();
 
-            var networks = new NetworkManager(wires);
+            var networks = new NetworkManager(wires, config.WireUnderBlockOnly ? Core.Graph.ConnectionRule.OwnTile : Core.Graph.ConnectionRule.OwnTileOrNeighbours);
             networks.Register(helper, ModManifest.UniqueID);
             networks.ReachAllBeforePorts = config.TerminalReachAllBeforePorts;
             power = new PowerService(helper, Monitor, networks) { Table = config.ToPowerTable() };

@@ -65,3 +65,35 @@ public class StockRuleCodecTests
     [InlineData("x;5;-1 (O)1;3 ")]
     public void BadInputIsSkipped(string? raw) => Assert.Empty(StockRuleCodec.Decode(raw));
 }
+
+public class JobReserveTests
+{
+    private static readonly ItemKey Ore = new("(O)378");
+
+    [Fact]
+    public void TakesLowestQualityFirstAndDrains()
+    {
+        var r = new JobReserve();
+        r.Add(Ore with { Quality = 2 }, 3);
+        r.Add(Ore, 2);
+        var got = r.Take("(O)378", 4);
+        Assert.Equal(new[] { (Ore, 2), (Ore with { Quality = 2 }, 2) }, got);
+        Assert.Equal(1, r.CountOf("(O)378"));
+        Assert.Single(r.Drain());
+        Assert.True(r.IsEmpty);
+    }
+
+    [Fact]
+    public void ReserveSurvivesTheCodec()
+    {
+        var queue = new JobQueue();
+        var step = new CraftStep(new RecipeDef("x", new[] { new ItemAmount(Ore, 5) }, new ItemAmount(new ItemKey("(O)334"), 1), RecipeKind.Furnace), 2);
+        var job = queue.Add(new ItemAmount(new ItemKey("(O)334"), 2), new CraftPlan(new[] { step }, new[] { new ItemAmount(Ore, 10) }, Array.Empty<ItemAmount>()));
+        job.Reserved = true;
+        job.Reserve.Add(Ore with { Quality = 1 }, 7);
+
+        var back = StardewEnergistics.Core.Persistence.JobQueueCodec.Decode(StardewEnergistics.Core.Persistence.JobQueueCodec.Encode(queue)).Jobs.Single();
+        Assert.True(back.Reserved);
+        Assert.Equal(new[] { (Ore with { Quality = 1 }, 7L) }, back.Reserve.All().ToArray());
+    }
+}

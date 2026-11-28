@@ -22,6 +22,9 @@ public static class JobQueueCodec
         public int Step { get; set; }
         public int Done { get; set; }
         public List<StepDto> Steps { get; set; } = new();
+        public bool Reserved { get; set; }
+        /// <summary>Items set aside, "count qualifiedId quality".</summary>
+        public List<string> Reserve { get; set; } = new();
     }
 
     private sealed class StepDto
@@ -54,6 +57,8 @@ public static class JobQueueCodec
             Status = j.Status.ToString(),
             Step = j.StepIndex,
             Done = j.RunsDone,
+            Reserved = j.Reserved,
+            Reserve = j.Reserve.All().Select(r => $"{r.Count} {r.Key.QualifiedId} {r.Key.Quality}").ToList(),
             Steps = j.Steps.Select(s => new StepDto
             {
                 Id = s.Recipe.Id,
@@ -88,8 +93,15 @@ public static class JobQueueCodec
                     new RecipeDef(s.Id, s.In.Select(Amount).ToList(), Amount(s.Out), Enum.Parse<RecipeKind>(s.Kind)),
                     s.Times)).ToList();
                 var status = Enum.TryParse<JobStatus>(j.Status, out var st) ? st : JobStatus.Queued;
-                queue.Restore(j.Id, new ItemAmount(new ItemKey(j.Target), j.Count), steps, status,
+                var job = queue.Restore(j.Id, new ItemAmount(new ItemKey(j.Target), j.Count), steps, status,
                     Math.Clamp(j.Step, 0, steps.Count), Math.Max(0, j.Done));
+                job.Reserved = j.Reserved;
+                foreach (string r in j.Reserve ?? new())
+                {
+                    string[] parts = r.Split(' ');
+                    if (parts.Length == 3 && long.TryParse(parts[0], out long n) && int.TryParse(parts[2], out int q))
+                        job.Reserve.Add(new ItemKey(parts[1], q), n);
+                }
             }
             catch (Exception e) when (e is FormatException or ArgumentException)
             {

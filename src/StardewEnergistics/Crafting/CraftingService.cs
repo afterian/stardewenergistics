@@ -21,7 +21,9 @@ namespace StardewEnergistics.Crafting;
 /// Autocrafting (host). Jobs live in the Computer Core's modData. Every 10 game minutes each Crafting Rack
 /// works on one job: craft steps run at once from storage; Furnace steps load free Furnaces that have a
 /// Machine Link (and the Furnaces touching them), and their bars go back to storage when done.
-/// Ingredients aren't reserved: if something is taken out meanwhile, the job waits until it's back.
+/// When a job starts, its ingredients from stock are set aside on the job (<see cref="JobReserve"/>), out of
+/// network storage, and the parts it makes stay there too; only the finished item goes to storage.
+/// Leftovers and a cancelled job's items go back. Jobs saved before this (not reserved) use storage as they go.
 /// </summary>
 internal sealed class CraftingService
 {
@@ -105,7 +107,8 @@ internal sealed class CraftingService
 
         var core = loc.ObjectOf(n.Core);
         var queue = JobsOf(core);
-        queue.Add(new ItemAmount(target, count), plan);
+        var job = queue.Add(new ItemAmount(target, count), plan);
+        SetAside(job, plan, NetworkStorage.For(loc, n, disks));
         SaveJobs(core, queue);
         monitor.Log($"Autocraft job: {count} {target} in {plan.Steps.Count} steps.", LogLevel.Debug);
         return null;
@@ -118,6 +121,7 @@ internal sealed class CraftingService
         var core = loc.ObjectOf(n.Core);
         var queue = JobsOf(core);
         bool ok = queue.Cancel(jobId);
+        ReturnEnded(queue, NetworkStorage.For(loc, n, disks), loc.Location, core.TileLocation);
         SaveJobs(core, queue);
         return ok;
     }
@@ -163,7 +167,7 @@ internal sealed class CraftingService
                     var plan = planner.Plan(due.Item, due.Count, Book(true), storage);
                     if (!plan.CanRun || plan.Steps.Take(plan.Steps.Count - 1).Any(st => !RecipeSource.IsStackable(st.Recipe.Out.Item.QualifiedId)))
                         continue;
-                    queue.Add(due, plan);
+                    SetAside(queue.Add(due, plan), plan, storage);
                     started++;
                 }
                 SaveJobs(core, queue);
@@ -242,9 +246,14 @@ internal sealed class CraftingService
             if (output == null)
                 continue;
             var job = int.TryParse(tag, out int id) ? queue.Jobs.FirstOrDefault(j => j.Id == id) : null;
-            if (job?.Current is { } step && step.Recipe.Kind == RecipeKind.Furnace && step.Recipe.Out.Item.QualifiedId == output.QualifiedItemId)
-                queue.Report(job, System.Math.Max(1, output.Stack / System.Math.Max(1, step.Recipe.Out.Count)));
-            PutOrDrop(storage, output, loc.Location, core.TileLocation);
+            bool forStep = job?.Current is { } step && step.Recipe.Kind == RecipeKind.Furnace && step.Recipe.Out.Item.QualifiedId == output.QualifiedItemId;
+            bool part = forStep && job!.Reserved && !job.IsLastStep && !job.Finished;
+            if (forStep)
+                queue.Report(job!, System.Math.Max(1, output.Stack / System.Math.Max(1, job!.Current!.Recipe.Out.Count)));
+            if (part && StardewItemKeys.TryGetKey(output, out var partKey))
+                job!.Reserve.Add(partKey, output.Stack); // a part for a later step stays with its job
+            else
+                PutOrDrop(storage, output, loc.Location, core.TileLocation);
         }
 
         var active = queue.Active(racks.Count);
@@ -255,7 +264,7 @@ internal sealed class CraftingService
             if (step.Recipe.Kind == RecipeKind.Furnace)
                 LoadFurnaces(job, step, furnaces, storage);
             else
-                queue.Report(job, RunCrafts(step.Recipe, System.Math.Min(job.RunsLeft, MaxRunsPerTick), storage, loc.Location, core.TileLocation));
+                queue.Report(job, RunCrafts(job, step.Recipe, System.Math.Min(job.RunsLeft, MaxRunsPerTick), storage, loc.Location, core.TileLocation));
 
             if (job.Status == JobStatus.Done)
             {
@@ -266,6 +275,7 @@ internal sealed class CraftingService
 
         for (int i = 0; i < racks.Count; i++)
             RackSlots.ShowFrame(racks[i], i < active.Count(j => !j.Finished) ? 1 : 0);
+        ReturnEnded(queue, storage, loc.Location, core.TileLocation);
         SaveJobs(core, queue);
     }
 
@@ -305,62 +315,147 @@ internal sealed class CraftingService
                 break;
             if (!MachineDriver.IsIdle(f) || f.modData.ContainsKey(Ids.Data.ForJob))
                 continue;
+
+            // A reserved job hands this run's ore and Coal to storage just long enough for the Furnace to take them.
+            var lent = job.Reserved ? Lend(job, step.Recipe.In, storage) : new List<(ItemKey Key, int Count)>();
             var key = storage.All()
                 .Where(k => k.Key.QualifiedId == main.Item.QualifiedId && k.Key.PreserveId == null && k.Key.Color == null && k.Count >= main.Count)
                 .OrderBy(k => k.Key.Quality).Select(k => (ItemKey?)k.Key).FirstOrDefault();
-            if (key == null)
-                break;
-            if (MachineDriver.Load(f, key.Value, main.Count, storage))
+            bool loaded = key != null && MachineDriver.Load(f, key.Value, main.Count, storage);
+            if (!loaded)
             {
-                f.modData[Ids.Data.ForJob] = tag;
-                need--;
+                TakeBack(job, lent, storage);
+                break;
             }
+            f.modData[Ids.Data.ForJob] = tag;
+            need--;
         }
     }
 
-    /// <summary>Runs a crafting recipe up to <paramref name="max"/> times from storage. Returns runs done.</summary>
-    private static int RunCrafts(RecipeDef recipe, int max, NetworkStorage storage, GameLocation location, Vector2 dropAt)
+    /// <summary>Runs a crafting recipe up to <paramref name="max"/> times. Returns runs done.</summary>
+    private static int RunCrafts(CraftJob job, RecipeDef recipe, int max, NetworkStorage storage, GameLocation location, Vector2 dropAt)
     {
+        bool part = job.Reserved && !job.IsLastStep;
         int done = 0;
         for (; done < max; done++)
         {
-            if (!TakeAll(recipe.In, storage))
+            if (!TakeAll(job, recipe.In, storage))
                 break;
+            if (part)
+            {
+                job.Reserve.Add(new ItemKey(recipe.Out.Item.QualifiedId), recipe.Out.Count); // stays with the job
+                continue;
+            }
             var item = ItemRegistry.Create(recipe.Out.Item.QualifiedId, recipe.Out.Count);
             PutOrDrop(storage, item, location, dropAt);
         }
         return done;
     }
 
-    /// <summary>Takes every ingredient (lowest quality first), or nothing.</summary>
-    private static bool TakeAll(IReadOnlyList<ItemAmount> inputs, NetworkStorage storage)
+    /// <summary>Takes every ingredient (the job's reserve first, then storage, lowest quality first), or nothing.</summary>
+    private static bool TakeAll(CraftJob job, IReadOnlyList<ItemAmount> inputs, NetworkStorage storage)
     {
-        var taken = new List<Item>();
+        var fromReserve = new List<(ItemKey Key, int Count)>();
+        var fromStorage = new List<Item>();
         foreach (var input in inputs)
         {
-            int need = input.Count;
-            var keys = storage.All()
-                .Where(k => k.Key.QualifiedId == input.Item.QualifiedId && k.Key.PreserveId == null && k.Key.Color == null)
-                .OrderBy(k => k.Key.Quality).Select(k => k.Key).ToList();
-            foreach (var key in keys)
+            var got = job.Reserve.Take(input.Item.QualifiedId, input.Count);
+            fromReserve.AddRange(got);
+            int need = input.Count - got.Sum(g => g.Count);
+            foreach (var key in LowestFirst(storage, input.Item.QualifiedId))
             {
                 if (need <= 0)
                     break;
-                var got = storage.Take(key, need);
-                if (got != null)
+                var item = storage.Take(key, need);
+                if (item != null)
                 {
-                    need -= got.Stack;
-                    taken.Add(got);
+                    need -= item.Stack;
+                    fromStorage.Add(item);
                 }
             }
             if (need > 0)
             {
-                foreach (var t in taken)
+                foreach (var (k, c) in fromReserve)
+                    job.Reserve.Add(k, c);
+                foreach (var t in fromStorage)
                     storage.Put(t);
                 return false;
             }
         }
         return true;
+    }
+
+    private static List<ItemKey> LowestFirst(NetworkStorage storage, string qualifiedId) => storage.All()
+        .Where(k => k.Key.QualifiedId == qualifiedId && k.Key.PreserveId == null && k.Key.Color == null)
+        .OrderBy(k => k.Key.Quality).Select(k => k.Key).ToList();
+
+    /// <summary>Moves one run's ingredients from the job's reserve into storage. Returns what was moved.</summary>
+    private static List<(ItemKey Key, int Count)> Lend(CraftJob job, IReadOnlyList<ItemAmount> inputs, NetworkStorage storage)
+    {
+        var lent = new List<(ItemKey, int)>();
+        foreach (var input in inputs)
+        {
+            foreach (var (key, count) in job.Reserve.Take(input.Item.QualifiedId, input.Count))
+            {
+                var left = storage.Put(StardewItemKeys.Create(key, count));
+                int stored = count - (left?.Stack ?? 0);
+                if (left != null)
+                    job.Reserve.Add(key, left.Stack);
+                if (stored > 0)
+                    lent.Add((key, stored));
+            }
+        }
+        return lent;
+    }
+
+    /// <summary>Takes lent items back out of storage into the job's reserve (the Furnace didn't start).</summary>
+    private static void TakeBack(CraftJob job, List<(ItemKey Key, int Count)> lent, NetworkStorage storage)
+    {
+        foreach (var (key, count) in lent)
+        {
+            var item = storage.Take(key, count);
+            if (item != null)
+                job.Reserve.Add(key, item.Stack);
+        }
+    }
+
+    /// <summary>Takes a new job's ingredients from stock out of storage and holds them on the job.</summary>
+    private static void SetAside(CraftJob job, CraftPlan plan, NetworkStorage storage)
+    {
+        foreach (var need in plan.FromStock)
+        {
+            int left = need.Count;
+            foreach (var key in LowestFirst(storage, need.Item.QualifiedId))
+            {
+                if (left <= 0)
+                    break;
+                var item = storage.Take(key, left);
+                if (item != null)
+                {
+                    left -= item.Stack;
+                    job.Reserve.Add(key, item.Stack);
+                }
+            }
+        }
+        job.Reserved = true;
+    }
+
+    /// <summary>Returns what finished or cancelled jobs still hold to storage (dropping what doesn't fit).</summary>
+    private static void ReturnEnded(JobQueue queue, NetworkStorage storage, GameLocation location, Vector2 tile)
+    {
+        foreach (var job in queue.EndedWithReserve().ToList())
+        {
+            foreach (var (key, count) in job.Reserve.Drain())
+            {
+                long left = count;
+                while (left > 0)
+                {
+                    int n = (int)System.Math.Min(999, left);
+                    PutOrDrop(storage, StardewItemKeys.Create(key, n), location, tile);
+                    left -= n;
+                }
+            }
+        }
     }
 
     private static void PutOrDrop(NetworkStorage storage, Item item, GameLocation location, Vector2 tile)
