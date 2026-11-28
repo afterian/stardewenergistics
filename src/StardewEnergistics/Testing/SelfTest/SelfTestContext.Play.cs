@@ -86,18 +86,35 @@ internal sealed partial class SelfTestContext
     /// </summary>
     public void KeepHandFree(Action add)
     {
-        bool blocked = Player.Items[HandSlot] == null;
-        if (blocked)
-            Player.Items[HandSlot] = ItemRegistry.Create("(O)0"); // a placeholder (Weeds), removed again below
-        try
+        bool wasEmpty = Player.Items[HandSlot] == null;
+        add();
+        if (!wasEmpty || Player.Items[HandSlot] is not { } landed)
+            return;
+        // It went into the hand slot: move it to a free slot, as if the player sorted it.
+        for (int i = 0; i < Player.Items.Count; i++)
         {
-            add();
-        }
-        finally
-        {
-            if (blocked)
+            if (i != HandSlot && Player.Items[i] == null)
+            {
+                Player.Items[i] = landed;
                 Player.Items[HandSlot] = null;
+                return;
+            }
         }
+    }
+
+    /// <summary>Puts away everything but the journal and the wrench (a player's chest of leftovers), so the backpack has room.</summary>
+    public void TidyBackpack()
+    {
+        int removed = 0;
+        for (int i = 0; i < Player.Items.Count; i++)
+        {
+            var item = Player.Items[i];
+            if (item == null || item.QualifiedItemId is "(O)" + Ids.QuestJournal or "(O)" + Ids.NetworkWrench)
+                continue;
+            Player.Items[i] = null;
+            removed++;
+        }
+        Log($"tidied the backpack: put away {removed} stacks");
     }
 
     private void GiveNow(string qualifiedId, int count)
@@ -199,7 +216,8 @@ internal sealed partial class SelfTestContext
         int gained = Carried(expected) - carriedBefore;
         int yield = Math.Max(1, recipe.numberProducedPerCraft);
         Check($"crafted {Short(expected)} x{yield}", gained == yield,
-            $"backpack gained {gained}; on the cursor: {held?.QualifiedItemId ?? "nothing"}; {Messages()}");
+            $"backpack gained {gained}; on the cursor: {held?.QualifiedItemId ?? "nothing"}; free slots {Player.Items.Count(i => i == null)}; ingredients now: "
+            + string.Join(", ", recipe.recipeList.Select(kv => $"{Short(kv.Key)} {Player.Items.CountId(ItemRegistry.QualifyItemId(kv.Key) ?? kv.Key)}/{kv.Value}")) + $"; {Messages()}");
         CheckEqual($"{Short(recipeId)}: crafted count went up by {yield}", timesBefore + yield, Player.craftingRecipes[recipeId]);
         var made = gained > 0 ? CarriedItems(expected).LastOrDefault() : null;
         if (made != null)
@@ -350,7 +368,8 @@ internal sealed partial class SelfTestContext
     /// clear of the player's own wire and blocks. Null if there's none.
     /// </summary>
     /// <param name="own">Tiles of this test's own blocks and wire, which the path may run beside.</param>
-    public List<Vector2>? FindPath(GameLocation loc, Vector2 from, Vector2 to, ISet<Vector2>? own = null, int limit = 20000)
+    /// <param name="avoid">Tiles the path must not use.</param>
+    public List<Vector2>? FindPath(GameLocation loc, Vector2 from, Vector2 to, ISet<Vector2>? own = null, ISet<Vector2>? avoid = null, int limit = 20000)
     {
         var prev = new Dictionary<Vector2, Vector2> { [from] = from };
         var queue = new Queue<Vector2>();
@@ -369,7 +388,7 @@ internal sealed partial class SelfTestContext
             foreach (var d in new[] { new Vector2(1, 0), new Vector2(-1, 0), new Vector2(0, 1), new Vector2(0, -1) })
             {
                 var n = at + d;
-                if (prev.ContainsKey(n))
+                if (prev.ContainsKey(n) || avoid?.Contains(n) == true)
                     continue;
                 if (n != to && !(IsClearable(loc, n) && AwayFromNetworks(loc, n, own)))
                     continue;

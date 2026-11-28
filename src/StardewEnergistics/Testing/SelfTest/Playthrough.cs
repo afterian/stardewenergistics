@@ -222,6 +222,7 @@ internal static class Playthrough
 
     private static IEnumerable<object?> FirstNetwork(SelfTestContext c)
     {
+        c.TidyBackpack();
         Quest.SetMaruHearts(c, 3);
         c.Player.deepestMineLevel = 80;
         NoLetterYet(c, TierId.T3Automation, "Maru is at 3 hearts");
@@ -331,6 +332,7 @@ internal static class Playthrough
 
     private static IEnumerable<object?> Automation(SelfTestContext c)
     {
+        c.TidyBackpack();
         Quest.SetMaruHearts(c, 6);
         c.Player.deepestMineLevel = 120;
         NoLetterYet(c, TierId.T4Autocrafting, "no Machine Link is set up yet", unlessBuilt: TierId.T3Automation);
@@ -398,6 +400,7 @@ internal static class Playthrough
 
     private static IEnumerable<object?> Autocrafting(SelfTestContext c)
     {
+        c.TidyBackpack();
         Quest.SetMaruHearts(c, 8);
         Game1.netWorldState.Value.LowestMineLevel = 145; // Skull Cavern floor 25 (the Mines are 120 floors)
         c.CheckEqual("Skull Cavern floor 25 reached", 25, c.S.Progression.Snapshot(c.Player).DeepestSkullCavernLevel);
@@ -441,6 +444,7 @@ internal static class Playthrough
 
     private static IEnumerable<object?> LinkedBuildings(SelfTestContext c)
     {
+        c.TidyBackpack();
         var p = c.Player;
         if (!p.mailReceived.Contains("Visited_Island"))
             p.mailReceived.Add("Visited_Island");
@@ -509,10 +513,13 @@ internal static class Playthrough
         foreach (var t in ports)
             c.Require($"Port placed at {t}", c.Place(BC(Ids.NetworkPort), t) != null);
         var wire = new List<Vector2>();
+        // Pointing just above a Port means the Port itself (its top half), so wire can't go there.
+        var aboveports = ports.Select(t => t - new Vector2(0, 1)).ToHashSet();
         for (int i = 0; i + 1 < ports.Count; i++)
         {
-            var path = c.FindPath(farm, ports[i], ports[i + 1], own);
+            var path = c.FindPath(farm, ports[i], ports[i + 1], own, aboveports);
             c.Require($"a clear path for wire from Port {i + 1} to Port {i + 2}", path != null, $"{ports[i]} to {ports[i + 1]}");
+            c.Log($"wire path {i + 1}: {string.Join(" ", path!.Select(t => $"({t.X},{t.Y})"))}");
             foreach (var t in path!)
             {
                 own.Add(t);
@@ -581,6 +588,7 @@ internal static class Playthrough
 
     private static IEnumerable<object?> WholeFarm(SelfTestContext c)
     {
+        c.TidyBackpack();
         c.CraftTimes(Ids.AdvancedCraftingRack, 1);
         c.Place(BC(Ids.AdvancedCraftingRack), c.T(7, 0));
         c.S.Networks.Invalidate(c.Loc);

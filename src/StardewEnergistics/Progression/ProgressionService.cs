@@ -52,7 +52,8 @@ internal sealed class ProgressionService
         // Qi's Walnut Room opens once the farm has found 100 Golden Walnuts.
         QiWalnutRoomOpen: Game1.netWorldState.Value.GoldenWalnutsFound >= 100,
         HasPrismaticShard: player.Items.ContainsId("(O)74"),
-        TiersBuilt: TiersBuilt());
+        TiersBuilt: TiersBuilt(),
+        LettersSent: ContentInjector.TiersWithMail.Where(t => player.hasOrWillReceiveMail(ContentInjector.MailId(t))).ToHashSet());
 
     public void OnDayStarted()
     {

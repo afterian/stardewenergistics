@@ -40,22 +40,34 @@ public class GateEvaluatorTests
         Assert.Equal(6, new GateEvaluator().Unlocked(s).Count);
     }
 
+    private static readonly TierId[] FirstFive = { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation, TierId.T4Autocrafting, TierId.T5LinkedBuildings };
+
     [Fact]
-    public void SpendingTheIridiumBarAfterBuildingT5DoesNotLockT6()
+    public void SpendingTheIridiumBarAfterTheT5LetterDoesNotLockT6()
     {
         // Found by the play-tester: the Iridium Bar went into an Iridium Disk, and Maru's T6 letter never came.
-        var s = Snap(8, 120, 25, 10, iridium: false, island: true, walnut: true, prismatic: true,
-            built: new[] { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation, TierId.T4Autocrafting, TierId.T5LinkedBuildings });
+        var s = Snap(8, 120, 25, 10, iridium: false, island: true, walnut: true, prismatic: true, built: FirstFive) with { LettersSent = FirstFive.ToHashSet() };
         Assert.Contains(TierId.T6WholeFarm, new GateEvaluator().Unlocked(s));
         Assert.True(GateRequirements.AllMet(TierId.T6WholeFarm, s));
+        Assert.DoesNotContain(TierId.T6WholeFarm, new GateEvaluator().Unlocked(s with { LettersSent = null }));
     }
 
     [Fact]
-    public void LosingHeartsAfterBuildingKeepsLaterTiersOpen()
+    public void LosingHeartsAfterALetterKeepsItsTierOpen()
     {
-        var s = Snap(hearts: 1, mine: 120, processors: 10, built: new[] { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation });
-        Assert.Contains(TierId.T4Autocrafting, new GateEvaluator().Unlocked(s with { MaruHearts = 6 }));
+        var s = Snap(hearts: 1, mine: 120, processors: 10, built: new[] { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation })
+            with { LettersSent = new HashSet<TierId> { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation } };
         Assert.Contains(TierId.T3Automation, new GateEvaluator().Unlocked(s));
+        Assert.DoesNotContain(TierId.T4Autocrafting, new GateEvaluator().Unlocked(s));
+        Assert.Contains(TierId.T4Autocrafting, new GateEvaluator().Unlocked(s with { MaruHearts = 6 }));
+    }
+
+    [Fact]
+    public void ABuiltNetworkDoesNotSkipALettersOwnRequirements()
+    {
+        // A save whose networks already count as T2 built still waits for 10 processors and Mines 20.
+        var s = Snap(hearts: 2, mine: 20, processors: 1, built: TierId.T2SimpleStorage);
+        Assert.DoesNotContain(TierId.T2SimpleStorage, new GateEvaluator().Unlocked(s));
     }
 
     [Fact]

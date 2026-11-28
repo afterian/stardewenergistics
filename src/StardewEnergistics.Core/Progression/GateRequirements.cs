@@ -55,7 +55,7 @@ public static class GateRequirements
         };
     }
 
-    /// <summary>True when this tier and every tier before it have all their requirements met (or are already built).</summary>
+    /// <summary>True when this tier and every tier before it have all their requirements met (or the letter was already sent).</summary>
     public static bool AllMet(TierId tier, ProgressSnapshot s) =>
-        Enum.GetValues<TierId>().Where(t => t <= tier).All(t => s.TiersBuilt.Contains(t) || For(t, s).All(r => r.Met));
+        Enum.GetValues<TierId>().Where(t => t <= tier).All(t => s.Sent(t) || For(t, s).All(r => r.Met));
 }
