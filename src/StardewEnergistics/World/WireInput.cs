@@ -13,7 +13,7 @@ namespace StardewEnergistics.World;
 /// Player input for wire:
 /// <list type="bullet">
 /// <item>Holding Copper Wire or Heavy Cable: click a floor tile to lay one; hold and drag to lay a line.
-/// Clicking a chest or machine lays wire under it (the block's own tile is where it connects).</item>
+/// Clicking a chest or machine (either half of a tall one) lays wire under it.</item>
 /// <item>Pickaxe on a bare wire tile picks the wire back up, like a path.</item>
 /// <item>Network Wrench: tap to hide/show one tile; hold to hide/show the whole run;
 /// right-click Heavy Cable to change its colour. Holding the wrench shows Network View.</item>
@@ -56,13 +56,15 @@ internal sealed class WireInput
         helper.Events.Display.RenderedWorld += OnRenderedWorld;
     }
 
-    /// <summary>While holding wire, outline the tile it would go on (green if it can, red if not).</summary>
+    /// <summary>While holding wire, outline the tile it would go on (green if it can, red if not; nothing if it's already wired).</summary>
     private void OnRenderedWorld(object? sender, RenderedWorldEventArgs e)
     {
         if (!Context.IsPlayerFree || HeldWireKind() == null)
             return;
         var tile = WireTile(helper.Input.GetCursorPosition());
-        bool ok = CanLay(Game1.currentLocation, tile) && store.Find(Game1.currentLocation)?.Get(tile) == null;
+        if (store.Find(Game1.currentLocation)?.Get(tile) != null)
+            return; // already wired: nothing to show
+        bool ok = CanLay(Game1.currentLocation, tile);
         var screen = Game1.GlobalToLocal(Game1.viewport, new Vector2(tile.X * 64, tile.Y * 64));
         e.SpriteBatch.Draw(Game1.mouseCursors, screen, new Rectangle(ok ? 194 : 210, 388, 16, 16), Color.White * 0.7f, 0f, Vector2.Zero, 4f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0.01f);
     }
@@ -95,9 +97,22 @@ internal sealed class WireInput
         var t = cursor.Tile;
         var me = Game1.player.Tile;
         bool cursorShown = Game1.mouseCursorTransparency > 0 && Game1.wasMouseVisibleThisFrame;
-        if (cursorShown && System.Math.Abs(t.X - me.X) <= WireReach && System.Math.Abs(t.Y - me.Y) <= WireReach)
-            return ToTile(t);
-        return ToTile(cursor.GrabTile);
+        var tile = cursorShown && System.Math.Abs(t.X - me.X) <= WireReach && System.Math.Abs(t.Y - me.Y) <= WireReach
+            ? t
+            : cursor.GrabTile;
+        return ToTile(BaseTile(Game1.currentLocation, tile));
+    }
+
+    /// <summary>
+    /// Pointing at the top half of a machine or other big craftable means the tile it stands on,
+    /// since that's where wire goes under it.
+    /// </summary>
+    private static Vector2 BaseTile(GameLocation location, Vector2 t)
+    {
+        if (location.objects.ContainsKey(t))
+            return t;
+        var below = new Vector2(t.X, t.Y + 1);
+        return location.objects.TryGetValue(below, out var obj) && obj.bigCraftable.Value ? below : t;
     }
 
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
