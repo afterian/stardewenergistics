@@ -88,6 +88,7 @@ failed checks; the last line is `SE-SELFTEST RESULT: PASS|FAIL (...)`.
 | machine-link | Unconfigured Link does nothing; configured one loads a Furnace from storage, collects the bar, reloads |
 | autocraft | Crafting Rack makes 20 Copper Wire from storage; too big a job is refused |
 | tools | A Pickaxe stores on a disk and comes back as a working tool |
+| whole-items | An enchanted Pickaxe and sword, a ring, a hat, boots, flavoured wine, a coloured flower and a mod-tagged item store whole and come back identical; space is counted and freed; a disk can't go in a disk |
 | press | Processor Press makes Copper, Gold and Iridium Processors; a bar without its other inputs is refused with the reason |
 | heavy-cable | Heavy Cable lays, the wrench changes its colour and hides it, a pickaxe picks it up as Heavy Cable |
 | disk-upgrade | Crafting an Iron Disk from a Copper Disk keeps its ID and contents (launched only) |

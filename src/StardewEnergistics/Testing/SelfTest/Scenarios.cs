@@ -62,6 +62,7 @@ internal static class Scenarios
         new("machine-link", "Machine Link feeds a Furnace from storage", MachineLink),
         new("autocraft", "Crafting Rack autocrafts Copper Wire", Autocraft),
         new("tools", "Plain tools go on disks through the Terminal", Tools),
+        new("whole-items", "Enchanted tools, weapons, rings, hats, boots, flavoured and coloured items go on disks whole and come back identical", WholeItems.Run),
         new("press", "Processor Press makes all three processors; missing inputs are refused", FeatureScenarios.Press),
         new("heavy-cable", "Heavy Cable lays, changes colour, hides and picks up", FeatureScenarios.HeavyCable),
         new("disk-upgrade", "Crafting a disk from the tier below keeps its ID and contents", FeatureScenarios.DiskUpgrade, ThrowawayOnly: true),

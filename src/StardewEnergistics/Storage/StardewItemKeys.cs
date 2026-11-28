@@ -6,7 +6,8 @@ using SObject = StardewValley.Object;
 namespace StardewEnergistics.Storage;
 
 /// <summary>
-/// Converts between game items and Core <see cref="ItemKey"/>s. Plain stackable objects (crops, ores,
+/// Converts between game items and Core <see cref="ItemKey"/>s (the fast path: items stored as counts).
+/// Items this refuses still go on disks, whole (see NetworkStorage.PutWhole). Plain stackable objects (crops, ores,
 /// bars, forage…, with quality) and plain tools (no enchantments, attachments or mod data)
 /// can go on disks. Flavoured preserves, coloured items, rings, weapons and enchanted tools need the whole-item
 /// store (spike S4) and stay in linked chests until then.

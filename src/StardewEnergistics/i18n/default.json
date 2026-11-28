@@ -108,6 +108,7 @@
   "terminal.search": "Search",
   "terminal.noNetwork": "This terminal isn't connected to a working network.",
   "terminal.full": "Network storage is full. Add another disk to a Storage Rack, or upgrade a disk.",
+  "terminal.remoteWhole": "Only the host can store items like this one (enchanted, flavoured, rings and so on) for now. Plain items work from here.",
   "terminal.noDisks": "This network has no disks. Put a disk in a Storage Rack beside the Computer Core or another rack, or on or right beside wire that runs to the Core.",
   "terminal.kindsFull": "Your disks hold as many kinds of items as they can. Add another disk, or upgrade one to hold more kinds.",
     "terminal.remoteCraft": "Crafting from the Terminal is host and split-screen only for now.",
@@ -115,7 +116,7 @@
   "terminal.noMatch": "Nothing matches your search.",
   "terminal.meter.power": "Power {{power}} ({{days}} days)",
   "terminal.meter.disks": "{{disks}} disks, {{kinds}} kinds, {{items}}/{{maxItems}} items",
-  "terminal.cantStore": "This item can't go on a disk yet (weapons, enchanted tools, rings, flavoured or coloured items, and items other mods changed). Keep it in a chest with a Chest Link: the Terminal still shows it.",
+  "terminal.cantStore": "A disk can't go inside another disk. Keep spare disks in a chest.",
 
   // Maru's letters
   "mail.T1.title": "Processor Press",

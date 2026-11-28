@@ -60,7 +60,9 @@ internal sealed class LocalTerminalBackend : ITerminalBackend
         var storage = Storage();
         if (storage != null && row.Handle is StoredRow stored)
         {
-            var item = stored.Key is { } key ? storage.Take(key, count) : storage.TakeFromChest(stored.Chest!, stored.Display, count);
+            var item = stored.Key is { } key ? storage.Take(key, count)
+                : stored.DiskId is { } disk ? storage.TakeWhole(disk, stored.Display, count)
+                : storage.TakeFromChest(stored.Chest!, stored.Display, count);
             if (item != null)
                 TerminalItems.Give(item);
         }

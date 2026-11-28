@@ -286,7 +286,11 @@ internal sealed class TerminalMenu : IClickableMenu
     /// <summary>Why an item didn't go into storage, so the player knows what to fix.</summary>
     private string WhyNotStored(Item item)
     {
-        bool storable = StardewEnergistics.Storage.StardewItemKeys.TryGetKey(item, out _);
+        bool storable = !StardewEnergistics.Storage.DiskStore.IsDisk(item); // anything else can go on a disk
+        // Online farmhands' Terminals move plain items only for now; the host stores whole items.
+        if (!StardewModdingAPI.Context.IsMainPlayer && !StardewModdingAPI.Context.IsSplitScreen
+            && !StardewEnergistics.Storage.StardewItemKeys.TryGetKey(item, out _))
+            return "terminal.remoteWhole";
         // Local rows carry a StoredRow, farmhand rows an ItemKey.
         bool kindStored = rows.Any(r => r.Handle switch
         {

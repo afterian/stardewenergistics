@@ -9,12 +9,17 @@ using StardewValley.Objects;
 
 namespace StardewEnergistics.Storage;
 
-/// <summary>One Terminal row: a keyed item (summed over storage) or one specific chest item.</summary>
-internal sealed record StoredRow(ItemKey? Key, Item Display, long Count, Chest? Chest);
+/// <summary>
+/// One Terminal row: a keyed item (summed over storage), one whole item on a disk (<paramref name="DiskId"/>),
+/// or one specific chest item (<paramref name="Chest"/>).
+/// </summary>
+internal sealed record StoredRow(ItemKey? Key, Item Display, long Count, Chest? Chest, string? DiskId = null);
 
 /// <summary>
 /// One network's storage: disks in its Storage Racks (rack order), then chests with a Chest Link.
-/// Items go to disks first when they can; anything else goes to linked chests.
+/// Items go to disks first. Plain items are kept as counts; anything with its own state (enchantments,
+/// flavour, colour, mod data…) is kept whole in the disk's global inventory (see <see cref="DiskStore.WholeItems"/>).
+/// Linked chests take what the disks can't.
 /// </summary>
 internal sealed class NetworkStorage : IStockView
 {
@@ -62,7 +67,9 @@ internal sealed class NetworkStorage : IStockView
         chests.AddRange(loc.ObjectsOf(network, BlockKind.ChestLink).OfType<Chest>());
     }
 
-    public int KindsStored => Disks.All().Select(a => a.Key.QualifiedId).Distinct().Count();
+    public int KindsStored => Disks.All().Select(a => a.Key.QualifiedId)
+        .Concat(Disks.Disks.SelectMany(d => DiskStore.WholeItems(d.Id.Value)).Where(i => i != null).Select(i => i!.QualifiedItemId))
+        .Distinct().Count();
 
     /// <summary>Total count of an item across disks and linked chests.</summary>
     public long Count(ItemKey key) =>
@@ -95,6 +102,18 @@ internal sealed class NetworkStorage : IStockView
                 return null;
             item.Stack = r.Remaining;
         }
+        else if (DiskStore.IsDisk(item))
+        {
+            // A disk can't go inside a disk; it can still go in a linked chest.
+        }
+        else if (PutWhole(item) is not { } rest)
+        {
+            return null;
+        }
+        else
+        {
+            item = rest;
+        }
 
         foreach (var chest in Chests)
         {
@@ -104,6 +123,48 @@ internal sealed class NetworkStorage : IStockView
             item = left;
         }
         return item;
+    }
+
+    /// <summary>
+    /// Stores an item with its own state on disks, whole: first on a disk already holding that kind, then on
+    /// the first with room. A stack can be split across disks. Returns what didn't fit (null if all of it did).
+    /// </summary>
+    private Item? PutWhole(Item item)
+    {
+        string id = item.QualifiedItemId;
+        foreach (var disk in Disks.Disks.OrderByDescending(d => d.HasKind(id)))
+        {
+            long fits = disk.AddWhole(id, item.Stack);
+            if (fits <= 0)
+                continue;
+            Item part = item;
+            if (fits < item.Stack)
+            {
+                part = item.getOne();
+                part.Stack = (int)fits;
+                item.Stack -= (int)fits;
+            }
+            AddToInventory(DiskStore.WholeItems(disk.Id.Value), part);
+            if (ReferenceEquals(part, item))
+                return null;
+        }
+        return item;
+    }
+
+    /// <summary>Adds an item to a disk's inventory, topping up a matching stack first.</summary>
+    private static void AddToInventory(Inventory inventory, Item item)
+    {
+        foreach (var have in inventory)
+        {
+            if (have != null && have.canStackWith(item))
+            {
+                int left = have.addToStack(item);
+                if (left <= 0)
+                    return;
+                item.Stack = left;
+            }
+        }
+        inventory.Add(item);
     }
 
     /// <summary>
@@ -130,7 +191,10 @@ internal sealed class NetworkStorage : IStockView
             }
         }
 
-        rows.InsertRange(0, keyed.Select(kv => new StoredRow(kv.Key, StardewItemKeys.Create(kv.Key, 1), kv.Value, null)));
+        var whole = Disks.Disks.SelectMany(d => DiskStore.WholeItems(d.Id.Value)
+            .Where(i => i != null)
+            .Select(i => new StoredRow(null, i!, i!.Stack, null, d.Id.Value)));
+        rows.InsertRange(0, keyed.Select(kv => new StoredRow(kv.Key, StardewItemKeys.Create(kv.Key, 1), kv.Value, null)).Concat(whole));
         return rows;
     }
 
@@ -154,6 +218,30 @@ internal sealed class NetworkStorage : IStockView
             chest.clearNulls();
         }
         return got > 0 ? StardewItemKeys.Create(key, got) : null;
+    }
+
+    /// <summary>Takes up to <paramref name="n"/> of one whole item off a disk.</summary>
+    public Item? TakeWhole(string diskId, Item item, int n)
+    {
+        var disk = Disks.Disks.FirstOrDefault(d => d.Id.Value == diskId);
+        var inventory = DiskStore.WholeItems(diskId);
+        int index = inventory.IndexOf(item);
+        if (disk == null || index < 0 || n <= 0)
+            return null;
+        Item taken;
+        if (n >= item.Stack)
+        {
+            inventory.RemoveAt(index);
+            taken = item;
+        }
+        else
+        {
+            taken = item.getOne();
+            taken.Stack = n;
+            item.Stack -= n;
+        }
+        disk.TakeWhole(taken.QualifiedItemId, taken.Stack);
+        return taken;
     }
 
     /// <summary>Takes up to <paramref name="n"/> of one specific (unkeyed) item from a chest.</summary>

@@ -16,7 +16,7 @@ public static class PlayTestCoverage
     public static readonly IReadOnlyList<string> ScenarioIds = new[]
     {
         "coverage", "placement", "wire", "wire-placement", "network", "disks", "terminal", "capacity", "targeting", "break-rack", "chest-link",
-        "power", "power-day", "machine-link", "autocraft", "tools", "press", "heavy-cable", "disk-upgrade", "shipping-link",
+        "power", "power-day", "machine-link", "autocraft", "tools", "whole-items", "press", "heavy-cable", "disk-upgrade", "shipping-link",
         "power-feed", "wireless", "keep-stock", "save", "quest", "playthrough", "showcase",
     };
 
@@ -81,6 +81,7 @@ public static class PlayTestCoverage
         F("terminal.storeWithdraw", "store and withdraw stacks and singles", "terminal", "playthrough"),
         F("storage.limits", "kind and item limits", "capacity"),
         F("tools.onDisks", "tools stored on disks keep working", "tools"),
+        F("storage.anything", "any item goes on a disk: ones with their own state are kept whole and come back identical", "whole-items"),
         F("break.drops", "breaking blocks drops their contents", "break-rack", "placement"),
         F("power.basics", "batteries, fuel, unpowered networks", "power", "playthrough"),
         F("power.morning", "the morning power pass", "power-day", "playthrough"),

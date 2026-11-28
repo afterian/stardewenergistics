@@ -9,6 +9,12 @@ public sealed class DiskContents
     private readonly Dictionary<ItemKey, long> counts = new();
     private readonly Dictionary<string, int> keysPerBaseId = new(StringComparer.Ordinal);
 
+    /// <summary>
+    /// Whole items (ones with their own state: enchanted tools, rings, preserves…) by base item ID. The items
+    /// themselves are kept by the game side; this only counts them toward the disk's kinds and items.
+    /// </summary>
+    private readonly Dictionary<string, long> wholeCounts = new(StringComparer.Ordinal);
+
     public DiskContents(DiskId id, DiskTier tier, DiskSpec spec)
     {
         Id = id;
@@ -24,7 +30,10 @@ public sealed class DiskContents
 
     public long TotalItems { get; private set; }
 
-    public int KindsUsed => keysPerBaseId.Count;
+    public int KindsUsed => keysPerBaseId.Count + wholeCounts.Keys.Count(k => !keysPerBaseId.ContainsKey(k));
+
+    /// <summary>How many whole items (with their own state) this disk holds.</summary>
+    public long WholeItems => wholeCounts.Values.Sum();
 
     public long FreeItems => Math.Max(0, Spec.MaxItems - TotalItems);
 
@@ -32,14 +41,58 @@ public sealed class DiskContents
 
     public long Count(ItemKey k) => counts.TryGetValue(k, out long n) ? n : 0;
 
-    public bool HasKind(string qualifiedId) => keysPerBaseId.ContainsKey(qualifiedId);
+    public bool HasKind(string qualifiedId) => keysPerBaseId.ContainsKey(qualifiedId) || wholeCounts.ContainsKey(qualifiedId);
 
     /// <summary>How many of this item would fit right now.</summary>
-    public long RoomFor(ItemKey k)
+    public long RoomFor(ItemKey k) => RoomFor(k.QualifiedId);
+
+    /// <summary>How many items with this base ID would fit right now.</summary>
+    public long RoomFor(string qualifiedId)
     {
-        if (!HasKind(k.QualifiedId) && !Spec.UnlimitedKinds && KindsUsed >= Spec.MaxKinds)
+        if (!HasKind(qualifiedId) && !Spec.UnlimitedKinds && KindsUsed >= Spec.MaxKinds)
             return 0;
         return FreeItems;
+    }
+
+    /// <summary>Counts up to <paramref name="n"/> whole items toward this disk; returns how many fit.</summary>
+    public long AddWhole(string qualifiedId, long n)
+    {
+        if (n <= 0)
+            return 0;
+        long take = Math.Min(n, RoomFor(qualifiedId));
+        if (take <= 0)
+            return 0;
+        wholeCounts[qualifiedId] = wholeCounts.GetValueOrDefault(qualifiedId) + take;
+        TotalItems += take;
+        return take;
+    }
+
+    /// <summary>Stops counting up to <paramref name="n"/> whole items; returns how many were counted.</summary>
+    public long TakeWhole(string qualifiedId, long n)
+    {
+        if (n <= 0 || !wholeCounts.TryGetValue(qualifiedId, out long have))
+            return 0;
+        long take = Math.Min(n, have);
+        if (take == have)
+            wholeCounts.Remove(qualifiedId);
+        else
+            wholeCounts[qualifiedId] = have - take;
+        TotalItems -= take;
+        return take;
+    }
+
+    /// <summary>Recounts whole items from what the game side actually holds (on load), without limit checks.</summary>
+    public void SetWhole(IEnumerable<(string QualifiedId, long Count)> items)
+    {
+        TotalItems -= WholeItems;
+        wholeCounts.Clear();
+        foreach (var (id, n) in items)
+        {
+            if (n <= 0)
+                continue;
+            wholeCounts[id] = wholeCounts.GetValueOrDefault(id) + n;
+            TotalItems += n;
+        }
     }
 
     /// <summary>Stores up to <paramref name="n"/>; returns how many were stored.</summary>
