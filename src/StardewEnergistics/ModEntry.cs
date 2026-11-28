@@ -89,7 +89,7 @@ namespace StardewEnergistics
                 shipping.OnDayEnding();
             };
 
-            var wireInput = new WireInput(helper, config, wires, renderer);
+            var wireInput = new WireInput(helper, Monitor, config, wires, renderer);
             wireInput.Register();
             var blockInteraction = new BlockInteraction(helper, networks, disks, power, terminal, textures);
             blockInteraction.Register();
