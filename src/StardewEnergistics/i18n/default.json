@@ -200,5 +200,22 @@
   "config.batteryPower": "Battery Pack power",
   "config.batteryPower.tip": "Power from one Battery Pack. A starter network uses 7 a day.",
   "config.coalPower": "Coal power",
-  "config.hardwoodPower": "Hardwood power"
+  "config.hardwoodPower": "Hardwood power",
+  "config.testing": "Testing",
+  "config.testMode": "Test mode (cheats)",
+  "config.testMode.tip": "Adds the test menu: free catalog of every item, starter kit, materials and unlock all recipes. Turn off for normal play.",
+  "config.testMenuKey": "Test menu button",
+  "config.testMenuKey.tip": "Opens the test menu while test mode is on. Default: F7, or click both sticks in on a controller.",
+
+  // Test mode menu
+  "test.hint": "Test mode: click both sticks in (or press F7) for the test menu.",
+  "test.title": "Stardew Energistics test menu",
+  "test.catalog": "Item catalog (everything free)",
+  "test.kit": "Starter kit (Core, racks, disks, wire, wrench, batteries, Terminal)",
+  "test.materials": "Crafting materials (bars, quartz, gems...)",
+  "test.unlock": "Unlock all recipes",
+  "test.close": "Close",
+  "test.kit.done": "Starter kit added.",
+  "test.materials.done": "Materials added.",
+  "test.unlock.done": "Learned {{count}} new recipes."
 }

@@ -50,5 +50,11 @@ public sealed class ModConfig
         return true;
     }
 
+    /// <summary>Test mode: the cheat menu (catalog, starter kit, unlock recipes). On while playtesting; switch off before release.</summary>
+    public bool TestMode { get; set; } = true;
+
+    /// <summary>Opens the test menu when test mode is on. Default F7, or click both sticks (L3 + R3) on a controller.</summary>
+    public KeybindList TestMenuKey { get; set; } = KeybindList.Parse("F7, LeftStick + RightStick");
+
     internal PowerTable ToPowerTable() => PowerTable.Default with { BatteryPower = BatteryPower, CoalPower = CoalPower, HardwoodPower = HardwoodPower };
 }

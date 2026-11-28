@@ -33,6 +33,10 @@ internal static class ConfigMenu
         api.AddBoolOption(manifest, () => config.AnimateDataCables, v => config.AnimateDataCables = v, () => T("config.animateCables"), () => T("config.animateCables.tip"));
         api.AddBoolOption(manifest, () => config.TerminalReachAllBeforePorts, v => config.TerminalReachAllBeforePorts = v, () => T("config.reachAll"), () => T("config.reachAll.tip"));
 
+        api.AddSectionTitle(manifest, () => T("config.testing"));
+        api.AddBoolOption(manifest, () => config.TestMode, v => config.TestMode = v, () => T("config.testMode"), () => T("config.testMode.tip"));
+        api.AddKeybindList(manifest, () => config.TestMenuKey, v => config.TestMenuKey = v, () => T("config.testMenuKey"), () => T("config.testMenuKey.tip"));
+
         api.AddSectionTitle(manifest, () => T("config.power"));
         api.AddNumberOption(manifest, () => config.BatteryPower, v => config.BatteryPower = v, () => T("config.batteryPower"), () => T("config.batteryPower.tip"), min: 10, max: 1000, interval: 10);
         api.AddNumberOption(manifest, () => config.CoalPower, v => config.CoalPower = v, () => T("config.coalPower"), null, min: 1, max: 50);
@@ -50,5 +54,7 @@ internal static class ConfigMenu
         to.HardwoodPower = from.HardwoodPower;
         to.ConfigVersion = ModConfig.CurrentVersion;
         to.TerminalReachAllBeforePorts = from.TerminalReachAllBeforePorts;
+        to.TestMode = from.TestMode;
+        to.TestMenuKey = from.TestMenuKey;
     }
 }
