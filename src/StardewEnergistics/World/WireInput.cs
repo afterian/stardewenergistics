@@ -37,7 +37,7 @@ internal sealed class WireInput
         public int WrenchHeldTicks;
         public bool WrenchRunDone;
         public bool NetworkViewToggled;
-        /// <summary>The tile the outline shows while wire is held: presses lay wire exactly here.</summary>
+        /// <summary>The tile the outline shows while wire is held (presses work it out the same way from their own cursor).</summary>
         public TilePos? Target;
         /// <summary>Why <see cref="Target"/> can't take wire (null if it can).</summary>
         public string? TargetWhyNot;
@@ -142,8 +142,8 @@ internal sealed class WireInput
         // Lay wire.
         if (HeldWireKind() is { } kind && (useTool || action))
         {
-            // Lay exactly where the outline is (same tile, same check), so what you see is what happens.
-            tile = st.Target ?? WireTile(e.Cursor);
+            // Same tile function and same check as the outline, from this press's own cursor.
+            tile = WireTile(e.Cursor);
             helper.Input.Suppress(e.Button);
             if (!TryLay(location, tile, kind, out string? why) && why != "hasWire")
             {
