@@ -31,6 +31,15 @@ public sealed class CraftJob
     /// <summary>Runs of the current step already done.</summary>
     public int RunsDone { get; internal set; }
 
+    /// <summary>Ingredients and parts set aside for this job.</summary>
+    public JobReserve Reserve { get; } = new();
+
+    /// <summary>True once the job's ingredients have been taken out of storage into <see cref="Reserve"/>.</summary>
+    public bool Reserved { get; set; }
+
+    /// <summary>True for the job's last step (its output is what was asked for).</summary>
+    public bool IsLastStep => StepIndex == Steps.Count - 1;
+
     public bool Finished => Status is JobStatus.Done or JobStatus.Cancelled;
     public CraftStep? Current => StepIndex < Steps.Count ? Steps[StepIndex] : null;
     public int RunsLeft => Current is { } s ? s.Times - RunsDone : 0;
@@ -108,8 +117,11 @@ public sealed class JobQueue
         return true;
     }
 
-    /// <summary>Drop finished and cancelled jobs from the list.</summary>
+    /// <summary>Drop finished and cancelled jobs from the list. Empty their reserves first (<see cref="JobReserve.Drain"/>).</summary>
     public int RemoveFinished() => jobs.RemoveAll(j => j.Finished);
+
+    /// <summary>Finished or cancelled jobs that still hold reserved items (to return to storage).</summary>
+    public IEnumerable<CraftJob> EndedWithReserve() => jobs.Where(j => j.Finished && !j.Reserve.IsEmpty);
 
     /// <summary>Put back a saved job.</summary>
     public CraftJob Restore(int id, ItemAmount target, IReadOnlyList<CraftStep> steps, JobStatus status, int stepIndex, int runsDone)

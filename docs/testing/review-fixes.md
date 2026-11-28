@@ -25,3 +25,7 @@ Fixes from the final code review (after M6). None of these has been tried in the
 | 14 | Right-click the farm's Shipping Bin holding a Shipping Link | "Link attached to the Shipping Bin…"; the Link is used up |
 | 15 | Run wire from an outdoor Computer Core (with power) to a tile right beside the bin; wrench the bin, add an item with Keep 2; put 10 in storage; sleep | 8 shipped overnight; the shipping summary shows them |
 | 16 | Wrench the bin, press Remove | The Shipping Link drops back |
+| 17 | Autocraft 2 Iron Bars' worth of something (e.g. a Sprinkler) with exactly the ore/bars it needs in storage | Right after Start, those ingredients are gone from the Terminal (set aside); the job still finishes and the item lands in storage |
+| 18 | Start a job, then cancel it at once | The set-aside ingredients come back to storage |
+| 19 | A Machine Link feeds Kegs from the same storage while a job runs | The job isn't starved: its items are set aside |
+| 20 | Two Computer Cores touching one network | Right-click a Core: "two Cores" problem; nothing runs until one is moved |
