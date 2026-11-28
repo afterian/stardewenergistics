@@ -22,6 +22,7 @@ namespace StardewEnergistics.World;
 internal sealed class WireInput
 {
     private readonly IModHelper helper;
+    private readonly IMonitor monitor;
     private readonly ModConfig config;
     private readonly WireLayerStore store;
     private readonly WireRenderer renderer;
@@ -36,13 +37,18 @@ internal sealed class WireInput
         public int WrenchHeldTicks;
         public bool WrenchRunDone;
         public bool NetworkViewToggled;
+        /// <summary>The tile the outline shows while wire is held (presses work it out the same way from their own cursor).</summary>
+        public TilePos? Target;
+        /// <summary>Why <see cref="Target"/> can't take wire (null if it can).</summary>
+        public string? TargetWhyNot;
     }
 
     private readonly PerScreen<State> state = new(() => new State());
 
-    public WireInput(IModHelper helper, ModConfig config, WireLayerStore store, WireRenderer renderer)
+    public WireInput(IModHelper helper, IMonitor monitor, ModConfig config, WireLayerStore store, WireRenderer renderer)
     {
         this.helper = helper;
+        this.monitor = monitor;
         this.config = config;
         this.store = store;
         this.renderer = renderer;
@@ -59,12 +65,12 @@ internal sealed class WireInput
     /// <summary>While holding wire, outline the tile it would go on (green if it can, red if not; nothing if it's already wired).</summary>
     private void OnRenderedWorld(object? sender, RenderedWorldEventArgs e)
     {
-        if (!Context.IsPlayerFree || HeldWireKind() == null)
+        var st = state.Value;
+        if (!Context.IsPlayerFree || HeldWireKind() == null || st.Target is not { } tile)
             return;
-        var tile = WireTile(helper.Input.GetCursorPosition());
-        if (store.Find(Game1.currentLocation)?.Get(tile) != null)
+        if (st.TargetWhyNot == "hasWire")
             return; // already wired: nothing to show
-        bool ok = CanLay(Game1.currentLocation, tile);
+        bool ok = st.TargetWhyNot == null;
         var screen = Game1.GlobalToLocal(Game1.viewport, new Vector2(tile.X * 64, tile.Y * 64));
         e.SpriteBatch.Draw(Game1.mouseCursors, screen, new Rectangle(ok ? 194 : 210, 388, 16, 16), Color.White * 0.7f, 0f, Vector2.Zero, 4f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0.01f);
     }
@@ -136,18 +142,16 @@ internal sealed class WireInput
         // Lay wire.
         if (HeldWireKind() is { } kind && (useTool || action))
         {
+            // Same tile function and same check as the outline, from this press's own cursor.
             tile = WireTile(e.Cursor);
             helper.Input.Suppress(e.Button);
-            if (TryLay(location, tile, kind))
+            if (!TryLay(location, tile, kind, out string? why) && why != "hasWire")
             {
-                st.DragButton = e.Button;
-                st.LastDragTile = tile;
+                monitor.Log($"Wire not laid at {tile} in {location.NameOrUniqueName}: {why} (button {e.Button}, cursor {e.Cursor.Tile}, grab {e.Cursor.GrabTile}, player {Game1.player.Tile}).", LogLevel.Debug);
+                Game1.showRedMessage(helper.Translation.Get("wire.cant." + why));
             }
-            else
-            {
-                st.DragButton = e.Button; // still allow dragging onto the next tile
-                st.LastDragTile = tile;
-            }
+            st.DragButton = e.Button; // still allow dragging onto the next tile
+            st.LastDragTile = tile;
             return;
         }
 
@@ -221,6 +225,19 @@ internal sealed class WireInput
 
         renderer.NetworkView = st.NetworkViewToggled || HoldingWrench();
 
+        // Work out once per tick where wire would go and whether it can; the outline and presses both use this.
+        if (HeldWireKind() != null && Context.IsPlayerFree)
+        {
+            var target = WireTile(helper.Input.GetCursorPosition());
+            st.Target = target;
+            st.TargetWhyNot = WhyNot(Game1.currentLocation, target);
+        }
+        else
+        {
+            st.Target = null;
+            st.TargetWhyNot = null;
+        }
+
         // Drag to lay a line.
         if (st.DragButton is { } drag && HeldWireKind() is { } kind && Context.IsPlayerFree)
         {
@@ -230,11 +247,10 @@ internal sealed class WireInput
             }
             else
             {
-                var tile = WireTile(helper.Input.GetCursorPosition());
-                if (tile != st.LastDragTile)
+                if (st.Target is { } tile && tile != st.LastDragTile)
                 {
                     st.LastDragTile = tile;
-                    TryLay(Game1.currentLocation, tile, kind);
+                    TryLay(Game1.currentLocation, tile, kind, out _);
                 }
             }
         }
@@ -263,30 +279,68 @@ internal sealed class WireInput
     }
 
     /// <summary>Lays one wire from the held stack if the tile can take it.</summary>
-    private bool TryLay(GameLocation location, TilePos tile, WireKind kind)
+    private bool TryLay(GameLocation location, TilePos tile, WireKind kind, out string? whyNot)
     {
-        if (!CanLay(location, tile))
+        whyNot = WhyNot(location, tile);
+        if (whyNot != null)
             return false;
 
-        var layer = store.For(location);
-        if (!layer.TryPlace(tile, kind))
+        if (!store.For(location).TryPlace(tile, kind))
+        {
+            whyNot = "hasWire";
             return false;
+        }
 
         Game1.player.reduceActiveItemByOne();
         Game1.playSound("woodyStep");
         return true;
     }
 
-    private static bool CanLay(GameLocation location, TilePos tile)
+    /// <summary>
+    /// Why wire can't go on a tile (an i18n suffix under "wire.cant."), or null if it can. Wire goes on floor,
+    /// paths, flooring, grass, tilled soil and under any placed object; not on water, walls or trees.
+    /// </summary>
+    private string? WhyNot(GameLocation location, TilePos tile)
     {
         var v = new Vector2(tile.X, tile.Y);
-        if (!location.isTileOnMap(v) || location.isWaterTile(tile.X, tile.Y))
-            return false;
+        if (!location.isTileOnMap(v))
+            return "offMap";
+        if (store.Find(location)?.Get(tile) != null)
+            return "hasWire";
+        if (location.isWaterTile(tile.X, tile.Y))
+            return "water";
 
-        // A chest or machine on the tile is fine: that's where it connects.
+        // A chest, machine or any placed object is fine: wire goes under it, which is where it connects.
         if (location.objects.ContainsKey(v))
-            return true;
+            return null;
 
-        return location.isTilePassable(v);
+        if (location.terrainFeatures.TryGetValue(v, out var feature)
+            && feature is not StardewValley.TerrainFeatures.Flooring
+            && feature is not StardewValley.TerrainFeatures.HoeDirt
+            && feature is not StardewValley.TerrainFeatures.Grass)
+            return "blocked";
+
+        var box = new Rectangle(tile.X * 64, tile.Y * 64, 64, 64);
+        foreach (var large in location.largeTerrainFeatures)
+        {
+            if (large.getBoundingBox().Intersects(box))
+                return "blocked";
+        }
+        foreach (var clump in location.resourceClumps)
+        {
+            if (clump.occupiesTile(tile.X, tile.Y))
+                return "blocked";
+        }
+
+        foreach (var building in location.buildings)
+        {
+            if (building.occupiesTile(v))
+                return "blocked";
+        }
+
+        // Walls, cliffs, building tiles and other map tiles you can't walk on.
+        if (!location.isTilePassable(new xTile.Dimensions.Location(tile.X, tile.Y), Game1.viewport))
+            return "blocked";
+        return null;
     }
 }

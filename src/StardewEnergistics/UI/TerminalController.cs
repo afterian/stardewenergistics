@@ -104,7 +104,8 @@ internal sealed class TerminalController
             Advanced: advanced,
             StockRules: () => Resolve(location, tile) is { } r ? CraftingService.StockRulesOf(r.Item1, r.Item2) : new List<StardewEnergistics.Core.Crafting.StockRule>(),
             SetStockRule: (key, n) => Resolve(location, tile) is { } r ? crafting.SetStockRule(r.Item1, r.Item2, key, n) : T("terminal.noNetwork"));
-        Game1.activeClickableMenu = new AutocraftMenu(backend, helper.Translation);
+        // Closing autocraft goes back to the Terminal's storage screen.
+        Game1.activeClickableMenu = new AutocraftMenu(backend, helper.Translation) { exitFunction = () => Open(location, tile) };
     }
 
     private void OpenCraft(GameLocation location, Vector2 tile)
@@ -131,13 +132,27 @@ internal sealed class TerminalController
         var pos = Utility.getTopLeftPositionForCenteringOnScreen(w, h);
         var menu = new CraftingPage((int)pos.X, (int)pos.Y, w, h, false, true, materials);
         craftSession.Value = new CraftSession(menu, storage, temp);
+        // Closing the crafting page (X, Escape or B) goes back to the Terminal's storage screen.
+        menu.exitFunction = () =>
+        {
+            FinishCraft();
+            Open(location, tile);
+        };
         Game1.activeClickableMenu = menu;
     }
 
     private void OnMenuChanged(object? sender, MenuChangedEventArgs e)
     {
+        // Fallback for a page closed without its exit function (end of day, a forced close).
+        if (craftSession.Value is { } s && e.OldMenu == s.Menu)
+            FinishCraft();
+    }
+
+    /// <summary>Puts the crafting page's unused ingredients back into network storage.</summary>
+    private void FinishCraft()
+    {
         var s = craftSession.Value;
-        if (s == null || e.OldMenu != s.Menu)
+        if (s == null)
             return;
         craftSession.Value = null;
 

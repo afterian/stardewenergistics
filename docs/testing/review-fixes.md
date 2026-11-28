@@ -51,3 +51,6 @@ Bug: on a controller, a Battery Pack wouldn't go into a Power Rack and Coal woul
 5. Store a plain Pickaxe in the Terminal: it goes on a disk. Take it out: it's the same pickaxe level. An enchanted tool says to use a Chest Link.
 6. Take a whole stack out: the disk meter's kinds and items go down.
 7. Test menu (L3+R3 or F7) > Recover lost disks: a disk lost before this fix comes back in your backpack with its items. Running it again finds 0.
+8. Open the Terminal, then Craft, then close it with X, Escape or B: you are back on the Terminal storage screen, and unused ingredients are back in storage. Do the same with Autocraft.
+9. Hold a Chest Link or Machine Link over a chest or machine: no red/green placement square shows, and using it attaches the Link. Hold Copper Wire: only the mod outline (green/red) shows.
+10. Hold Copper Wire and move the cursor (mouse, trackpad or stick) over an empty floor tile, flooring, tilled soil, under a chest or machine, and beside objects: the outline is green, and pressing lays wire exactly on the outlined tile. Over water, walls, trees and buildings it is red, and pressing shows why.

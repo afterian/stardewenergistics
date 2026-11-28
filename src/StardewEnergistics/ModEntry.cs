@@ -65,6 +65,7 @@ namespace StardewEnergistics
             renderer.Patch(harmony);
             new OverlayRenderer(textures, networks, power, disks, renderer, Monitor).Patch(harmony);
             DiskStackPatch.Apply(harmony);
+            NotPlaceablePatch.Apply(harmony);
             DiskUpgradePatch.Apply(harmony, disks);
 
             var links = new MachineLinkService(Monitor, networks, disks, power);
@@ -89,7 +90,7 @@ namespace StardewEnergistics
                 shipping.OnDayEnding();
             };
 
-            var wireInput = new WireInput(helper, config, wires, renderer);
+            var wireInput = new WireInput(helper, Monitor, config, wires, renderer);
             wireInput.Register();
             var blockInteraction = new BlockInteraction(helper, networks, disks, power, terminal, textures);
             blockInteraction.Register();
