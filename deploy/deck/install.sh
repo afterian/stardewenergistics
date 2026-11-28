@@ -13,6 +13,8 @@ case "$1" in */*) REPO="$1"; shift ;; esac
 TOKEN="${1:-$SE_TOKEN}"
 DIR="$HOME/stardew-energistics"; mkdir -p "$DIR"
 LAUNCH_OPTIONS="$DIR/launch.sh %command%"
+# Everything shown is also saved to ~/stardew-energistics/install.log.
+exec > >(tee "$DIR/install.log") 2>&1
 HAVE_GUI=0; command -v kdialog >/dev/null && [ -n "$DISPLAY$WAYLAND_DISPLAY" ] && HAVE_GUI=1
 
 say() { echo; echo "== $*"; }
@@ -51,35 +53,55 @@ fetch() {  # fetch <repo path> <output file>
     "https://api.github.com/repos/$REPO/contents/$1" -o "$2"
 }
 
-# --- 2. Find the game --------------------------------------------------------
+# --- 2. Find the game (internal storage or SD card)
+steam_libraries() {
+  # Every Steam library on this Deck (internal, SD card, USB), from Steam's own list.
+  local f p
+  for f in "$HOME/.local/share/Steam/steamapps/libraryfolders.vdf" "$HOME/.steam/steam/steamapps/libraryfolders.vdf"; do
+    [ -f "$f" ] || continue
+    sed -n 's/^[[:space:]]*"path"[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$f" | sed 's/\\\\/\\/g'
+  done
+  echo "$HOME/.local/share/Steam"
+  echo "$HOME/.steam/steam"
+  for p in /run/media/*/steamapps /run/media/*/*/steamapps /run/media/*/*/*/steamapps; do
+    [ -d "$p" ] && dirname "$p"
+  done
+}
+
+# --- --------------------------------------------------------
 say "Looking for Stardew Valley"
+# Pick the folder that really has the game in it (an empty leftover folder can
+# exist on internal storage when the game is on the SD card). Prefer one with SMAPI.
 GAME=""
-for d in "$HOME/.local/share/Steam/steamapps/common/Stardew Valley" \
-         "$HOME/.steam/steam/steamapps/common/Stardew Valley" \
-         /run/media/*/steamapps/common/"Stardew Valley" \
-         /run/media/*/*/steamapps/common/"Stardew Valley" \
-         /run/media/*/*/*/steamapps/common/"Stardew Valley"; do
-  [ -d "$d" ] && { GAME="$d"; break; }
-done
+while IFS= read -r lib; do
+  d="$lib/steamapps/common/Stardew Valley"
+  [ -f "$d/Stardew Valley.dll" ] || [ -e "$d/StardewValley" ] || [ -f "$d/Stardew Valley.exe" ] || continue
+  if [ -e "$d/StardewModdingAPI" ] || [ -f "$d/StardewModdingAPI.dll" ]; then GAME="$d"; break; fi
+  [ -n "$GAME" ] || GAME="$d"
+done < <(steam_libraries)
 [ -n "$GAME" ] || fail "Stardew Valley isn't installed yet. Install it in Steam, start it once, quit, then run the installer again."
 echo "Found: $GAME"
 if [ -f "$GAME/Stardew Valley.exe" ] && [ ! -e "$GAME/StardewValley" ]; then
   fail "This is the Windows (Proton) version of the game. In Steam: Stardew Valley > Properties > Compatibility, turn OFF 'Force the use of a specific Steam Play compatibility tool', let it update, then run the installer again."
 fi
 
-# --- 3. SMAPI (install or update) -------------------------------------------
-say "Installing the latest SMAPI"
-# SMAPI is public on GitHub; the token is never sent there.
-URL=$(curl -fsSL -m 20 https://api.github.com/repos/Pathoschild/SMAPI/releases/latest | python3 -c '
+# --- 3. SMAPI ----------------------------------------------------------------
+smapi_installed() {
+  [ -f "$GAME/StardewModdingAPI" ] && [ ! -x "$GAME/StardewModdingAPI" ] && chmod +x "$GAME/StardewModdingAPI" 2>/dev/null
+  [ -x "$GAME/StardewModdingAPI" ] || [ -f "$GAME/StardewModdingAPI.dll" ]
+}
+if smapi_installed; then
+  say "SMAPI is already installed; keeping it"
+else
+  say "Installing SMAPI"
+  # SMAPI is public on GitHub; the token is never sent there.
+  URL=$(curl -fsSL -m 20 https://api.github.com/repos/Pathoschild/SMAPI/releases/latest | python3 -c '
 import json,sys
 for a in json.load(sys.stdin)["assets"]:
     n=a["name"].lower()
     if n.endswith(".zip") and "installer" in n and "developer" not in n:
         print(a["browser_download_url"]); break' 2>/dev/null)
-if [ -z "$URL" ]; then
-  [ -x "$GAME/StardewModdingAPI" ] && echo "Couldn't check for a SMAPI update; keeping the installed one." \
-    || fail "Couldn't find the SMAPI download. Check the wifi and run the installer again."
-else
+  [ -n "$URL" ] || fail "Couldn't find the SMAPI download. Install SMAPI by hand (guide: 'If the automatic SMAPI install fails'), then run this installer again."
   echo "Downloading $(basename "$URL")"
   TMP=$(mktemp -d)
   curl -fsSL -m 300 "$URL" -o "$TMP/smapi.zip" || fail "SMAPI download failed. Check the wifi and run the installer again."
@@ -89,7 +111,7 @@ else
   # --install/--game-path/--no-prompt skip SMAPI's questions; stdin from /dev/null answers anything left.
   ( cd "$(dirname "$INSTALLER")" && bash "./install on Linux.sh" --install --game-path "$GAME" --no-prompt < /dev/null ) || true
   rm -rf "$TMP"
-  [ -x "$GAME/StardewModdingAPI" ] || fail "SMAPI didn't install. See the guide: 'If the automatic SMAPI install fails'."
+  smapi_installed || fail "SMAPI didn't install. Install it by hand (guide: 'If the automatic SMAPI install fails'), then run this installer again; it will skip SMAPI."
   echo "SMAPI is ready."
 fi
 

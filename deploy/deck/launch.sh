@@ -26,16 +26,29 @@ mkdir -p "$APP_DIR"
 [ -f "$LOG" ] && [ "$(wc -l < "$LOG")" -gt 500 ] && tail -n 200 "$LOG" > "$LOG.tmp" && mv "$LOG.tmp" "$LOG"
 log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
 
-find_game() {
-  local d
-  for d in \
-    "$HOME/.local/share/Steam/steamapps/common/Stardew Valley" \
-    "$HOME/.steam/steam/steamapps/common/Stardew Valley" \
-    /run/media/*/steamapps/common/"Stardew Valley" \
-    /run/media/*/*/steamapps/common/"Stardew Valley" \
-    /run/media/*/*/*/steamapps/common/"Stardew Valley"; do
-    [ -d "$d" ] && { echo "$d"; return; }
+steam_libraries() {
+  # Every Steam library on this Deck (internal, SD card, USB), from Steam's own list.
+  local f p
+  for f in "$HOME/.local/share/Steam/steamapps/libraryfolders.vdf" "$HOME/.steam/steam/steamapps/libraryfolders.vdf"; do
+    [ -f "$f" ] || continue
+    sed -n 's/^[[:space:]]*"path"[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$f" | sed 's/\\\\/\\/g'
   done
+  echo "$HOME/.local/share/Steam"
+  echo "$HOME/.steam/steam"
+  for p in /run/media/*/steamapps /run/media/*/*/steamapps /run/media/*/*/*/steamapps; do
+    [ -d "$p" ] && dirname "$p"
+  done
+}
+
+find_game() {
+  local lib d first=""
+  while IFS= read -r lib; do
+    d="$lib/steamapps/common/Stardew Valley"
+    [ -f "$d/Stardew Valley.dll" ] || [ -e "$d/StardewValley" ] || continue
+    [ -e "$d/StardewModdingAPI" ] && { echo "$d"; return; }
+    [ -n "$first" ] || first="$d"
+  done < <(steam_libraries)
+  [ -n "$first" ] && echo "$first"
 }
 
 # Steam's launch environment (LD_PRELOAD overlay, runtime libraries) can break
@@ -122,6 +135,7 @@ update_self
 # Start the game through SMAPI: swap the plain game binary in Steam's command
 # for StardewModdingAPI (same as SMAPI's own '"…/StardewModdingAPI" %command%').
 CMD=("$@")
+[ -n "$GAME" ] && [ -f "$GAME/StardewModdingAPI" ] && [ ! -x "$GAME/StardewModdingAPI" ] && chmod +x "$GAME/StardewModdingAPI" 2>/dev/null
 if [ -n "$GAME" ] && [ -x "$GAME/StardewModdingAPI" ]; then
   for i in "${!CMD[@]}"; do
     case "${CMD[$i]}" in
