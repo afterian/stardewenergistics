@@ -264,7 +264,7 @@ internal sealed partial class SelfTestContext
     /// other inputs come from the backpack), let it finish, collect. Hands over the inputs each time.
     /// Returns how many came out.
     /// </summary>
-    public int PressProcessors(Vector2 pressTile, string barId, int count)
+    public int PressProcessors(Vector2 pressTile, string barId, int count, int? maxMinutes = null)
     {
         string bar = "(O)" + barId;
         int made = 0;
@@ -282,6 +282,8 @@ internal sealed partial class SelfTestContext
             if (!Check($"press takes {Short(bar)} ({i + 1}/{count})", loaded && press.heldObject.Value != null, $"held {press.heldObject.Value?.QualifiedItemId ?? "nothing"}; {Messages()}"))
                 return made;
             string output = press.heldObject.Value!.QualifiedItemId;
+            if (maxMinutes is { } max)
+                Check($"{Short(output)} is ready within {max} minutes", press.MinutesUntilReady > 0 && press.MinutesUntilReady <= max, $"minutes until ready {press.MinutesUntilReady}");
             press.minutesElapsed(Math.Max(10, press.MinutesUntilReady));
             Check($"press finished {Short(output)}", press.readyForHarvest.Value, $"minutes left {press.MinutesUntilReady}");
             HoldNothing();

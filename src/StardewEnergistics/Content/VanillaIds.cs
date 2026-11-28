@@ -8,6 +8,7 @@ internal static class VanillaIds
     public const string IronBar = "335";
     public const string GoldBar = "336";
     public const string IridiumBar = "337";
+    public const string Quartz = "80";
     public const string RefinedQuartz = "338";
     public const string Cloth = "428";
     public const string Fiber = "771";

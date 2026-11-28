@@ -184,8 +184,8 @@ internal static class Quest
         Refresh(c);
         c.Check("journal goals 'maru' and 'letter1' ticked", Done(c).Contains("maru") && Done(c).Contains("letter1"), string.Join(",", Done(c)));
 
-        // Ten Copper Processors pressed, Mines floor 20 and 2 hearts: storage blueprints.
-        p.stats.Set(Ids.StatCopperProcessors, 10);
+        // Five Copper Processors pressed, Mines floor 20 and 2 hearts: storage blueprints.
+        p.stats.Set(Ids.StatCopperProcessors, 5);
         SetMaruHearts(c, 2);
         Morning(c);
         c.Check("T2 waits for Mines floor 20", !p.mailbox.Contains(ContentInjector.MailId(TierId.T2SimpleStorage)));
@@ -193,7 +193,7 @@ internal static class Quest
         Morning(c);
         letter = ReadMail(c, ContentInjector.MailId(TierId.T2SimpleStorage));
         CheckRecipes(c, TierId.T2SimpleStorage);
-        yield return c.Show("10 processors, Mines floor 20, 2 hearts: storage blueprints (Core, racks, Terminal, disks)", 110, 40);
+        yield return c.Show("5 processors, Mines floor 20, 2 hearts: storage blueprints (Core, racks, Terminal, disks)", 110, 40);
         c.CloseMenu();
         Refresh(c);
         c.Check("journal goals 'tenChips' and 'letter2' ticked", Done(c).Contains("tenChips") && Done(c).Contains("letter2"), string.Join(",", Done(c)));

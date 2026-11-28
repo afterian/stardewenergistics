@@ -48,9 +48,9 @@ A first network is a Computer Core in the player home, then a sub computer for e
 | Component | Made in | From |
 | --- | --- | --- |
 | Copper Wire (x10) | Crafting menu | 1 Copper Bar + 1 Fiber |
-| Copper Processor | Processor Press, overnight | 1 Copper Bar + 1 Refined Quartz |
-| Gold Processor | Processor Press, overnight | 1 Gold Bar + 1 Refined Quartz + 1 Copper Processor |
-| Iridium Processor | Processor Press, 2 days | 1 Iridium Bar + 1 Diamond + 1 Gold Processor |
+| Copper Processor | Processor Press, 2 hours | 1 Copper Bar + 1 Quartz |
+| Gold Processor | Processor Press, 6 hours | 1 Gold Bar + 1 Refined Quartz + 1 Copper Processor |
+| Iridium Processor | Processor Press, overnight | 1 Iridium Bar + 1 Diamond + 1 Gold Processor |
 
 ### Wires and the computer
 
@@ -112,8 +112,8 @@ Components → small storage network in late Spring Y1 → machine automation in
 
 | Tier | When | Gate | Unlocks |
 | --- | --- | --- | --- |
-| T1 Components | Spring Y1 | Talk to Maru once; she mails the Processor Press blueprint the next morning; Copper Bars + Refined Quartz | Processor Press, Copper Processor, Copper Wire |
-| T2 Simple storage + basic crafting | late Spring Y1 | 10 Copper Processors crafted, Mines level 20, Maru 2 hearts | Computer Core, Storage Rack, Copper Disk, Terminal, Chest Link, Power Rack, Coal Generator, Network Wrench |
+| T1 Components | Spring Y1 | Talk to Maru once; she mails the Processor Press blueprint the next morning; Copper Bars + Quartz | Processor Press, Copper Processor, Copper Wire |
+| T2 Simple storage + basic crafting | late Spring Y1 | 5 Copper Processors crafted, Mines level 20, Maru 2 hearts | Computer Core, Storage Rack, Copper Disk, Terminal, Chest Link, Power Rack, Coal Generator, Network Wrench |
 | T3 Bigger storage + automation | Summer Y1 | Mines level 80 (Gold), Maru 5 hearts | Gold Processor, Iron and Gold Disks, Machine Link, Shipping Link, Heavy Cable |
 | T4 Autocrafting | Fall Y1 | Mines floor 120, Maru 7 hearts | Crafting Rack, multi-step crafting inside one building |
 | T5 Linked buildings | Winter Y1 – Y2 | Skull Cavern floor 25, Iridium Bars, Maru 8 hearts | Iridium Processor, Network Port, Iridium Disk, Wireless Terminal, Power Feed |
@@ -130,16 +130,16 @@ Recipes are first-pass; tune in playtests.
 
 | Item | T | Does | Draft recipe |
 | --- | --- | --- | --- |
-| Processor Press | 1 | Machine that makes Processors | 5 Copper Bar + 2 Iron Bar + 1 Refined Quartz |
-| Copper Processor | 1 | Basic component | Press: 1 Copper Bar + 1 Refined Quartz |
+| Processor Press | 1 | Machine that makes Processors | 3 Copper Bar + 20 Stone |
+| Copper Processor | 1 | Basic component | Press: 1 Copper Bar + 1 Quartz |
 | Gold Processor | 3 | Mid component | Press: 1 Gold Bar + 1 Refined Quartz + 1 Copper Processor |
 | Iridium Processor | 5 | Late component | Press: 1 Iridium Bar + 1 Diamond + 1 Gold Processor |
 | Copper Wire (x10) | 1 | Connects everything it touches | 1 Copper Bar + 1 Fiber |
 | Heavy Cable (x10) | 3 | Thick, paintable cable for trunk and outdoor runs | 2 Copper Wire + 1 Iron Bar + 1 Cloth |
-| Network Wrench | 2 | Cover/uncover wire, paint Heavy Cable, open Link settings | 2 Iron Bar + 1 Copper Processor |
-| Computer Core | 2 | The network's brain; one per building | 4 Copper Processor + 5 Iron Bar + 1 Battery Pack |
-| Storage Rack | 2 | Beside the Core; holds 4 disks | 2 Copper Processor + 3 Iron Bar |
-| Power Rack | 2 | Holds 4 Battery Packs | 1 Copper Processor + 2 Copper Bar + 1 Battery Pack |
+| Network Wrench | 2 | Cover/uncover wire, paint Heavy Cable, open Link settings | 2 Copper Bar + 1 Copper Processor |
+| Computer Core | 2 | The network's brain; one per building | 4 Copper Processor + 5 Copper Bar + 2 Refined Quartz |
+| Storage Rack | 2 | Beside the Core; holds 4 disks | 2 Copper Processor + 2 Copper Bar + 10 Wood |
+| Power Rack | 2 | Holds 4 Battery Packs | 1 Copper Processor + 3 Copper Bar |
 | Coal Generator | 2 | Burns Coal or Hardwood for power | 1 Copper Processor + 1 Furnace + 5 Stone |
 | Copper Disk | 2 | 20 kinds, 2,000 items | 2 Copper Bar + 1 Copper Processor |
 | Iron Disk | 3 | 40 kinds, 8,000 items | Copper Disk + 3 Iron Bar + 1 Copper Processor |

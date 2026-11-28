@@ -132,8 +132,8 @@ public class GuideTests
         var ten = GuideBook.Find("tenChips")!;
         Assert.True(GuideProgress.IsMet(chip.Goal, f));
         Assert.False(GuideProgress.IsMet(ten.Goal, f));
-        Assert.Equal((4, 10), GuideProgress.Counter(ten.Goal, f));
-        Assert.Equal((10, 10), GuideProgress.Counter(ten.Goal, Facts(Snap(processors: 25))));
+        Assert.Equal((4, 5), GuideProgress.Counter(ten.Goal, f));
+        Assert.Equal((5, 5), GuideProgress.Counter(ten.Goal, Facts(Snap(processors: 25))));
         Assert.Null(GuideProgress.Counter(GuideBook.Find("press")!.Goal, f));
     }
 
@@ -196,7 +196,7 @@ public class GuideTests
     {
         var rng = new Random(seed);
         var g = new GateEvaluator();
-        int[] hearts = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 10 }, mines = { 0, 19, 20, 79, 80, 119, 120 }, skull = { 0, 24, 25, 60 }, procs = { 0, 9, 10, 30 };
+        int[] hearts = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 10 }, mines = { 0, 19, 20, 79, 80, 119, 120 }, skull = { 0, 24, 25, 60 }, procs = { 0, 4, 5, 30 };
         for (int i = 0; i < 2000; i++)
         {
             var built = Enum.GetValues<TierId>().Where(_ => rng.Next(3) > 0).ToArray();

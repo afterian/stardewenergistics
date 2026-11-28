@@ -103,7 +103,7 @@ public static class GuideBook
         Q("press", GuideGoal.Get("ProcessorPress"), "ProcessorPress");
         Q("chip", GuideGoal.Processors(1), "CopperProcessor");
         Q("wire", GuideGoal.Get("CopperWire"), "CopperWire");
-        Q("tenChips", GuideGoal.Processors(10), "CopperProcessor");
+        Q("tenChips", GuideGoal.Processors(5), "CopperProcessor");
         Chapter(TierId.T1Components, "338", 5); // Refined Quartz
 
         // 2 First network.

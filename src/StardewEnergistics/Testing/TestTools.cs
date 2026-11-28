@@ -97,6 +97,7 @@ internal static class TestTools
         (O(IronBar), 100),
         (O(GoldBar), 100),
         (O(IridiumBar), 50),
+        (O(Quartz), 50),
         (O(RefinedQuartz), 50),
         (O(BatteryPack), 20),
         (O(Coal), 100),

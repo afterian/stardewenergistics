@@ -91,6 +91,7 @@ The Deck playtest found these, fixed in PRs #19–#32. Manual steps: `docs/testi
 - Disks take any item (#32): items with their own state are stored whole in one global inventory per disk. **Not yet self-tested in game:** the `whole-items` scenario has only been compiled (0 errors on Stardew 1.6.15 / SMAPI 4.5.2). Run `deploy\selftest.bat -Only whole-items,terminal,capacity,save` when the PC is free.
 - Maru's first letter comes the morning after you talk to her once. Later gates went up: T2 also needs 2 hearts, T3 5, T4 7 (T5 stays 8). **Not yet self-tested in game:** run `deploy\selftest.bat -Only quest,playthrough` when the PC is free.
 - Test mode is off by default; old configs on the Decks switch off once (turn it back on in the mod settings). Self-test launches turn it on. **Not yet self-tested in game:** `deploy\selftest.bat -Only config`.
+- Faster early game: no iron or Battery Packs before T3, Copper Processors take 2 hours from Copper Bar + Quartz, T2 needs 5 of them (see `docs/decisions.md`). **Not yet self-tested in game:** `deploy\selftest.bat -Only press,quest,playthrough`.
 
 ## Final review (2026-11-28)
 
