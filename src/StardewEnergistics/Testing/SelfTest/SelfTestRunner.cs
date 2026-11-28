@@ -537,6 +537,9 @@ internal sealed class SelfTestRunner
                             foreach (var (key, count) in d.Stacks.ToList())
                                 d.Take(key, count);
                         }
+                        // Whole items live in the game's global inventories: remove the test's ones entirely.
+                        Game1.player.team.globalInventories.Remove(Storage.DiskStore.WholePrefix + id);
+                        services.Disks.Get(id, Core.Storage.DiskTier.Copper).SetWhole(Array.Empty<(string, long)>());
                     }
                 }
                 if (scratch != null)

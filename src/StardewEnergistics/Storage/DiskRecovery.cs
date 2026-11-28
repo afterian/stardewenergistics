@@ -35,6 +35,11 @@ internal static class DiskRecovery
             foreach (var item in farmer.Items.Where(i => i != null))
                 Note(item);
         }
+        foreach (var (_, inventory) in Game1.player.team.globalInventories.Pairs)
+        {
+            foreach (var item in inventory.Where(i => i != null))
+                Note(item!);
+        }
         Utility.ForEachLocation(loc =>
         {
             foreach (var obj in loc.objects.Values)
@@ -47,8 +52,19 @@ internal static class DiskRecovery
             return true;
         });
 
+        // Disks whose only contents are whole items may not be loaded yet: find them by their global inventory.
+        foreach (string key in Game1.player.team.globalInventories.Keys.ToList())
+        {
+            if (key.StartsWith(DiskStore.WholePrefix) && Game1.player.team.globalInventories[key].Any(i => i != null))
+            {
+                string id = key[DiskStore.WholePrefix.Length..];
+                store.Get(id, store.TierOf(id));
+            }
+        }
+
         return store.All
             .Where(d => d.TotalItems > 0 && !used.Contains(d.Id.Value))
+            .ToList()
             .Select(store.CreateItem)
             .ToList();
     }

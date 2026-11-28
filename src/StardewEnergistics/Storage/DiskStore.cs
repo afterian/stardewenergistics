@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using StardewEnergistics.Core.Persistence;
 using StardewEnergistics.Core.Storage;
 using StardewModdingAPI;
@@ -24,6 +25,19 @@ internal sealed class DiskStore
 
     private readonly IMonitor monitor;
     private readonly Dictionary<string, DiskContents> disks = new();
+
+    /// <summary>Disks whose whole-item counts were read from the game this session.</summary>
+    private readonly HashSet<string> wholeSynced = new();
+
+    /// <summary>Prefix of the game's global inventories that hold each disk's whole items.</summary>
+    public const string WholePrefix = Ids.Prefix + "Disk_";
+
+    /// <summary>
+    /// The real items (with all their state: enchantments, flavour, colour, mod data…) a disk holds, in one of
+    /// the game's global inventories. The game saves it with the farm and syncs it in multiplayer, like a Junimo Chest.
+    /// </summary>
+    public static StardewValley.Inventories.Inventory WholeItems(string diskId) =>
+        Game1.player.team.GetOrCreateGlobalInventory(WholePrefix + diskId);
 
     public DiskStore(IMonitor monitor) => this.monitor = monitor;
 
@@ -55,6 +69,14 @@ internal sealed class DiskStore
     {
         if (!disks.TryGetValue(id, out var contents))
             disks[id] = contents = new DiskContents(new DiskId(id), tier, DiskSpec.For(tier));
+        if (!wholeSynced.Contains(id) && StardewModdingAPI.Context.IsWorldReady)
+        {
+            wholeSynced.Add(id);
+            contents.SetWhole(WholeItems(id)
+                .Where(i => i != null)
+                .GroupBy(i => i!.QualifiedItemId)
+                .Select(g => (g.Key, (long)g.Sum(i => i!.Stack))));
+        }
         return contents;
     }
 
@@ -77,6 +99,7 @@ internal sealed class DiskStore
     public void Load(SaveModel? model)
     {
         disks.Clear();
+        wholeSynced.Clear();
         if (model == null)
             return;
         foreach (var (id, dto) in model.Disks)
@@ -98,5 +121,12 @@ internal sealed class DiskStore
     /// <summary>Every disk's contents known to this save.</summary>
     public IEnumerable<DiskContents> All => disks.Values;
 
-    public void Clear() => disks.Clear();
+    public void Clear()
+    {
+        disks.Clear();
+        wholeSynced.Clear();
+    }
+
+    /// <summary>The tier this save last knew a disk at (Copper if unknown).</summary>
+    public DiskTier TierOf(string id) => disks.TryGetValue(id, out var d) ? d.Tier : DiskTier.Copper;
 }
