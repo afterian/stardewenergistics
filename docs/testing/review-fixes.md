@@ -41,3 +41,12 @@ Bug: on a controller, a Battery Pack wouldn't go into a Power Rack and Coal woul
 | 3 | Hold Coal next to the Coal Generator, press A or X | Fuel loaded message |
 | 4 | Hold a Battery Pack next to a vanilla chest (no rack nearby), press A | Normal game behaviour |
 | 5 | With the mouse, click a rack 1 tile away | Works as before; clicking empty ground does nothing special |
+
+## Playtest fixes (2026-11-28)
+
+1. Put a Copper Disk with items on it into a Storage Rack, then break the rack with an axe or pickaxe. The disk pops out. Put it into a rack again: the Terminal shows the same items.
+2. Break a Power Rack holding batteries and a Coal Generator with fuel: Battery Packs and Coal pop out.
+3. Open the Terminal and click a stack in your backpack. It leaves your backpack and shows in storage (no duplicate). Right-click stores one.
+4. Click an item when the network has no disks: the message says there are no disks, and the item stays in your backpack.
+5. Store a plain Pickaxe in the Terminal: it goes on a disk. Take it out: it's the same pickaxe level. An enchanted tool says to use a Chest Link.
+6. Take a whole stack out: the disk meter's kinds and items go down.

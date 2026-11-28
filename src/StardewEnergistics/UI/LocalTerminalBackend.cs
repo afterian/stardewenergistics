@@ -67,5 +67,12 @@ internal sealed class LocalTerminalBackend : ITerminalBackend
         done();
     }
 
-    public void Put(Item item, Action<Item?> done) => done(Storage()?.Put(item) ?? item);
+    // Put returns null when everything was stored; "?? item" here once gave the stored stack back (duplication).
+    public void Put(Item item, Action<Item?> done)
+    {
+        Func<Item, Item?>? put = null;
+        if (Storage() is { } storage)
+            put = storage.Put;
+        done(StoreAttempt.Leftover(item, put));
+    }
 }
