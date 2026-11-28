@@ -29,3 +29,15 @@ Fixes from the final code review (after M6). None of these has been tried in the
 | 18 | Start a job, then cancel it at once | The set-aside ingredients come back to storage |
 | 19 | A Machine Link feeds Kegs from the same storage while a job runs | The job isn't starved: its items are set aside |
 | 20 | Two Computer Cores touching one network | Right-click a Core: "two Cores" problem; nothing runs until one is moved |
+
+## Controller targeting (Steam Deck playtest, 2026-11-28)
+
+Bug: on a controller, a Battery Pack wouldn't go into a Power Rack and Coal wouldn't go into the Coal Generator. The mod only looked at the tile under the cursor or straight in front of the player. The game also lets controllers reach the 8 tiles around the player, and players often press X (use) instead of A.
+
+| # | Do this (controller) | Expect |
+| --- | --- | --- |
+| 1 | Stand next to a Power Rack (also diagonally, or not facing it), hold a Battery Pack, press A | Battery goes in, "1/4 Battery Packs" |
+| 2 | Same, press X | Same |
+| 3 | Hold Coal next to the Coal Generator, press A or X | Fuel loaded message |
+| 4 | Hold a Battery Pack next to a vanilla chest (no rack nearby), press A | Normal game behaviour |
+| 5 | With the mouse, click a rack 1 tile away | Works as before; clicking empty ground does nothing special |
