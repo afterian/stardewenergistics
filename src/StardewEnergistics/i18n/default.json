@@ -112,7 +112,7 @@
   "terminal.noMatch": "Nothing matches your search.",
   "terminal.meter.power": "Power {{power}} ({{days}} days)",
   "terminal.meter.disks": "{{disks}} disks, {{kinds}} kinds, {{items}}/{{maxItems}} items",
-  "terminal.cantStore": "This item can't go on a disk yet. Keep it in a linked chest.",
+  "terminal.cantStore": "This item can't go on a disk yet (weapons, enchanted tools, rings, flavoured or coloured items, and items other mods changed). Keep it in a chest with a Chest Link: the Terminal still shows it.",
 
   // Maru's letters
   "mail.T1.title": "Processor Press",

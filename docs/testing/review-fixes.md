@@ -48,3 +48,5 @@ Bug: on a controller, a Battery Pack wouldn't go into a Power Rack and Coal woul
 2. Break a Power Rack holding batteries and a Coal Generator with fuel: Battery Packs and Coal pop out.
 3. Open the Terminal and click a stack in your backpack. It leaves your backpack and shows in storage (no duplicate). Right-click stores one.
 4. Click an item when the network has no disks: the message says there are no disks, and the item stays in your backpack.
+5. Store a plain Pickaxe in the Terminal: it goes on a disk. Take it out: it's the same pickaxe level. An enchanted tool says to use a Chest Link.
+6. Take a whole stack out: the disk meter's kinds and items go down.
