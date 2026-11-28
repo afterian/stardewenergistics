@@ -18,7 +18,9 @@ function Log($t) {
 $mutex = New-Object Threading.Mutex($false, "Local\StardewEnergisticsWatcher")
 if (-not $mutex.WaitOne(0)) { exit 0 }
 
-Log "watcher started (following $($s.Branch) of $($s.Repo))"
+Log "watcher started (following $($s.Branch) of $($s.Repo), plus the other mods in deploy\mods.json)"
+# Lets build-and-publish.ps1 notice when a new commit changes this script (it then restarts the task).
+Set-Content -Path (Join-Path $SEDir "watcher-running.hash") -Value (Get-FileHash $PSCommandPath -Algorithm SHA256).Hash
 while ($true) {
   try {
     if (-not (Test-Path (Join-Path $work ".git"))) {
@@ -57,5 +59,7 @@ while ($true) {
     Log "error: $($_.Exception.Message)"
     try { Pop-Location } catch { }
   }
+  # The other mods of the pack (deploy\mods.json). Separate script, so a problem there never stops Energistics.
+  try { & (Join-Path $PSScriptRoot "build-others.ps1") *>> $log } catch { Log "other mods: $($_.Exception.Message)" }
   Start-Sleep -Seconds 60
 }
