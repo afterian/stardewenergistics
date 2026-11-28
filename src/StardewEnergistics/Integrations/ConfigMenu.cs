@@ -30,6 +30,8 @@ internal static class ConfigMenu
         api.AddKeybindList(manifest, () => config.NetworkViewKey, v => config.NetworkViewKey = v, () => T("config.networkViewKey"), () => T("config.networkViewKey.tip"));
         api.AddNumberOption(manifest, () => config.WrenchHoldTicks, v => config.WrenchHoldTicks = v, () => T("config.wrenchHold"), () => T("config.wrenchHold.tip"), min: 10, max: 120, interval: 5);
         api.AddBoolOption(manifest, () => config.TierGates, v => config.TierGates = v, () => T("config.tierGates"), () => T("config.tierGates.tip"));
+        api.AddBoolOption(manifest, () => config.AnimateDataCables, v => config.AnimateDataCables = v, () => T("config.animateCables"), () => T("config.animateCables.tip"));
+        api.AddBoolOption(manifest, () => config.TerminalReachAllBeforePorts, v => config.TerminalReachAllBeforePorts = v, () => T("config.reachAll"), () => T("config.reachAll.tip"));
 
         api.AddSectionTitle(manifest, () => T("config.power"));
         api.AddNumberOption(manifest, () => config.BatteryPower, v => config.BatteryPower = v, () => T("config.batteryPower"), () => T("config.batteryPower.tip"), min: 10, max: 1000, interval: 10);
@@ -41,6 +43,7 @@ internal static class ConfigMenu
     {
         to.NetworkViewKey = from.NetworkViewKey;
         to.WrenchHoldTicks = from.WrenchHoldTicks;
+        to.AnimateDataCables = from.AnimateDataCables;
         to.TierGates = from.TierGates;
         to.BatteryPower = from.BatteryPower;
         to.CoalPower = from.CoalPower;

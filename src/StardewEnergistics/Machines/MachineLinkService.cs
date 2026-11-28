@@ -108,20 +108,9 @@ internal sealed class MachineLinkService
                 continue;
             }
 
-            if (settings.Output == OutputMode.ToStorage && MachineDriver.IsReady(machine))
-            {
-                var output = MachineDriver.Collect(machine);
-                if (output != null)
-                {
-                    var left = storage.Put(output);
-                    if (left is SObject leftObj)
-                    {
-                        // Storage full: leave it in the machine.
-                        machine.heldObject.Value = leftObj;
-                        machine.readyForHarvest.Value = true;
-                    }
-                }
-            }
+            // Storage full: whatever doesn't fit stays in the machine.
+            if (settings.Output == OutputMode.ToStorage)
+                MachineDriver.CollectInto(machine, storage);
 
             if (MachineDriver.IsIdle(machine))
             {

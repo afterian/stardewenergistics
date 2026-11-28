@@ -27,7 +27,7 @@ public sealed class ModConfig
     /// <summary>Power from one Hardwood.</summary>
     public int HardwoodPower { get; set; } = 1;
 
-    /// <summary>Terminal sees all buildings before Network Ports exist (open question; default own building only).</summary>
+    /// <summary>Every building's network joins the farmhouse's without Network Ports (open question; default off: own building only until T5).</summary>
     public bool TerminalReachAllBeforePorts { get; set; } = false;
 
     internal PowerTable ToPowerTable() => PowerTable.Default with { BatteryPower = BatteryPower, CoalPower = CoalPower, HardwoodPower = HardwoodPower };

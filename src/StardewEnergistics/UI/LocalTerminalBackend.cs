@@ -42,7 +42,7 @@ internal sealed class LocalTerminalBackend : ITerminalBackend
     public static TerminalStatus StatusOf(LocationNetworks loc, StardewEnergistics.Core.Graph.Network net, NetworkStorage storage, PowerService power)
     {
         var state = power.StateOf(loc, net);
-        int use = power.DailyUse(net);
+        int use = power.DailyUse(loc, net);
         var d = storage.Disks.Disks;
         return new TerminalStatus(
             power.IsPowered(loc, net),

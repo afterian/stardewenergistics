@@ -28,13 +28,14 @@ Confirmed decisions log. The full design is in `docs/design-plan.md`; status and
 - M4 rules (Proposed, 2026-11-27, change on request): autocraft uses crafting recipes any farmer knows plus simple Furnace rules; the requested item is always crafted, its parts come from stock first; lowest quality ingredients are used first; Furnace steps use Furnaces with a Machine Link (and Furnaces touching them) even if the Link isn't set up; jobs advance every 10 game minutes, one job per Crafting Rack, and are stored on the Computer Core; ingredients are not reserved.
 - M5 rules (Proposed, 2026-11-27, change on request): a Network Port is placed on the farm on a wired tile directly beside a building (any side, not only the door), since objects can't go on building walls; it joins the network with a Core inside that building. All buildings whose Ports share one outdoor network form one group with shared storage; the farmhouse leads the group. Power stays per building; outdoor wire (no Core) uses the leading network's power. A building with its own Crafting Rack uses only its own linked Furnaces. The Wireless Terminal opens the network where you stand, or the farmhouse's anywhere on the farm or in a farm building.
 - M6 rules (Proposed, 2026-11-27, change on request): keep-in-stock rules live on the Advanced Crafting Rack and start jobs at the end of each day (only for recipes that can be fully made); the Advanced rack also cooks and uses linked Furnaces in every building; every network with an Island Uplink joins every other one.
+- Final review rules (Proposed, 2026-11-28, change on request): a Machine Link collects output like a player (the machine's "output collected" rule runs, so Crystalariums and Solar Panels restart); output that doesn't fit in storage stays in the machine; outdoor blocks joined by a Port add their daily use to the leading network; T6's "Qi's Walnut Room" gate means 100 Golden Walnuts found; Maru mails a low-power letter with each 3-day warning.
 - Art: produced in parallel by another tool from `docs/art-asset-list.md` (36 files).
 - Art style (2026-11-27): Maru purple-and-oak approved (amethyst cases, plum outlines, honey-oak supports, green CRTs). First final batch: `computer-core.png`, `network-terminal.png`, `wire-tiles.png`, `wire-tiles-glow.png`, `heavy-cable-tiles.png`. See `docs/artwork-pipeline.md`.
 - Art complete (2026-11-27): all 38 assets final. Added #37 `copper-data-signal.png` and #38 `heavy-data-signal.png` (8 phases × 16 masks, drawn on powered wire). Unpainted Heavy Cable is tinted Maru plum.
 
 ## Open
 
-- Wire connection rule: wire on the block's own tile only (current reading of the user's reply) vs also the 4 neighbouring tiles. Confirm before M2.
-- Terminal reach before Network Ports (own building only vs all buildings).
+- Wire connection rule: wire on the block's own tile only (what the code does, `ConnectionRule.OwnTile`) vs also the 4 neighbouring tiles (`OwnTileOrNeighbours`, already in Core and tested). Confirm in the first playtest.
+- Terminal reach before Network Ports (own building only vs all buildings). Default own building; since 2026-11-28 the config option "Terminals reach all buildings early" (GMCM) joins every building's network to the farmhouse's without Ports.
 - Coal Generator value (1 Coal = 1 power vs 10).
 - Installed game and SMAPI versions on PC and Decks.

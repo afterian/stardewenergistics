@@ -44,7 +44,8 @@ namespace StardewEnergistics
             wireSync.Register();
 
             var networks = new NetworkManager(wires);
-            networks.Register(helper);
+            networks.Register(helper, ModManifest.UniqueID);
+            networks.ReachAllBeforePorts = config.TerminalReachAllBeforePorts;
             power = new PowerService(helper, Monitor, networks) { Table = config.ToPowerTable() };
             progression = new ProgressionService(Monitor, networks, power) { GatesEnabled = config.TierGates };
             var terminalNet = new TerminalNet(helper, Monitor, networks, disks, power, ModManifest.UniqueID);
@@ -92,6 +93,8 @@ namespace StardewEnergistics
             {
                 power.Table = config.ToPowerTable();
                 progression.GatesEnabled = config.TierGates;
+                networks.ReachAllBeforePorts = config.TerminalReachAllBeforePorts;
+                networks.Clear();
             });
 
             helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;

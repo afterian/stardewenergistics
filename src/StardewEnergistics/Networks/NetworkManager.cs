@@ -62,12 +62,53 @@ internal sealed class NetworkManager
         };
     }
 
-    public void Register(IModHelper helper)
+    private const string InvalidateType = "NetInvalidate";
+
+    private IModHelper? helper;
+    private string modId = "";
+
+    /// <summary>Terminals see every building's network before Network Ports exist (config; default off).</summary>
+    public bool ReachAllBeforePorts { get; set; }
+
+    public void Register(IModHelper helper, string modId)
     {
-        helper.Events.World.ObjectListChanged += (_, e) => Invalidate(e.Location);
+        this.helper = helper;
+        this.modId = modId;
+        helper.Events.World.ObjectListChanged += (_, e) => InvalidateLocal(e.Location);
+        helper.Events.World.BuildingListChanged += (_, _) => links = null; // Ports may now sit beside another building
         helper.Events.GameLoop.SaveLoaded += (_, _) => Clear();
         helper.Events.GameLoop.ReturnedToTitle += (_, _) => Clear();
+
+        // Block settings live in modData, which syncs between players without any event. Rebuild before each
+        // 10-minute tick (this handler is added before the services' own TimeChanged handlers), and tell other
+        // players when a block changes here so their Terminals and overlays update at once.
+        helper.Events.GameLoop.TimeChanged += (_, _) => Clear();
+        helper.Events.Multiplayer.ModMessageReceived += (_, e) =>
+        {
+            if (e.FromModID != modId || e.Type != InvalidateType)
+                return;
+            string key = e.ReadAs<string>();
+            cache.Remove(key);
+            links = null;
+            pendingRecheck[key] = Game1.ticks + RecheckTicks; // the modData change may arrive just after this message
+        };
+        helper.Events.GameLoop.UpdateTicked += (_, _) =>
+        {
+            if (pendingRecheck.Count == 0)
+                return;
+            foreach (var (key, due) in pendingRecheck.ToList())
+            {
+                if (Game1.ticks < due)
+                    continue;
+                pendingRecheck.Remove(key);
+                cache.Remove(key);
+                links = null;
+            }
+        };
     }
+
+    private const int RecheckTicks = 30;
+    private readonly Dictionary<string, int> pendingRecheck = new();
 
     public void Clear()
     {
@@ -75,7 +116,21 @@ internal sealed class NetworkManager
         links = null;
     }
 
+    /// <summary>Rebuild a location's networks after a block's modData changed (e.g. a Chest Link was added), here and for other players.</summary>
     public void Invalidate(GameLocation location)
+    {
+        InvalidateLocal(location);
+        if (helper == null || !Context.IsMultiplayer)
+            return;
+        long[] peers = helper.Multiplayer.GetConnectedPlayers()
+            .Where(p => !p.IsSplitScreen && p.GetMod(modId) != null)
+            .Select(p => p.PlayerID)
+            .ToArray();
+        if (peers.Length > 0)
+            helper.Multiplayer.SendMessage(WireLayerStore.KeyOf(location), InvalidateType, new[] { modId }, peers);
+    }
+
+    private void InvalidateLocal(GameLocation location)
     {
         cache.Remove(WireLayerStore.KeyOf(location));
         links = null;
@@ -210,6 +265,18 @@ internal sealed class NetworkManager
                     if (target != null)
                         edges.Add((n.Id, target.Id));
                 }
+            }
+        }
+
+        // Optional: before Network Ports, every building's network joins the farmhouse's.
+        if (ReachAllBeforePorts)
+        {
+            var house = locations.FirstOrDefault(l => l.Location.NameOrUniqueName == "FarmHouse")?.Graph.Networks.FirstOrDefault(x => x.Working);
+            if (house != null)
+            {
+                foreach (var l in locations.Where(l => l.Location.ParentBuilding != null || l.Location.NameOrUniqueName is "Greenhouse" or "Cellar"))
+                    foreach (var n in l.Graph.Networks.Where(x => x.Working))
+                        edges.Add((house.Id, n.Id));
             }
         }
 
