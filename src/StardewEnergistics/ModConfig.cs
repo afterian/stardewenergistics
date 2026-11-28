@@ -36,6 +36,8 @@ public sealed class ModConfig
     /// <summary>Every building's network joins the farmhouse's without Network Ports (default off: own building only until T5, user 2026-11-28).</summary>
     public bool TerminalReachAllBeforePorts { get; set; } = false;
 
+    /// <summary>Opens the Tinkerer's Journal (the quest guide). The journal item opens it too.</summary>
+    public KeybindList GuideKey { get; set; } = KeybindList.Parse("F8");
     /// <summary>Config format version, for one-time updates of old config.json files (kept on the Decks).</summary>
     public int ConfigVersion { get; set; }
 

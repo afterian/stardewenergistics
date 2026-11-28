@@ -28,6 +28,7 @@ internal static class ConfigMenu
 
         api.AddSectionTitle(manifest, () => T("config.general"));
         api.AddKeybindList(manifest, () => config.NetworkViewKey, v => config.NetworkViewKey = v, () => T("config.networkViewKey"), () => T("config.networkViewKey.tip"));
+        api.AddKeybindList(manifest, () => config.GuideKey, v => config.GuideKey = v, () => T("config.guideKey"), () => T("config.guideKey.tip"));
         api.AddNumberOption(manifest, () => config.WrenchHoldTicks, v => config.WrenchHoldTicks = v, () => T("config.wrenchHold"), () => T("config.wrenchHold.tip"), min: 10, max: 120, interval: 5);
         api.AddBoolOption(manifest, () => config.WireUnderBlockOnly, v => config.WireUnderBlockOnly = v, () => T("config.wireUnder"), () => T("config.wireUnder.tip"));
         api.AddBoolOption(manifest, () => config.TierGates, v => config.TierGates = v, () => T("config.tierGates"), () => T("config.tierGates.tip"));
@@ -47,6 +48,7 @@ internal static class ConfigMenu
     private static void Copy(ModConfig from, ModConfig to)
     {
         to.NetworkViewKey = from.NetworkViewKey;
+        to.GuideKey = from.GuideKey;
         to.WrenchHoldTicks = from.WrenchHoldTicks;
         to.AnimateDataCables = from.AnimateDataCables;
         to.TierGates = from.TierGates;
