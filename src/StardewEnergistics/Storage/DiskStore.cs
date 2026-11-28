@@ -95,5 +95,8 @@ internal sealed class DiskStore
         }
     }
 
+    /// <summary>Every disk's contents known to this save.</summary>
+    public IEnumerable<DiskContents> All => disks.Values;
+
     public void Clear() => disks.Clear();
 }
