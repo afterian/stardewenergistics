@@ -35,19 +35,42 @@ function Get-OrCreate-Release([string]$Repo, [string]$Tag, [string]$Sha) {
 }
 
 # Upload under a temporary name, delete the old zip, then rename, so a Deck never sees a release without a zip.
-function Publish-Zip([string]$Repo, [string]$Tag, [string]$Zip, [string]$Version, [string]$Notes, [string]$Sha) {
+function Publish-Zip([string]$Repo, [string]$Tag, [string]$Zip, [string]$Version, [string]$Notes, [string]$Sha, [string]$AssetBase = "StardewEnergistics", [switch]$KeepNotes, [string]$Ext = ".zip") {
   $rel = Get-OrCreate-Release $Repo $Tag $Sha
-  Invoke-GhApi PATCH "repos/$Repo/releases/$($rel.id)" @{ body = $Notes; prerelease = $true } | Out-Null
-  try { Invoke-GhApi PATCH "repos/$Repo/git/refs/tags/$Tag" @{ sha = $Sha; force = $true } | Out-Null } catch { }
-  $new = Upload-Asset $Repo $rel.id $Zip "StardewEnergistics-uploading-$([guid]::NewGuid().ToString('N').Substring(0,8)).zip" "application/zip"
-  foreach ($a in (Invoke-GhApi GET "repos/$Repo/releases/$($rel.id)/assets?per_page=100" $null)) {
-    if ($a.id -ne $new.id -and $a.name -like "StardewEnergistics*.zip") { Invoke-GhApi DELETE "repos/$Repo/releases/assets/$($a.id)" $null | Out-Null }
+  # Other mods in the pack share this release; only this repo's own builds rewrite the notes and move the tag.
+  if (-not $KeepNotes) {
+    Invoke-GhApi PATCH "repos/$Repo/releases/$($rel.id)" @{ body = $Notes; prerelease = $true } | Out-Null
+    try { Invoke-GhApi PATCH "repos/$Repo/git/refs/tags/$Tag" @{ sha = $Sha; force = $true } | Out-Null } catch { }
   }
-  Invoke-GhApi PATCH "repos/$Repo/releases/assets/$($new.id)" @{ name = "StardewEnergistics-test.zip"; label = $Version } | Out-Null
+  $new = Upload-Asset $Repo $rel.id $Zip "$AssetBase-uploading-$([guid]::NewGuid().ToString('N').Substring(0,8))$Ext" "application/zip"
+  foreach ($a in (Invoke-GhApi GET "repos/$Repo/releases/$($rel.id)/assets?per_page=100" $null)) {
+    if ($a.id -ne $new.id -and ($a.name -eq "$AssetBase-test$Ext" -or $a.name -like "$AssetBase-uploading-*$Ext")) { Invoke-GhApi DELETE "repos/$Repo/releases/assets/$($a.id)" $null | Out-Null }
+  }
+  Invoke-GhApi PATCH "repos/$Repo/releases/assets/$($new.id)" @{ name = "$AssetBase-test$Ext"; label = $Version } | Out-Null
 }
 
 # Shows a green tick or red cross next to the commit on GitHub.
 function Set-CommitStatus([string]$Repo, [string]$Sha, [string]$State, [string]$Text, [string]$Context = "pc-build") {
   if ($Text.Length -gt 139) { $Text = $Text.Substring(0, 139) }
   try { Invoke-GhApi POST "repos/$Repo/statuses/$Sha" @{ state = $State; context = $Context; description = $Text } | Out-Null } catch { }
+}
+
+# The watcher runs its script from its own build copy. When a new commit changes watch.ps1,
+# restart the watcher task so the new version runs, after the old one has finished this build
+# (it writes last-built.txt last, after any self-test). Does nothing outside the watcher.
+function Update-Watcher([string]$Source, [string]$Sha) {
+  try {
+    $work = Join-Path $Global:SEDir "build"
+    if ((Resolve-Path $Source).Path.TrimEnd('\') -ne (Resolve-Path $work -ErrorAction Stop).Path.TrimEnd('\')) { return }
+    $script = Join-Path $work "deploy\pc\watch.ps1"
+    $hashFile = Join-Path $Global:SEDir "watcher-running.hash"
+    $now = (Get-FileHash $script -Algorithm SHA256).Hash
+    $running = if (Test-Path $hashFile) { (Get-Content $hashFile -Raw).Trim() } else { "" }
+    if ($now -eq $running) { return }
+    $state = Join-Path $Global:SEDir "last-built.txt"
+    $cmd = "`$end=(Get-Date).AddMinutes(20); while ((Get-Date) -lt `$end) { if ((Test-Path '$state') -and ((Get-Content '$state' -Raw).Trim() -eq '$Sha')) { break }; Start-Sleep 5 }; " +
+           "Stop-ScheduledTask -TaskName 'Stardew Energistics build watcher'; Start-Sleep 3; Start-ScheduledTask -TaskName 'Stardew Energistics build watcher'"
+    Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $cmd
+    Write-Host "The watcher itself changed; it restarts with the new version after this build."
+  } catch { }
 }

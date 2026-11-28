@@ -10,6 +10,8 @@ change pushed to main -> your PC builds the mod (a minute or two) -> GitHub rele
 
 Setup is one double-click on the PC and one double-click on each Deck. No typing on the Deck.
 
+**More than one mod (temporary pack loader):** the same watcher and launcher also handle the other mods listed in [`deploy/mods.json`](../deploy/mods.json) (now Stardew Food Time too). The PC builds each mod's new commits, every mod goes on the same release, and each Deck installs all of them on every start. One mod failing to build or download never blocks the others. To add a mod, add a line to `deploy/mods.json`. Nothing to set up again on the PC or the Decks: both update themselves.
+
 **How it works, and why it's safe:** a SMAPI mod can only be built against the game's own files, and those can't go on GitHub's servers. So your PC does the building. A small hidden "watcher" starts when you sign in to Windows. Every minute it asks GitHub "is there a new commit on `main`?". If there is, it builds that commit and uploads the zip to the release. Only your PC reaches out. Nothing on GitHub, and nobody else, can start anything on your PC. It only builds `main`, which only you (and Claude through pull requests you merge) can change. That's the same code you'd build and play yourself anyway. It needs no administrator rights and installs no service.
 
 Why not build on GitHub's own servers? That would need the game's DLLs (or "reference" copies made from them) stored on GitHub. Those are ConcernedApe's copyrighted files, so that's not something to upload, even to a private repo. Most SMAPI mods build locally for the same reason.
