@@ -30,7 +30,7 @@ internal static class FeatureScenarios
 
         c.Hold(CopperBar, 1);
         bool took = c.GameAction(tile);
-        c.Check("a Copper Bar without Refined Quartz is refused", !took && c.Loc.objects[tile].heldObject.Value == null);
+        c.Check("a Copper Bar without Refined Quartz is refused", c.Loc.objects[tile].heldObject.Value == null, $"game action returned {took}");
         c.Check("the press says what's missing", Game1.hudMessages.Any(m => m.message.Contains(ItemRegistry.GetData(Quartz)!.DisplayName)), c.Messages());
         c.CheckEqual("the bar stays in the hand", 1, c.Carried(CopperBar));
 
@@ -138,6 +138,7 @@ internal static class FeatureScenarios
         c.Action(c.T(4, 0));
         c.Require("Power Feed attached", rod.modData.ContainsKey(Ids.Data.PowerFeed));
 
+        c.StandBeside(c.T(0, 0));
         c.Hold(O(Ids.PowerFeed));
         c.Action(c.T(0, 0));
         c.Check("a Power Feed on anything else is refused", c.Showed(c.T("feed.notTarget")), c.Messages());

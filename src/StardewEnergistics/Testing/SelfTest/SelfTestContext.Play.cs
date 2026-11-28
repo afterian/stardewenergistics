@@ -163,18 +163,21 @@ internal sealed partial class SelfTestContext
         }
         if (!Check($"{Short(recipeId)}: shown in the crafting menu", button != null))
             return null;
+        int carriedBefore = Carried(expected);
         page.receiveLeftClick(button!.bounds.Center.X, button.bounds.Center.Y);
-        var made = page.heldItem;
+        // The page holds the result on the cursor, or (1.6) puts it straight into the backpack.
+        var held = page.heldItem;
         page.heldItem = null;
-        Check($"crafted {Short(expected)}", made?.QualifiedItemId == expected,
-            $"got {made?.QualifiedItemId ?? "nothing"}; ingredients: {string.Join(", ", recipe.recipeList.Select(kv => $"{Short(kv.Key)} x{kv.Value} (have {Player.Items.CountId(ItemRegistry.QualifyItemId(kv.Key) ?? kv.Key)})"))}");
-        CheckEqual($"{Short(recipeId)}: crafted count went up", timesBefore + 1, Player.craftingRecipes[recipeId]);
+        if (held != null && !Player.addItemToInventoryBool(held))
+            Log($"backpack full: {held.QualifiedItemId} dropped", LogLevel.Warn);
+        int gained = Carried(expected) - carriedBefore;
+        int yield = Math.Max(1, recipe.numberProducedPerCraft);
+        Check($"crafted {Short(expected)} x{yield}", gained == yield,
+            $"backpack gained {gained}; on the cursor: {held?.QualifiedItemId ?? "nothing"}; {Messages()}");
+        CheckEqual($"{Short(recipeId)}: crafted count went up by {yield}", timesBefore + yield, Player.craftingRecipes[recipeId]);
+        var made = gained > 0 ? CarriedItems(expected).LastOrDefault() : null;
         if (made != null)
-        {
-            Log($"crafted {made.QualifiedItemId} x{made.Stack}");
-            if (!Player.addItemToInventoryBool(made))
-                Log($"backpack full: {made.QualifiedItemId} dropped", LogLevel.Warn);
-        }
+            Log($"crafted {made.QualifiedItemId} x{yield}");
         return made;
     }
 

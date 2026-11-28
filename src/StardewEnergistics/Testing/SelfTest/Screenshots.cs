@@ -10,8 +10,8 @@ using StardewValley;
 namespace StardewEnergistics.Testing.SelfTest;
 
 /// <summary>
-/// Saves what's on screen (world, HUD and menus) as PNGs for the showcase run. A request is taken over the
-/// next two frames (see <see cref="OnRendered"/>). Folder: SE_SELFTEST_SHOTS, else selftest-shots in the mod folder.
+/// Saves what's on screen (world, HUD and menus) as PNGs for the showcase run. A request is taken on the
+/// next frame (see <see cref="OnRendered"/>). Folder: SE_SELFTEST_SHOTS, else selftest-shots in the mod folder.
 /// </summary>
 internal sealed class Screenshots
 {
@@ -25,7 +25,6 @@ internal sealed class Screenshots
         this.monitor = monitor;
         Folder = Environment.GetEnvironmentVariable("SE_SELFTEST_SHOTS") is { Length: > 0 } p ? p : Path.Combine(helper.DirectoryPath, "selftest-shots");
         helper.Events.Display.Rendered += OnRendered;
-        helper.Events.Display.Rendering += OnRenderingNextFrame;
     }
 
     public string Folder { get; }
@@ -53,69 +52,55 @@ internal sealed class Screenshots
     }
 
     /// <summary>
-    /// The game draws the world into one render target and the HUD and menus into another (uiScreen), and
-    /// only puts them together on the back buffer after mods' Rendered event. So the picture is taken in two
-    /// halves: the world at Rendered (from the back buffer or the game's screen target), and the UI layer at
-    /// the start of the next frame, before anything is drawn over it. Then the UI is laid over the world.
+    /// The game draws the world into the back buffer (or its screen target) and the HUD and menus into a
+    /// separate UI target (uiScreen), and only lays the UI over the world after mods' Rendered event. So at
+    /// Rendered both layers are finished but not yet combined: read both and combine them here.
     /// </summary>
     private void OnRendered(object? sender, RenderedEventArgs e)
     {
-        if (pending is not { } shot || world != null)
-            return;
-        try
-        {
-            var device = Game1.graphics.GraphicsDevice;
-            int w = device.PresentationParameters.BackBufferWidth, h = device.PresentationParameters.BackBufferHeight;
-            var screen = Game1.game1.screen;
-            if (screen != null && !screen.IsDisposed && Game1.game1.ShouldDrawOnBuffer())
-                world = (Grab(screen), screen.Width, screen.Height, false);
-            else
-            {
-                var data = new Color[w * h];
-                device.GetBackBufferData(data);
-                world = (data, w, h, true);
-            }
-        }
-        catch (Exception ex)
-        {
-            pending = null;
-            world = null;
-            monitor.Log($"[self-test] screenshot failed (world): {ex}", LogLevel.Warn);
-        }
-    }
-
-    /// <summary>The world half, taken at Rendered: pixels, size, and whether it came from the back buffer.</summary>
-    private (Color[] Data, int W, int H, bool BackBuffer)? world;
-
-    private void OnRenderingNextFrame(object? sender, RenderingEventArgs e)
-    {
-        if (pending is not { } shot || world is not { } w)
+        if (pending is not { } shot)
             return;
         pending = null;
-        world = null;
         try
         {
             var device = Game1.graphics.GraphicsDevice;
             int outW = device.PresentationParameters.BackBufferWidth, outH = device.PresentationParameters.BackBufferHeight;
-            var result = Scale(w.Data, w.W, w.H, outW, outH);
+            Color[] result;
+            string worldFrom;
+            var screen = Game1.game1.screen;
+            if (screen != null && !screen.IsDisposed && Game1.game1.ShouldDrawOnBuffer())
+            {
+                result = Scale(Grab(screen), screen.Width, screen.Height, outW, outH);
+                worldFrom = $"screen target {screen.Width}x{screen.Height}";
+            }
+            else
+            {
+                result = new Color[outW * outH];
+                device.GetBackBufferData(result);
+                worldFrom = "back buffer";
+            }
+
             var ui = Game1.game1.uiScreen;
-            bool withUi = false;
+            string uiFrom = "no UI target";
             if (ui != null && !ui.IsDisposed)
             {
-                var layer = Scale(Grab(ui), ui.Width, ui.Height, outW, outH);
+                var raw = Grab(ui);
+                int opaque = 0;
+                foreach (var px in raw)
+                    if (px.A > 0)
+                        opaque++;
+                uiFrom = $"UI target {ui.Width}x{ui.Height}, {opaque * 100L / Math.Max(1, raw.Length)}% drawn";
+                var layer = Scale(raw, ui.Width, ui.Height, outW, outH);
                 for (int i = 0; i < result.Length; i++)
                 {
                     // Premultiplied alpha, as the game draws it: ui + world * (1 - ui.a).
                     var u = layer[i];
+                    if (u.A == 0)
+                        continue;
                     int keep = 255 - u.A;
-                    var b = result[i];
-                    result[i] = new Color(
-                        Math.Min(255, u.R + b.R * keep / 255),
-                        Math.Min(255, u.G + b.G * keep / 255),
-                        Math.Min(255, u.B + b.B * keep / 255),
-                        255);
+                    var w = result[i];
+                    result[i] = new Color(Math.Min(255, u.R + w.R * keep / 255), Math.Min(255, u.G + w.G * keep / 255), Math.Min(255, u.B + w.B * keep / 255), 255);
                 }
-                withUi = true;
             }
             for (int i = 0; i < result.Length; i++)
                 result[i].A = 255;
@@ -125,7 +110,7 @@ internal sealed class Screenshots
             using var stream = File.Create(Path.Combine(Folder, shot.File));
             tex.SaveAsPng(stream, outW, outH);
             Taken.Add(shot);
-            monitor.Log($"[self-test] screenshot {shot.File} ({outW}x{outH}, world {(w.BackBuffer ? "back buffer" : "screen target")}, {(withUi ? "with" : "without")} UI layer): {shot.Caption}", LogLevel.Debug);
+            monitor.Log($"[self-test] screenshot {shot.File} ({outW}x{outH}; world from {worldFrom}; {uiFrom}; menu {Game1.activeClickableMenu?.GetType().Name ?? "none"}): {shot.Caption}", LogLevel.Debug);
         }
         catch (Exception ex)
         {

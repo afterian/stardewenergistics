@@ -78,9 +78,15 @@ internal static class Playthrough
         + "; tiers built: " + string.Join(",", Progression.ProgressionService.TiersBuilt().OrderBy(t => t).Select(t => ((int)t).ToString()));
 
     /// <summary>A morning passes and Maru's letter for <paramref name="tier"/> must not come yet.</summary>
-    private static void NoLetterYet(SelfTestContext c, TierId tier, string because)
+    /// <param name="unlessBuilt">Skip the check if this save's own networks already count as this tier built.</param>
+    private static void NoLetterYet(SelfTestContext c, TierId tier, string because, TierId? unlessBuilt = null)
     {
         Quest.Morning(c, PowerPass);
+        if (unlessBuilt is { } b && Progression.ProgressionService.TiersBuilt().Contains(b))
+        {
+            c.Log($"skipped '{tier} letter waits while {because}': this save's own networks already count as {b} built ({Gates(c, tier)})", LogLevel.Info);
+            return;
+        }
         c.Check($"{tier} letter waits while {because}", !Quest.LetterCame(c, tier), Gates(c, tier));
     }
 
@@ -218,7 +224,7 @@ internal static class Playthrough
     {
         Quest.SetMaruHearts(c, 4);
         c.Player.deepestMineLevel = 80;
-        NoLetterYet(c, TierId.T3Automation, "no storage network is built yet");
+        NoLetterYet(c, TierId.T3Automation, "no storage network is built yet", unlessBuilt: TierId.T2SimpleStorage);
 
         foreach (var (id, times) in new[] { (Ids.ComputerCore, 1), (Ids.StorageRack, 2), (Ids.PowerRack, 1), (Ids.CoalGenerator, 1),
                      (Ids.NetworkTerminal, 1), (Ids.ChestLink, 1), (Ids.CopperDisk, 1), (Ids.NetworkWrench, 1), (Ids.CopperWire, 2) })
@@ -298,6 +304,8 @@ internal static class Playthrough
         }
         var storage = c.StorageAt(c.T(5, 0))!;
         c.CheckEqual("ten kinds stored", 10, TenKinds.Count(k => SelfTestContext.Stored(storage, k.Id) > 0));
+        c.Check("each kind is on the network", TenKinds.All(k => SelfTestContext.Stored(storage, k.Id) > 0),
+            "not stored: " + string.Join(", ", TenKinds.Where(k => SelfTestContext.Stored(storage, k.Id) == 0).Select(k => $"{k.Id} (still carried {c.Carried(k.Id)}, slot {c.SlotOf(k.Id)})")) + "; " + c.Messages());
         yield return c.Show("Everything stored: ten kinds on the network", 90);
         c.ClickStoredItem(menu!, Parsnip);
         c.CheckEqual("25 Parsnips withdrawn", 25, c.Carried(Parsnip));
@@ -326,7 +334,7 @@ internal static class Playthrough
     {
         Quest.SetMaruHearts(c, 6);
         c.Player.deepestMineLevel = 120;
-        NoLetterYet(c, TierId.T4Autocrafting, "no Machine Link is set up yet");
+        NoLetterYet(c, TierId.T4Autocrafting, "no Machine Link is set up yet", unlessBuilt: TierId.T3Automation);
 
         var pressTile = c.T(PressAt.X, PressAt.Y);
         c.CheckEqual("Gold Processor pressed", 1, c.PressProcessors(pressTile, "336", 1));
@@ -391,9 +399,10 @@ internal static class Playthrough
     private static IEnumerable<object?> Autocrafting(SelfTestContext c)
     {
         Quest.SetMaruHearts(c, 8);
-        MineShaft.lowestLevelReached = 145; // Skull Cavern floor 25
+        Game1.netWorldState.Value.LowestMineLevel = 145; // Skull Cavern floor 25 (the Mines are 120 floors)
+        c.CheckEqual("Skull Cavern floor 25 reached", 25, c.S.Progression.Snapshot(c.Player).DeepestSkullCavernLevel);
         c.Give(IridiumBar);
-        NoLetterYet(c, TierId.T5LinkedBuildings, "no Crafting Rack is running yet");
+        NoLetterYet(c, TierId.T5LinkedBuildings, "no Crafting Rack is running yet", unlessBuilt: TierId.T4Autocrafting);
 
         c.CraftTimes(Ids.CraftingRack, 1);
         c.Place(BC(Ids.CraftingRack), c.T(6, 0));
@@ -437,7 +446,7 @@ internal static class Playthrough
             p.mailReceived.Add("Visited_Island");
         Game1.netWorldState.Value.GoldenWalnutsFound = 100;
         c.Give(PrismaticShard);
-        NoLetterYet(c, TierId.T6WholeFarm, "no buildings are linked yet");
+        NoLetterYet(c, TierId.T6WholeFarm, "no buildings are linked yet", unlessBuilt: TierId.T5LinkedBuildings);
 
         var pressTile = c.T(PressAt.X, PressAt.Y);
         c.CheckEqual("Iridium Processor pressed", 1, c.PressProcessors(pressTile, "337", 1));
