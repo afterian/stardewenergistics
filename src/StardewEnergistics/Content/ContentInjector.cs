@@ -60,6 +60,9 @@ internal sealed class ContentInjector
     /// <summary>Crafting recipes taught when a tier unlocks.</summary>
     public static IEnumerable<string> RecipesFor(TierId tier) => Items.Where(i => i.Tier == tier && i.Recipe != "").Select(i => i.Id);
 
+    /// <summary>Qualified IDs of every item the mod adds, in tier order (for the test catalog).</summary>
+    public static IEnumerable<string> AllQualifiedItemIds => Items.OrderBy(i => i.Tier).Select(i => (i.Big ? "(BC)" : "(O)") + i.Id);
+
     public static IEnumerable<string> AllRecipes => Items.Where(i => i.Recipe != "").Select(i => i.Id);
 
     /// <summary>Mail ID of Maru's letter for a tier.</summary>
