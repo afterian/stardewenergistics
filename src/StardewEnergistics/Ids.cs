@@ -47,6 +47,9 @@ namespace StardewEnergistics
         public const string PrismaticDisk = Prefix + "PrismaticDisk";
         public const string IslandUplink = Prefix + "IslandUplink";         // big craftable
 
+        // Quest guide
+        public const string QuestJournal = Prefix + "QuestJournal";
+
         /// <summary>Key prefix for values this mod stores in an object's modData.</summary>
         public const string ModDataPrefix = ModId + "/";
 
@@ -83,6 +86,10 @@ namespace StardewEnergistics
             public const string Jobs = ModDataPrefix + "Jobs";
             /// <summary>On a machine: ID of the autocraft job it is working for.</summary>
             public const string ForJob = ModDataPrefix + "ForJob";
+            /// <summary>On a player: quest guide goals done, comma-separated quest IDs.</summary>
+            public const string GuideDone = ModDataPrefix + "GuideDone";
+            /// <summary>On the farm: quest guide world flags seen so far (host writes), comma-separated names.</summary>
+            public const string GuideWorld = ModDataPrefix + "GuideWorld";
             /// <summary>On the farm: tiers built so far, comma-separated tier numbers.</summary>
             public const string TiersBuilt = ModDataPrefix + "TiersBuilt";
         }

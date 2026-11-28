@@ -57,11 +57,30 @@ internal sealed class ContentInjector
         new(Ids.IslandUplink, "IslandUplink", "island-uplink.png", true, 8000, TierId.T6WholeFarm, $"{Ids.IridiumProcessor} 2 {PrismaticShard} 1 {RadioactiveBar} 5"),
     };
 
+    /// <summary>The quest guide journal: not in a tier; Maru mails it on day one and its recipe comes with it.</summary>
+    private static readonly ItemDef Journal = new(Ids.QuestJournal, "QuestJournal", "", false, 0, TierId.T1Components, $"{Wood} 1 {Fiber} 1");
+
+    /// <summary>Lost Book sprite in Maps/springobjects, used for the journal until it has its own art.</summary>
+    private const int JournalSpriteIndex = 102;
+
+    /// <summary>Qualified item ID for a mod item key such as "CopperDisk" or "ComputerCore".</summary>
+    public static string QualifiedIdOf(string key)
+    {
+        var item = key == Journal.Key ? Journal : Items.First(i => i.Key == key);
+        return (item.Big ? "(BC)" : "(O)") + item.Id;
+    }
+
+    /// <summary>Mail ID of Maru's day-one letter with the journal.</summary>
+    public const string GuideMailId = Ids.ModId + "_Maru_Guide";
+
+    /// <summary>Mail ID of Maru's thank-you letter for finishing a journal chapter.</summary>
+    public static string GuideChapterMailId(int chapter) => $"{Ids.ModId}_Maru_GuideCh{chapter}";
+
     /// <summary>Crafting recipes taught when a tier unlocks.</summary>
     public static IEnumerable<string> RecipesFor(TierId tier) => Items.Where(i => i.Tier == tier && i.Recipe != "").Select(i => i.Id);
 
     /// <summary>Qualified IDs of every item the mod adds, in tier order (for the test catalog).</summary>
-    public static IEnumerable<string> AllQualifiedItemIds => Items.OrderBy(i => i.Tier).Select(i => (i.Big ? "(BC)" : "(O)") + i.Id);
+    public static IEnumerable<string> AllQualifiedItemIds => Items.OrderBy(i => i.Tier).Select(i => (i.Big ? "(BC)" : "(O)") + i.Id).Append("(O)" + Ids.QuestJournal);
 
     public static IEnumerable<string> AllRecipes => Items.Where(i => i.Recipe != "").Select(i => i.Id);
 
@@ -118,6 +137,19 @@ internal sealed class ContentInjector
                 ContextTags = new List<string> { "stardew_energistics_item" },
             };
         }
+
+        data[Journal.Id] = new ObjectData
+        {
+            Name = Journal.Id,
+            DisplayName = T("item.QuestJournal.name"),
+            Description = T("item.QuestJournal.description"),
+            Type = "Crafting",
+            Category = 0,
+            Price = 0,
+            SpriteIndex = JournalSpriteIndex,
+            Edibility = -300,
+            ContextTags = new List<string> { "stardew_energistics_item", "not_giftable" },
+        };
     }
 
     private void AddBigCraftables(IDictionary<string, BigCraftableData> data)
@@ -147,6 +179,7 @@ internal sealed class ContentInjector
             string yield = i.Yield > 1 ? $"{i.Id} {i.Yield}" : i.Id;
             data[i.Id] = $"{i.Recipe}/Home/{yield}/{(i.Big ? "true" : "false")}/null/{T($"item.{i.Key}.name")}";
         }
+        data[Journal.Id] = $"{Journal.Recipe}/Home/{Journal.Id}/false/null/{T("item.QuestJournal.name")}";
     }
 
     private void AddMail(IDictionary<string, string> data)
@@ -157,6 +190,10 @@ internal sealed class ContentInjector
             data[MailId(tier)] = $"{T($"mail.T{(int)tier}.text")}{recipes}[#]{T($"mail.T{(int)tier}.title")}";
         }
         data[LowPowerMailId] = $"{T("mail.powerLow.text")}[#]{T("mail.powerLow.title")}";
+
+        data[GuideMailId] = $"{T("mail.guide.text")} %item object {Ids.QuestJournal} 1 %%[#]{T("mail.guide.title")}";
+        foreach (var chapter in Core.Guide.GuideBook.Chapters.Where(c => c.RewardItem != null))
+            data[GuideChapterMailId(chapter.Number)] = $"{T($"mail.guideCh{chapter.Number}.text")} %item object {chapter.RewardItem} {chapter.RewardCount} %%[#]{T($"mail.guideCh{chapter.Number}.title")}";
     }
 
     private void AddMachines(IDictionary<string, MachineData> data)

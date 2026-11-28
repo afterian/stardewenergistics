@@ -30,6 +30,9 @@ public sealed class ModConfig
     /// <summary>Every building's network joins the farmhouse's without Network Ports (open question; default off: own building only until T5).</summary>
     public bool TerminalReachAllBeforePorts { get; set; } = false;
 
+    /// <summary>Opens the Tinkerer's Journal (the quest guide). The journal item opens it too.</summary>
+    public KeybindList GuideKey { get; set; } = KeybindList.Parse("F8");
+
     /// <summary>Test mode: the cheat menu (catalog, starter kit, unlock recipes). On while playtesting; switch off before release.</summary>
     public bool TestMode { get; set; } = true;
 
