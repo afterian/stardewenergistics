@@ -41,9 +41,12 @@ internal sealed class SyntheticInput
     private readonly ConstructorInfo pressedCtor;
     private readonly ConstructorInfo releasedCtor;
 
-    public SyntheticInput(IModHelper helper, IEnumerable<object> targets)
+    private readonly SelfTestContext? ctx;
+
+    public SyntheticInput(IModHelper helper, IEnumerable<object> targets, SelfTestContext? ctx = null)
     {
         this.helper = helper;
+        this.ctx = ctx;
         const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
         foreach (object t in targets)
         {
@@ -63,6 +66,10 @@ internal sealed class SyntheticInput
     public bool Press(SButton button, Vector2 cursorTile, Vector2? grabTile = null, bool mouse = true)
     {
         ClearSuppression(button);
+        if (helper.Input.IsSuppressed(button))
+            ctx?.Log($"{button} still suppressed from an earlier press", LogLevel.Warn);
+        if (!Context.IsPlayerFree)
+            ctx?.Log($"pressing {button} while the player isn't free, so the mod will ignore it: {ctx.State()}", LogLevel.Warn);
         var cursor = new FakeCursor(cursorTile, grabTile ?? cursorTile);
         SetPointer(mouse);
         foreach (var (target, pressed, _) in handlers)
@@ -71,6 +78,8 @@ internal sealed class SyntheticInput
             Invoke(pressed, target, pressedCtor.Invoke(new object?[] { button, cursor, null }));
         }
         bool taken = helper.Input.IsSuppressed(button);
+        if (ctx != null)
+            ctx.Log($"press {button} {(mouse ? "mouse" : "controller")} cursor={ctx.Rel(cursorTile)} grab={ctx.Rel(grabTile ?? cursorTile)} -> {(taken ? "taken" : "not taken")}; menu after: {Game1.activeClickableMenu?.GetType().Name ?? "none"}");
         foreach (var (target, _, released) in handlers)
         {
             if (released != null)

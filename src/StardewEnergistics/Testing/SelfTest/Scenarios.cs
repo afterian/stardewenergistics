@@ -17,8 +17,9 @@ using SObject = StardewValley.Object;
 
 namespace StardewEnergistics.Testing.SelfTest;
 
-/// <summary>One end-to-end scenario. <see cref="ThrowawayOnly"/> ones change state outside the scratch area (e.g. a day's power pass on every network), so they only run in a session launched for the self-test.</summary>
-internal sealed record Scenario(string Id, string Title, Func<SelfTestContext, IEnumerable<object?>> Run, bool ThrowawayOnly = false);
+/// <summary>One end-to-end scenario. <see cref="ThrowawayOnly"/> ones change state outside the scratch area (e.g. a day's power pass on every network), so they only run in a session launched for the self-test.
+/// <see cref="OnlyWhenNamed"/> ones (the showcase) are left out of a plain run.</summary>
+internal sealed record Scenario(string Id, string Title, Func<SelfTestContext, IEnumerable<object?>> Run, bool ThrowawayOnly = false, bool OnlyWhenNamed = false);
 
 /// <summary>The self-test's scenarios. Each starts from an empty scratch area and a cleared backpack.</summary>
 internal static class Scenarios
@@ -45,8 +46,10 @@ internal static class Scenarios
 
     public static readonly IReadOnlyList<Scenario> All = new List<Scenario>
     {
+        new("coverage", "Every item has data, a recipe and a play test; every scenario is on the coverage list", Coverage),
         new("placement", "Place every block and break it again", Placement),
         new("wire", "Lay wire with mouse and controller; pick it up", Wire),
+        new("wire-placement", "Where wire goes with mouse and controller: floor, chests, machines, flooring, soil; walls, trees, water refused", WirePlacement.Run),
         new("network", "Core, racks and Terminal join one powered network", Network),
         new("disks", "Insert and remove disks in a Storage Rack", Disks),
         new("terminal", "Store and withdraw through the Terminal screen", Terminal),
@@ -59,10 +62,46 @@ internal static class Scenarios
         new("machine-link", "Machine Link feeds a Furnace from storage", MachineLink),
         new("autocraft", "Crafting Rack autocrafts Copper Wire", Autocraft),
         new("tools", "Plain tools go on disks through the Terminal", Tools),
+        new("press", "Processor Press makes all three processors; missing inputs are refused", FeatureScenarios.Press),
+        new("heavy-cable", "Heavy Cable lays, changes colour, hides and picks up", FeatureScenarios.HeavyCable),
+        new("disk-upgrade", "Crafting a disk from the tier below keeps its ID and contents", FeatureScenarios.DiskUpgrade, ThrowawayOnly: true),
+        new("shipping-link", "Shipping Link ships from storage into the farm's bin in the evening", FeatureScenarios.ShippingLink, ThrowawayOnly: true),
+        new("power-feed", "Power Feed moves a Lightning Rod's battery into the Power Rack", FeatureScenarios.PowerFeed),
+        new("wireless", "Wireless Terminal opens the network from anywhere in the building", FeatureScenarios.Wireless),
+        new("keep-stock", "Advanced Crafting Rack keeps an item in stock overnight", FeatureScenarios.KeepInStock, ThrowawayOnly: true),
         new("save", "Save data and the game's own save format keep everything", Save),
+        new("quest", "Maru's journal letter, tier letters teach recipes, journal goals tick", Quest.Run, ThrowawayOnly: true),
+        new("playthrough", "The whole mod from day one to the journal's last page, as a player", Playthrough.Run, ThrowawayOnly: true),
+        new("showcase", "The playthrough slowly, with screenshots, leaving the base standing", Playthrough.Run, ThrowawayOnly: true, OnlyWhenNamed: true),
     };
 
     // ---------------------------------------------------------------
+
+    private static IEnumerable<object?> Coverage(SelfTestContext c)
+    {
+        var listed = Core.Testing.PlayTestCoverage.ScenarioIds;
+        var ids = All.Select(s => s.Id).ToList();
+        c.Check("every scenario is on the coverage list", ids.All(listed.Contains), "not listed: " + string.Join(", ", ids.Where(i => !listed.Contains(i))));
+        c.Check("every scenario on the coverage list exists", listed.All(ids.Contains), "missing: " + string.Join(", ", listed.Where(i => !ids.Contains(i))));
+        foreach (string qid in Content.ContentInjector.AllQualifiedItemIds)
+        {
+            string key = qid[(qid.IndexOf(')') + 1)..].Replace(Ids.Prefix, "");
+            c.Check($"{key}: item data loaded", ItemRegistry.GetData(qid) != null);
+            c.Check($"{key}: has a play test", !Core.Testing.PlayTestCoverage.Missing(new[] { "item:" + key }).Any());
+        }
+        var recipes = StardewValley.CraftingRecipe.craftingRecipes;
+        foreach (string r in Content.ContentInjector.AllRecipes.Append(Ids.QuestJournal))
+        {
+            c.Check($"{r.Replace(Ids.Prefix, "")}: recipe in the game's data", recipes.ContainsKey(r));
+            if (recipes.ContainsKey(r))
+            {
+                var recipe = new StardewValley.CraftingRecipe(r, false);
+                var bad = recipe.recipeList.Keys.Where(k => ItemRegistry.GetData(k) == null).ToList();
+                c.Check($"{r.Replace(Ids.Prefix, "")}: every ingredient exists", bad.Count == 0, string.Join(", ", bad));
+            }
+        }
+        yield break;
+    }
 
     private static IEnumerable<object?> Placement(SelfTestContext c)
     {
@@ -238,7 +277,7 @@ internal static class Scenarios
         c.CheckEqual("withdraw one: no kinds used", 0, disk.KindsUsed);
 
         // With no disks at all, a stored item comes straight back with a reason.
-        Game1.exitActiveMenu();
+        c.CloseMenu();
         c.StandBeside(c.T(1, 0));
         c.HoldNothing();
         c.Action(c.T(1, 0)); // take the disk out
@@ -250,7 +289,7 @@ internal static class Scenarios
         c.ClickInventorySlot(menu!, slot);
         c.CheckEqual("no disks: Stone comes back (exactly once)", 50, c.Carried(Stone));
         c.Check("no disks: says why", c.Showed(c.T("terminal.noDisks")), c.Messages());
-        Game1.exitActiveMenu();
+        c.CloseMenu();
     }
 
     private static IEnumerable<object?> Capacity(SelfTestContext c)
@@ -300,7 +339,7 @@ internal static class Scenarios
         c.Check("items full: says why", c.Showed(c.T("terminal.full")), c.Messages());
 
         // Withdrawing frees item space at once.
-        Game1.exitActiveMenu();
+        c.CloseMenu();
         menu = c.OpenTerminal(term);
         c.ClickStoredItem(menu!, Kinds[1]);
         c.Check("withdraw frees item space", disk.TotalItems < disk.Spec.MaxItems, $"{disk.TotalItems}/{disk.Spec.MaxItems}");
@@ -310,7 +349,7 @@ internal static class Scenarios
         c.Player.Items[slot] = ItemRegistry.Create(Kinds[1], 5);
         c.ClickInventorySlot(menu!, slot);
         c.CheckEqual("freed space: 5 more stored", storedBefore + 5, SelfTestContext.Stored(c.StorageAt(term), Kinds[1]));
-        Game1.exitActiveMenu();
+        c.CloseMenu();
     }
 
     private static IEnumerable<object?> Targeting(SelfTestContext c)
@@ -438,7 +477,7 @@ internal static class Scenarios
         c.ClickStoredItem(menu!, Stone);
         c.CheckEqual("withdrawn from the chest", 25, c.Carried(Stone));
         c.CheckEqual("chest is empty again", 0, chest.Items.Count(i => i != null));
-        Game1.exitActiveMenu();
+        c.CloseMenu();
 
         // Wrench takes the Link off and drops it.
         c.StandBeside(chestTile);
@@ -600,7 +639,7 @@ internal static class Scenarios
         c.Check("Pickaxe is listed", c.ClickStoredItem(menu!, id));
         c.CheckEqual("Pickaxe withdrawn", 1, c.Carried(id));
         c.Check("Pickaxe is a working tool again", c.CarriedItems(id).FirstOrDefault() is Pickaxe);
-        Game1.exitActiveMenu();
+        c.CloseMenu();
     }
 
     private static IEnumerable<object?> Save(SelfTestContext c)

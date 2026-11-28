@@ -56,7 +56,8 @@ namespace StardewEnergistics
             var feeds = new PowerFeedService(helper, Monitor, networks, power);
             helper.Events.GameLoop.DayStarted += (_, _) => crafting.OnDayStarted();
             // Before the other TimeChanged handlers, so the journal sees short autocraft jobs before they finish.
-            new Guide.GuideService(helper, Monitor, config, networks, power, disks, wires, progression).Register();
+            var guide = new Guide.GuideService(helper, Monitor, config, networks, power, disks, wires, progression);
+            guide.Register();
             var terminal = new TerminalController(helper, Monitor, networks, disks, power, textures, terminalNet, crafting);
             terminal.Register();
 
@@ -66,6 +67,8 @@ namespace StardewEnergistics
             DiskStackPatch.Apply(harmony);
             NotPlaceablePatch.Apply(harmony);
             DiskUpgradePatch.Apply(harmony, disks);
+            QiGemCostPatch.Apply(harmony);
+            Monitor.Log("Patched crafting so Qi Gem recipes spend the Qi Gem balance.", LogLevel.Trace);
 
             var links = new MachineLinkService(Monitor, networks, disks, power);
             var shipping = new ShippingLinkService(helper, Monitor, networks, disks, power);
@@ -104,7 +107,11 @@ namespace StardewEnergistics
                 Power = power,
                 Crafting = crafting,
                 Links = links,
-                InputHandlers = new object[] { wireInput, blockInteraction },
+                Shipping = shipping,
+                Feeds = feeds,
+                Guide = guide,
+                Progression = progression,
+                InputHandlers = new object[] { guide, wireInput, blockInteraction },
             }).Register();
 
             new Multiplayer.VersionCheck(helper, Monitor, ModManifest).Register();
