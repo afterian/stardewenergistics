@@ -94,7 +94,7 @@ namespace StardewEnergistics
             blockInteraction.Register();
             new BlockDrops(helper, Monitor, disks, power).Register();
             new DebugCommands(helper, Monitor, wires, networks, disks, power).Register();
-            new Testing.TestMenu(helper, Monitor, config).Register();
+            new Testing.TestMenu(helper, Monitor, config, disks).Register();
             new Testing.SelfTest.SelfTestRunner(helper, Monitor, config, new Testing.SelfTest.SelfTestServices
             {
                 Wires = wires,
