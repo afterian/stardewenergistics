@@ -47,18 +47,18 @@ function Publish-Zip([string]$Repo, [string]$Tag, [string]$Zip, [string]$Version
 }
 
 # The build log goes on the release too, so Claude can read build errors without the PC.
-function Publish-Log([string]$Repo, [string]$Tag, [string]$Log, [string]$Sha) {
+function Publish-Log([string]$Repo, [string]$Tag, [string]$Log, [string]$Sha, [string]$Name = "last-build-log.txt") {
   try {
     $rel = Get-OrCreate-Release $Repo $Tag $Sha
     foreach ($a in (Invoke-GhApi GET "repos/$Repo/releases/$($rel.id)/assets?per_page=100" $null)) {
-      if ($a.name -eq "last-build-log.txt") { Invoke-GhApi DELETE "repos/$Repo/releases/assets/$($a.id)" $null | Out-Null }
+      if ($a.name -eq $Name) { Invoke-GhApi DELETE "repos/$Repo/releases/assets/$($a.id)" $null | Out-Null }
     }
-    Upload-Asset $Repo $rel.id $Log "last-build-log.txt" "text/plain" | Out-Null
+    Upload-Asset $Repo $rel.id $Log $Name "text/plain" | Out-Null
   } catch { Write-Host "Couldn't upload the build log: $($_.Exception.Message)" }
 }
 
 # Shows a green tick or red cross next to the commit on GitHub.
-function Set-CommitStatus([string]$Repo, [string]$Sha, [string]$State, [string]$Text) {
+function Set-CommitStatus([string]$Repo, [string]$Sha, [string]$State, [string]$Text, [string]$Context = "pc-build") {
   if ($Text.Length -gt 139) { $Text = $Text.Substring(0, 139) }
-  try { Invoke-GhApi POST "repos/$Repo/statuses/$Sha" @{ state = $State; context = "pc-build"; description = $Text } | Out-Null } catch { }
+  try { Invoke-GhApi POST "repos/$Repo/statuses/$Sha" @{ state = $State; context = $Context; description = $Text } | Out-Null } catch { }
 }

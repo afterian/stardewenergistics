@@ -88,11 +88,23 @@ namespace StardewEnergistics
                 shipping.OnDayEnding();
             };
 
-            new WireInput(helper, config, wires, renderer).Register();
-            new BlockInteraction(helper, networks, disks, power, terminal, textures).Register();
+            var wireInput = new WireInput(helper, config, wires, renderer);
+            wireInput.Register();
+            var blockInteraction = new BlockInteraction(helper, networks, disks, power, terminal, textures);
+            blockInteraction.Register();
             new BlockDrops(helper, Monitor, disks, power).Register();
             new DebugCommands(helper, Monitor, wires, networks, disks, power).Register();
             new Testing.TestMenu(helper, Monitor, config, disks).Register();
+            new Testing.SelfTest.SelfTestRunner(helper, Monitor, config, new Testing.SelfTest.SelfTestServices
+            {
+                Wires = wires,
+                Networks = networks,
+                Disks = disks,
+                Power = power,
+                Crafting = crafting,
+                Links = links,
+                InputHandlers = new object[] { wireInput, blockInteraction },
+            }).Register();
 
             new Multiplayer.VersionCheck(helper, Monitor, ModManifest).Register();
             helper.Events.GameLoop.GameLaunched += (_, _) => Integrations.ConfigMenu.Register(helper, ModManifest, config, () =>
