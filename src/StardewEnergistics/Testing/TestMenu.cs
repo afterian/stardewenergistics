@@ -21,12 +21,14 @@ internal sealed class TestMenu
     private readonly IModHelper helper;
     private readonly IMonitor monitor;
     private readonly ModConfig config;
+    private readonly Storage.DiskStore disks;
 
     /// <summary>Work to do once the question box has closed (per split-screen player).</summary>
     private readonly PerScreen<Action?> pending = new();
 
-    public TestMenu(IModHelper helper, IMonitor monitor, ModConfig config)
+    public TestMenu(IModHelper helper, IMonitor monitor, ModConfig config, Storage.DiskStore disks)
     {
+        this.disks = disks;
         this.helper = helper;
         this.monitor = monitor;
         this.config = config;
@@ -69,6 +71,7 @@ internal sealed class TestMenu
             new Response("kit", T("test.kit")),
             new Response("materials", T("test.materials")),
             new Response("unlock", T("test.unlock")),
+            new Response("recover", T("test.recover")),
             new Response("close", T("test.close")),
         };
         Game1.currentLocation.createQuestionDialogue(T("test.title"), choices, (_, answer) =>
@@ -83,9 +86,24 @@ internal sealed class TestMenu
                     int added = TestTools.Unlock().Count;
                     Hud(helper.Translation.Get("test.unlock.done", new { count = added }));
                 },
+                "recover" => RecoverDisks,
                 _ => null,
             };
         });
+    }
+
+    private void RecoverDisks()
+    {
+        if (!Context.IsMainPlayer)
+        {
+            Hud(T("test.recover.hostOnly"));
+            return;
+        }
+        var found = Storage.DiskRecovery.Recover(disks);
+        foreach (var disk in found)
+            UI.TerminalItems.Give(disk);
+        monitor.Log($"Recovered {found.Count} lost disks.", LogLevel.Info);
+        Hud(helper.Translation.Get("test.recover.done", new { count = found.Count }));
     }
 
     private static void Hud(string text) => Game1.addHUDMessage(new HUDMessage(text) { noIcon = true });
