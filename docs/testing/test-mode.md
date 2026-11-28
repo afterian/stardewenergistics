@@ -1,6 +1,6 @@
 # Test mode (cheat menu)
 
-Test mode is **on by default** while we playtest. Switch it off before release (config `TestMode`, or Generic Mod Config Menu → Stardew Energistics → Testing → "Test mode (cheats)").
+Test mode is **off by default** (user, 2026-11-28). Switch it on in Generic Mod Config Menu → Stardew Energistics → Testing → "Test mode (cheats)", or set `TestMode` to `true` in config.json. An older config.json (saved while it was on by default) is switched off once; turning it back on after that sticks. Sessions launched for the self-test always have it on.
 
 ## Open the menu
 

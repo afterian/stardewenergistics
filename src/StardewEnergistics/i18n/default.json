@@ -212,7 +212,7 @@
   "config.hardwoodPower": "Hardwood power",
   "config.testing": "Testing",
   "config.testMode": "Test mode (cheats)",
-  "config.testMode.tip": "Adds the test menu: free catalog of every item, starter kit, materials and unlock all recipes. Turn off for normal play.",
+  "config.testMode.tip": "Adds the test menu: free catalog of every item, starter kit, materials and unlock all recipes. Off by default.",
   "config.testMenuKey": "Test menu button",
   "config.testMenuKey.tip": "Opens the test menu while test mode is on. Default: F7, or click both sticks in on a controller.",
 

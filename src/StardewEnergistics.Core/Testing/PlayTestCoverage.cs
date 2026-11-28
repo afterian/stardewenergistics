@@ -17,7 +17,7 @@ public static class PlayTestCoverage
     {
         "coverage", "placement", "wire", "wire-placement", "network", "disks", "terminal", "capacity", "targeting", "break-rack", "chest-link",
         "power", "power-day", "machine-link", "autocraft", "tools", "whole-items", "press", "heavy-cable", "disk-upgrade", "shipping-link",
-        "power-feed", "wireless", "keep-stock", "save", "quest", "playthrough", "showcase",
+        "power-feed", "wireless", "keep-stock", "save", "config", "quest", "playthrough", "showcase",
     };
 
     private static PlayTestFeature F(string id, string what, params string[] scenarios) => new(id, what, scenarios);
@@ -92,6 +92,7 @@ public static class PlayTestCoverage
         F("uplink.island", "Uplinks join Ginger Island to the base", "playthrough"),
         F("crafting.menu", "every recipe crafts at the game's crafting menu", "playthrough"),
         F("crafting.qiGems", "recipes with Qi Gems spend them from the player's Qi Gem balance", "playthrough"),
+        F("config.testModeOff", "test mode off by default; old configs turned off once, a later choice sticks", "config"),
         F("save.roundtrip", "mod data and the game's save format keep everything", "save"),
         F("progression.gates", "each tier letter waits for its last missing requirement", "playthrough"),
     };
