@@ -64,6 +64,7 @@ namespace StardewEnergistics
             renderer.Patch(harmony);
             new OverlayRenderer(textures, networks, power, disks, renderer, Monitor).Patch(harmony);
             DiskStackPatch.Apply(harmony);
+            NotPlaceablePatch.Apply(harmony);
             DiskUpgradePatch.Apply(harmony, disks);
 
             var links = new MachineLinkService(Monitor, networks, disks, power);
