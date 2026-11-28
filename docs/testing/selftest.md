@@ -21,7 +21,7 @@ Leave the game window alone while it runs (about a minute). The game must be clo
 Options (`powershell -File deploy\pc\selftest.ps1 ...`): `-Only disks,terminal`, `-Save <save folder name>`,
 `-ZipDir <folder with a built zip>`, `-TimeoutMinutes 6`, `-Watcher on|off`.
 
-**While playing:** with test mode on, type `se_selftest` in the SMAPI console (`se_selftest list` for the
+**While playing:** with test mode on (off by default; turn it on in the mod settings), type `se_selftest` in the SMAPI console (`se_selftest list` for the
 scenarios, `se_selftest disks terminal` for some). It builds in a temporary location, then puts your
 backpack and position back. Scenarios that would touch your other networks (the morning power pass) only
 run in a session launched by the script.
@@ -89,6 +89,7 @@ failed checks; the last line is `SE-SELFTEST RESULT: PASS|FAIL (...)`.
 | autocraft | Crafting Rack makes 20 Copper Wire from storage; too big a job is refused |
 | tools | A Pickaxe stores on a disk and comes back as a working tool |
 | whole-items | An enchanted Pickaxe and sword, a ring, a hat, boots, flavoured wine, a coloured flower and a mod-tagged item store whole and come back identical; space is counted and freed; a disk can't go in a disk |
+| config | Test mode is off in a new config; an old config.json is updated once (test mode off, Coal moved to 5); switching test mode back on after that sticks |
 | press | Processor Press makes Copper, Gold and Iridium Processors; a bar without its other inputs is refused with the reason |
 | heavy-cable | Heavy Cable lays, the wrench changes its colour and hides it, a pickaxe picks it up as Heavy Cable |
 | disk-upgrade | Crafting an Iron Disk from a Copper Disk keeps its ID and contents (launched only) |

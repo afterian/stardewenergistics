@@ -44,6 +44,9 @@ internal sealed class SelfTestRunner
         this.monitor = monitor;
         this.config = config;
         this.services = services;
+        // A session launched for the self-test always has test mode on (in memory only; config.json is untouched).
+        if (auto)
+            config.TestMode = true;
         shots = new Screenshots(helper, monitor);
     }
 

@@ -21,6 +21,28 @@ internal static class FeatureScenarios
 
     private const string CopperBar = "(O)334", GoldBar = "(O)336", IridiumBar = "(O)337", Quartz = "(O)338", Battery = "(O)787", Parsnip = "(O)24";
 
+    /// <summary>Settings: test mode is off for new players, old config.json files are updated once, and a later choice sticks.</summary>
+    public static IEnumerable<object?> Config(SelfTestContext c)
+    {
+        c.Check("test mode is off in a new config", !new ModConfig().TestMode);
+        c.Check("a new config needs no update", !new ModConfig { ConfigVersion = ModConfig.CurrentVersion }.Upgrade());
+
+        var old = new ModConfig { ConfigVersion = 0, TestMode = true, CoalPower = 1 };
+        c.Check("a version 0 config is updated", old.Upgrade());
+        c.Check("version 0: test mode switched off", !old.TestMode);
+        c.CheckEqual("version 0: Coal moved to 5 power", 5, old.CoalPower);
+
+        var v1 = new ModConfig { ConfigVersion = 1, TestMode = true, CoalPower = 3 };
+        c.Check("a version 1 config is updated", v1.Upgrade());
+        c.Check("version 1: test mode switched off", !v1.TestMode);
+        c.CheckEqual("version 1: the player's Coal setting kept", 3, v1.CoalPower);
+
+        var chosen = new ModConfig { ConfigVersion = ModConfig.CurrentVersion, TestMode = true };
+        c.Check("test mode switched back on after the update stays on", !chosen.Upgrade() && chosen.TestMode);
+        c.CheckEqual("the config is at the current version", ModConfig.CurrentVersion, v1.ConfigVersion);
+        yield break;
+    }
+
     /// <summary>All three processors from the Processor Press; a bar without its other inputs is refused with the reason.</summary>
     public static IEnumerable<object?> Press(SelfTestContext c)
     {

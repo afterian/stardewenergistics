@@ -42,11 +42,13 @@ public sealed class ModConfig
     public int ConfigVersion { get; set; }
 
     /// <summary>The current <see cref="ConfigVersion"/>.</summary>
-    internal const int CurrentVersion = 1;
+    internal const int CurrentVersion = 2;
 
     /// <summary>
     /// Brings an older config.json up to date. Returns true if anything changed (then write it back).
     /// Version 1: the Coal default went from 1 to 5 power; an old file still holding 1 gets 5.
+    /// Version 2: test mode became off by default (user, 2026-11-28); old files, saved with it on, turn it off once.
+    /// Switching it back on later sticks, since the file is then at version 2.
     /// </summary>
     internal bool Upgrade()
     {
@@ -54,12 +56,14 @@ public sealed class ModConfig
             return false;
         if (ConfigVersion < 1 && CoalPower == 1)
             CoalPower = 5;
+        if (ConfigVersion < 2)
+            TestMode = false;
         ConfigVersion = CurrentVersion;
         return true;
     }
 
-    /// <summary>Test mode: the cheat menu (catalog, starter kit, unlock recipes). On while playtesting; switch off before release.</summary>
-    public bool TestMode { get; set; } = true;
+    /// <summary>Test mode: the cheat menu (catalog, starter kit, unlock recipes). Off by default (user, 2026-11-28); switch on in the mod settings.</summary>
+    public bool TestMode { get; set; } = false;
 
     /// <summary>Opens the test menu when test mode is on. Default F7, or click both sticks (L3 + R3) on a controller.</summary>
     public KeybindList TestMenuKey { get; set; } = KeybindList.Parse("F7, LeftStick + RightStick");
