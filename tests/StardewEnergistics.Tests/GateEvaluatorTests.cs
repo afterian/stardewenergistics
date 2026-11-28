@@ -20,13 +20,13 @@ public class GateEvaluatorTests
         Assert.Empty(new GateEvaluator().Unlocked(Snap(mine: 120, processors: 50) with { TalkedToMaru = false }));
 
     [Fact]
-    public void T2NeedsTenProcessorsMineTwentyAndTwoHearts()
+    public void T2NeedsFiveProcessorsMineTwentyAndTwoHearts()
     {
         var g = new GateEvaluator();
-        Assert.DoesNotContain(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 1, mine: 20, processors: 10)));
-        Assert.DoesNotContain(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 2, mine: 20, processors: 9)));
-        Assert.DoesNotContain(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 2, mine: 19, processors: 10)));
-        Assert.Contains(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 2, mine: 20, processors: 10)));
+        Assert.DoesNotContain(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 1, mine: 20, processors: 5)));
+        Assert.DoesNotContain(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 2, mine: 20, processors: 4)));
+        Assert.DoesNotContain(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 2, mine: 19, processors: 5)));
+        Assert.Contains(TierId.T2SimpleStorage, g.Unlocked(Snap(hearts: 2, mine: 20, processors: 5)));
     }
 
     [Fact]

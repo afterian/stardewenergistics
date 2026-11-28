@@ -33,7 +33,7 @@ public sealed class GateEvaluator
         else
             return result;
 
-        if (Sent(TierId.T2SimpleStorage) || s.CopperProcessorsCrafted >= 10 && s.DeepestMineLevel >= 20 && s.MaruHearts >= 2)
+        if (Sent(TierId.T2SimpleStorage) || s.CopperProcessorsCrafted >= 5 && s.DeepestMineLevel >= 20 && s.MaruHearts >= 2)
             result.Add(TierId.T2SimpleStorage);
         else
             return result;

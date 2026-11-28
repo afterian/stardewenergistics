@@ -19,7 +19,7 @@ internal static class FeatureScenarios
     private static string O(string id) => "(O)" + id;
     private static string BC(string id) => "(BC)" + id;
 
-    private const string CopperBar = "(O)334", GoldBar = "(O)336", IridiumBar = "(O)337", Quartz = "(O)338", Battery = "(O)787", Parsnip = "(O)24";
+    private const string CopperBar = "(O)334", GoldBar = "(O)336", IridiumBar = "(O)337", Quartz = "(O)80", RefinedQuartz = "(O)338", Battery = "(O)787", Parsnip = "(O)24";
 
     /// <summary>Settings: test mode is off for new players, old config.json files are updated once, and a later choice sticks.</summary>
     public static IEnumerable<object?> Config(SelfTestContext c)
@@ -52,16 +52,16 @@ internal static class FeatureScenarios
 
         c.Hold(CopperBar, 1);
         bool took = c.GameAction(tile);
-        c.Check("a Copper Bar without Refined Quartz is refused", c.Loc.objects[tile].heldObject.Value == null, $"game action returned {took}");
+        c.Check("a Copper Bar without Quartz is refused", c.Loc.objects[tile].heldObject.Value == null, $"game action returned {took}");
         c.Check("the press says what's missing", Game1.hudMessages.Any(m => m.message.Contains(ItemRegistry.GetData(Quartz)!.DisplayName)), c.Messages());
         c.CheckEqual("the bar stays in the hand", 1, c.Carried(CopperBar));
 
-        c.CheckEqual("Copper Processor pressed", 1, c.PressProcessors(tile, "334", 1));
-        c.CheckEqual("pressing counts toward Maru's 10", stat + 1, (int)c.Player.stats.Get(Ids.StatCopperProcessors));
-        c.CheckEqual("Gold Processor pressed", 1, c.PressProcessors(tile, "336", 1));
+        c.CheckEqual("Copper Processor pressed", 1, c.PressProcessors(tile, "334", 1, maxMinutes: 120));
+        c.CheckEqual("pressing counts toward Maru's 5", stat + 1, (int)c.Player.stats.Get(Ids.StatCopperProcessors));
+        c.CheckEqual("Gold Processor pressed", 1, c.PressProcessors(tile, "336", 1, maxMinutes: 360));
         c.CheckEqual("Iridium Processor pressed", 1, c.PressProcessors(tile, "337", 1));
-        c.CheckEqual("the presses used up their other inputs (one of each processor left)", "1 1 0 0",
-            $"{c.Carried(O(Ids.CopperProcessor))} {c.Carried(O(Ids.GoldProcessor))} {c.Carried(Quartz)} {c.Carried("(O)72")}");
+        c.CheckEqual("the presses used up their other inputs (one of each processor left)", "1 1 0 0 0",
+            $"{c.Carried(O(Ids.CopperProcessor))} {c.Carried(O(Ids.GoldProcessor))} {c.Carried(Quartz)} {c.Carried(RefinedQuartz)} {c.Carried("(O)72")}");
         if (!c.Throwaway)
             c.Player.stats.Set(Ids.StatCopperProcessors, stat); // console run: leave the player's count as it was
         yield break;

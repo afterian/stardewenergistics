@@ -200,19 +200,20 @@ internal static class Playthrough
         c.Require("Processor Press placed", c.Place(BC(Ids.ProcessorPress), pressTile) != null);
         c.CheckEqual("the crafted press was used", 0, c.Carried(BC(Ids.ProcessorPress)));
 
-        c.CheckEqual("first Copper Processor pressed", 1, c.PressProcessors(pressTile, "334", 1));
+        c.CheckEqual("first Copper Processor pressed", 1, c.PressProcessors(pressTile, "334", 1, maxMinutes: 120));
         c.CheckEqual("processor count is 1", 1, (int)p.stats.Get(Ids.StatCopperProcessors));
         c.StandBeside(pressTile);
-        yield return c.Show("The Processor Press makes a Copper Processor from a Copper Bar and Refined Quartz");
+        yield return c.Show("The Processor Press makes a Copper Processor from a Copper Bar and Quartz in 2 hours");
 
         c.Craft(Ids.CopperWire);
         c.CloseMenu();
         c.CheckEqual("Copper Wire comes in tens", 10, c.Carried(O(Ids.CopperWire)));
 
         p.deepestMineLevel = 20;
-        NoLetterYet(c, TierId.T2SimpleStorage, "only 1 of 10 Copper Processors is pressed");
-        c.PressProcessors(pressTile, "334", 9);
-        c.CheckEqual("processor count is 10", 10, (int)p.stats.Get(Ids.StatCopperProcessors));
+        Quest.SetMaruHearts(c, 2);
+        NoLetterYet(c, TierId.T2SimpleStorage, "only 1 of 5 Copper Processors is pressed");
+        c.PressProcessors(pressTile, "334", 4);
+        c.CheckEqual("processor count is 5", 5, (int)p.stats.Get(Ids.StatCopperProcessors));
         p.deepestMineLevel = 19;
         NoLetterYet(c, TierId.T2SimpleStorage, "the Mines are only at floor 19 of 20");
         p.deepestMineLevel = 20;
@@ -220,7 +221,7 @@ internal static class Playthrough
         NoLetterYet(c, TierId.T2SimpleStorage, "Maru is at 1 heart of 2");
         Quest.SetMaruHearts(c, 2);
         foreach (object? s in ChapterDone(c, 1)) yield return s;
-        foreach (object? s in LetterArrives(c, TierId.T2SimpleStorage, "10 processors, Mines floor 20, 2 hearts: storage blueprints")) yield return s;
+        foreach (object? s in LetterArrives(c, TierId.T2SimpleStorage, "5 processors, Mines floor 20, 2 hearts: storage blueprints")) yield return s;
     }
 
     // ---- Chapter 2: the first network ----

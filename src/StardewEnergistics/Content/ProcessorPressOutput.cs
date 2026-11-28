@@ -19,7 +19,7 @@ public static class ProcessorPressOutput
     /// <summary>Extra items (qualified ID, count) needed besides the bar that triggers the rule.</summary>
     internal static readonly IReadOnlyDictionary<string, (string Id, int Count)[]> ExtrasByBar = new Dictionary<string, (string, int)[]>
     {
-        [VanillaIds.Obj(VanillaIds.CopperBar)] = new[] { (VanillaIds.Obj(VanillaIds.RefinedQuartz), 1) },
+        [VanillaIds.Obj(VanillaIds.CopperBar)] = new[] { (VanillaIds.Obj(VanillaIds.Quartz), 1) },
         [VanillaIds.Obj(VanillaIds.GoldBar)] = new[] { (VanillaIds.Obj(VanillaIds.RefinedQuartz), 1), (VanillaIds.Obj(Ids.CopperProcessor), 1) },
         [VanillaIds.Obj(VanillaIds.IridiumBar)] = new[] { (VanillaIds.Obj(VanillaIds.Diamond), 1), (VanillaIds.Obj(Ids.GoldProcessor), 1) },
     };

@@ -24,14 +24,14 @@ internal sealed class ContentInjector
     private static readonly ItemDef[] Items =
     {
         // T1
-        new(Ids.ProcessorPress, "ProcessorPress", "processor-press.png", true, 500, TierId.T1Components, $"{CopperBar} 5 {IronBar} 2 {RefinedQuartz} 1"),
+        new(Ids.ProcessorPress, "ProcessorPress", "processor-press.png", true, 500, TierId.T1Components, $"{CopperBar} 3 {Stone} 20"),
         new(Ids.CopperProcessor, "CopperProcessor", "copper-processor.png", false, 50, TierId.T1Components, ""),
         new(Ids.CopperWire, "CopperWire", "copper-wire-spool.png", false, 5, TierId.T1Components, $"{CopperBar} 1 {Fiber} 1", Yield: 10),
         // T2
-        new(Ids.NetworkWrench, "NetworkWrench", "network-wrench.png", false, 100, TierId.T2SimpleStorage, $"{IronBar} 2 {Ids.CopperProcessor} 1"),
-        new(Ids.ComputerCore, "ComputerCore", "computer-core.png", true, 1000, TierId.T2SimpleStorage, $"{Ids.CopperProcessor} 4 {IronBar} 5 {BatteryPack} 1"),
-        new(Ids.StorageRack, "StorageRack", "storage-rack.png", true, 400, TierId.T2SimpleStorage, $"{Ids.CopperProcessor} 2 {IronBar} 3"),
-        new(Ids.PowerRack, "PowerRack", "power-rack.png", true, 300, TierId.T2SimpleStorage, $"{Ids.CopperProcessor} 1 {CopperBar} 2 {BatteryPack} 1"),
+        new(Ids.NetworkWrench, "NetworkWrench", "network-wrench.png", false, 100, TierId.T2SimpleStorage, $"{CopperBar} 2 {Ids.CopperProcessor} 1"),
+        new(Ids.ComputerCore, "ComputerCore", "computer-core.png", true, 1000, TierId.T2SimpleStorage, $"{Ids.CopperProcessor} 4 {CopperBar} 5 {RefinedQuartz} 2"),
+        new(Ids.StorageRack, "StorageRack", "storage-rack.png", true, 400, TierId.T2SimpleStorage, $"{Ids.CopperProcessor} 2 {CopperBar} 2 {Wood} 10"),
+        new(Ids.PowerRack, "PowerRack", "power-rack.png", true, 300, TierId.T2SimpleStorage, $"{Ids.CopperProcessor} 1 {CopperBar} 3"),
         new(Ids.CoalGenerator, "CoalGenerator", "coal-generator.png", true, 300, TierId.T2SimpleStorage, $"{Ids.CopperProcessor} 1 {Big(FurnaceBig)} 1 {Stone} 5"),
         new(Ids.NetworkTerminal, "NetworkTerminal", "network-terminal.png", true, 400, TierId.T2SimpleStorage, $"{Ids.CopperProcessor} 2 {RefinedQuartz} 1 {CopperBar} 1"),
         new(Ids.ChestLink, "ChestLink", "chest-link.png", false, 80, TierId.T2SimpleStorage, $"{Ids.CopperProcessor} 1 {CopperBar} 1"),
@@ -204,14 +204,15 @@ internal sealed class ContentInjector
             ShowNextIndexWhileWorking = true,
             OutputRules = new List<MachineOutputRule>
             {
-                PressRule("CopperProcessor", CopperBar, Ids.CopperProcessor, days: 1),
-                PressRule("GoldProcessor", GoldBar, Ids.GoldProcessor, days: 1),
-                PressRule("IridiumProcessor", IridiumBar, Ids.IridiumProcessor, days: 2),
+                // Copper is quick so early progress isn't a day per chip (user, 2026-11-28).
+                PressRule("CopperProcessor", CopperBar, Ids.CopperProcessor, minutes: 120),
+                PressRule("GoldProcessor", GoldBar, Ids.GoldProcessor, minutes: 360),
+                PressRule("IridiumProcessor", IridiumBar, Ids.IridiumProcessor, days: 1),
             },
         };
     }
 
-    private static MachineOutputRule PressRule(string ruleId, string barId, string outputId, int days) => new()
+    private static MachineOutputRule PressRule(string ruleId, string barId, string outputId, int days = -1, int minutes = -1) => new()
     {
         Id = ruleId,
         Triggers = new List<MachineOutputTriggerRule>
@@ -234,5 +235,6 @@ internal sealed class ContentInjector
             },
         },
         DaysUntilReady = days,
+        MinutesUntilReady = minutes,
     };
 }

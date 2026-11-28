@@ -22,7 +22,7 @@ public static class GateRequirements
             TierId.T1Components => new[] { new GateRequirement("talkedMaru", B(s.TalkedToMaru), 1) },
             TierId.T2SimpleStorage => new[]
             {
-                new GateRequirement("processors", s.CopperProcessorsCrafted, 10),
+                new GateRequirement("processors", s.CopperProcessorsCrafted, 5),
                 new GateRequirement("mines", s.DeepestMineLevel, 20),
                 new GateRequirement("maru", s.MaruHearts, 2),
             },
