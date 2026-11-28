@@ -53,6 +53,18 @@ internal sealed class WireInput
         helper.Events.Input.ButtonPressed += OnButtonPressed;
         helper.Events.Input.ButtonReleased += OnButtonReleased;
         helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
+        helper.Events.Display.RenderedWorld += OnRenderedWorld;
+    }
+
+    /// <summary>While holding wire, outline the tile it would go on (green if it can, red if not).</summary>
+    private void OnRenderedWorld(object? sender, RenderedWorldEventArgs e)
+    {
+        if (!Context.IsPlayerFree || HeldWireKind() == null)
+            return;
+        var tile = WireTile(helper.Input.GetCursorPosition());
+        bool ok = CanLay(Game1.currentLocation, tile) && store.Find(Game1.currentLocation)?.Get(tile) == null;
+        var screen = Game1.GlobalToLocal(Game1.viewport, new Vector2(tile.X * 64, tile.Y * 64));
+        e.SpriteBatch.Draw(Game1.mouseCursors, screen, new Rectangle(ok ? 194 : 210, 388, 16, 16), Color.White * 0.7f, 0f, Vector2.Zero, 4f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0.01f);
     }
 
     private static WireKind? HeldWireKind()
@@ -68,6 +80,25 @@ internal sealed class WireInput
     private static bool HoldingWrench() => Game1.player.ActiveObject?.QualifiedItemId == "(O)" + Ids.NetworkWrench;
 
     private static TilePos ToTile(Vector2 v) => new((int)v.X, (int)v.Y);
+
+    /// <summary>How far from the player (in tiles) wire can be laid at the cursor.</summary>
+    public const int WireReach = 5;
+
+    /// <summary>
+    /// The tile wire goes on: the tile under the visible cursor (mouse, trackpad or the Deck's stick cursor)
+    /// when it's within <see cref="WireReach"/> tiles; otherwise the tile in front of the player.
+    /// SMAPI's GrabTile alone falls back to the tile in front as soon as the cursor is over 1 tile away,
+    /// which made wire land somewhere other than the cursor.
+    /// </summary>
+    private static TilePos WireTile(ICursorPosition cursor)
+    {
+        var t = cursor.Tile;
+        var me = Game1.player.Tile;
+        bool cursorShown = Game1.mouseCursorTransparency > 0 && Game1.wasMouseVisibleThisFrame;
+        if (cursorShown && System.Math.Abs(t.X - me.X) <= WireReach && System.Math.Abs(t.Y - me.Y) <= WireReach)
+            return ToTile(t);
+        return ToTile(cursor.GrabTile);
+    }
 
     private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
     {
@@ -90,6 +121,7 @@ internal sealed class WireInput
         // Lay wire.
         if (HeldWireKind() is { } kind && (useTool || action))
         {
+            tile = WireTile(e.Cursor);
             helper.Input.Suppress(e.Button);
             if (TryLay(location, tile, kind))
             {
@@ -183,7 +215,7 @@ internal sealed class WireInput
             }
             else
             {
-                var tile = ToTile(helper.Input.GetCursorPosition().GrabTile);
+                var tile = WireTile(helper.Input.GetCursorPosition());
                 if (tile != st.LastDragTile)
                 {
                     st.LastDragTile = tile;

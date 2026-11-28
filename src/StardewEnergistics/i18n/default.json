@@ -219,5 +219,6 @@
   "test.materials.done": "Materials added.",
   "test.unlock.done": "Learned {{count}} new recipes.",
   "config.wireUnder": "Wire must be under blocks",
-  "config.wireUnder.tip": "Off: wire on a block's tile or right beside it connects. On: only wire under the block counts. Applies after reloading the save."
+  "config.wireUnder.tip": "Off: wire on a block's tile or right beside it connects. On: only wire under the block counts. Applies after reloading the save.",
+  "power.notConnected": "Not connected to a Computer Core. A Coal Generator needs wire on or right beside it that runs to the Core; a Power Rack must touch the Core or another rack."
 }
