@@ -37,7 +37,7 @@ Living (online, editable) copies of the plan and art list: https://claude.ai/art
 - [x] **GitHub repo** `afterian/stardewenergistics`; filled into `deploy/README.md` and `manifest.json`.
 - [x] **Coal value:** 1 Coal = 5 power (2026-11-28).
 - [x] **Terminal reach before T5:** own building only (2026-11-28); config option for all buildings.
-- [x] **Wire connection:** block's own tile only (2026-11-28).
+- [x] **Wire connection:** block's own tile or next to it (2026-11-28).
 - [ ] Installed versions: PC has Stardew 1.6.15, SMAPI 4.5.2, .NET SDK 8.0.428. Decks still to record.
 
 ## Environment
@@ -84,7 +84,7 @@ The detailed task breakdown per milestone and lane is in `docs/implementation-pl
 
 Fixed: machines restart after a Link collects (Crystalarium, Solar Panel, Mushroom Box, tappers, Bee House honey recalculated), full storage leaves output in the machine instead of risking it, Machine Links can run the Processor Press, hovering a disk recipe no longer moves the old disk's contents, picked-up racks/generators/Cores holding state don't stack, the host rebuilds networks when a farmhand changes a block (and peers are told at once), Ports re-check buildings when one is built or moved, outdoor blocks joined by a Port now use the farmhouse's power, the T6 gate (Qi's Walnut Room = 100 Golden Walnuts) can be met, Maru's low-power letter, and the "reach all buildings early" option now works (off by default; in GMCM). In-game checks: `docs/testing/review-fixes.md`.
 
-Decided 2026-11-28: wire connects on the block's own tile only, Terminal reach is own building until Ports, 1 Coal = 5 power, Shipping Links also go on the main Shipping Bin, two Cores stop a network, keep-in-stock runs overnight, autocraft sets ingredients aside. Still open: the other "Proposed" rules in `docs/decisions.md`. Autocraft now sets ingredients aside when a job starts. Known limits: online farmhands can't craft or autocraft from a Terminal (storage only); whole/flavoured items stay in linked chests; category ingredients aren't planned; Nexus mod ID for UpdateKeys.
+Decided 2026-11-28: wire connects on the block's tile or next to it, Terminal reach is own building until Ports, 1 Coal = 5 power, Shipping Links also go on the main Shipping Bin, two Cores stop a network, keep-in-stock runs overnight, autocraft sets ingredients aside. Still open: the other "Proposed" rules in `docs/decisions.md`. Autocraft now sets ingredients aside when a job starts. Known limits: online farmhands can't craft or autocraft from a Terminal (storage only); whole/flavoured items stay in linked chests; category ingredients aren't planned; Nexus mod ID for UpdateKeys.
 
 ## Art status (2026-11-27)
 
