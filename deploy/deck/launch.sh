@@ -122,6 +122,7 @@ update_self
 # Start the game through SMAPI: swap the plain game binary in Steam's command
 # for StardewModdingAPI (same as SMAPI's own '"…/StardewModdingAPI" %command%').
 CMD=("$@")
+[ -n "$GAME" ] && [ -f "$GAME/StardewModdingAPI" ] && [ ! -x "$GAME/StardewModdingAPI" ] && chmod +x "$GAME/StardewModdingAPI" 2>/dev/null
 if [ -n "$GAME" ] && [ -x "$GAME/StardewModdingAPI" ]; then
   for i in "${!CMD[@]}"; do
     case "${CMD[$i]}" in

@@ -75,7 +75,7 @@ You only need the touchscreen or trackpads: move the mouse with the right trackp
 5. A terminal window shows the progress. It installs SMAPI, installs the auto-updater, and sets Stardew's Launch Options for you. **Steam closes and reopens by itself** during this; that's expected.
 6. When the "All set!" box appears, click **OK**, double-click **Return to Gaming Mode** on the desktop, and start Stardew. The first start takes a few extra seconds. You'll see the SMAPI console, then "Stardew Energistics is running!" after loading a save.
 
-Run the installer again any time: it updates SMAPI (do this after a game update if mods stop loading) and refreshes everything.
+If SMAPI is already installed, the installer keeps it and skips that step. You don't need to uninstall anything. Run the installer again any time to refresh everything. Everything it shows is also saved in `~/stardew-energistics/install.log`.
 
 **If the box says "Almost done":** Steam didn't close, so set the Launch Options by hand. In Steam, right-click Stardew Valley > **Properties** > **General** > **Launch Options**, and enter the line the box shows.
 
