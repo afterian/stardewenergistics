@@ -65,6 +65,9 @@ internal sealed class ContentInjector
     /// <summary>Mail ID of Maru's letter for a tier.</summary>
     public static string MailId(TierId tier) => $"{Ids.ModId}_Maru_T{(int)tier}";
 
+    /// <summary>Maru's low-power letter (sent again on each new drain).</summary>
+    public const string LowPowerMailId = Ids.ModId + "_Maru_PowerLow";
+
     public static readonly TierId[] TiersWithMail = { TierId.T1Components, TierId.T2SimpleStorage, TierId.T3Automation, TierId.T4Autocrafting, TierId.T5LinkedBuildings, TierId.T6WholeFarm };
 
     public void Register()
@@ -150,6 +153,7 @@ internal sealed class ContentInjector
             string recipes = string.Join("", RecipesFor(tier).Select(id => $" %item craftingRecipe {id} %%"));
             data[MailId(tier)] = $"{T($"mail.T{(int)tier}.text")}{recipes}[#]{T($"mail.T{(int)tier}.title")}";
         }
+        data[LowPowerMailId] = $"{T("mail.powerLow.text")}[#]{T("mail.powerLow.title")}";
     }
 
     private void AddMachines(IDictionary<string, MachineData> data)

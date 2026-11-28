@@ -33,6 +33,23 @@ internal sealed class PowerService
 
     public int DailyUse(Network n) => ledger.DailyUse(n, Table);
 
+    /// <summary>
+    /// What a network with a Core pays each day: its own blocks plus any joined network without a Core
+    /// (outdoor wire, Ports, outdoor Links) that runs on its power.
+    /// </summary>
+    public int DailyUse(LocationNetworks loc, Network n)
+    {
+        int use = DailyUse(n);
+        if (!n.Working)
+            return use;
+        foreach (var (mloc, m) in loc.Manager.Members(loc, n))
+        {
+            if (m != n && !m.Working && loc.Manager.Home(mloc, m) is { } home && home.Net.Id == n.Id)
+                use += DailyUse(m);
+        }
+        return use;
+    }
+
     public PowerState StateOf(LocationNetworks loc, Network n)
     {
         var charge = loc.ObjectsOf(n, BlockKind.PowerRack).SelectMany(r => RackSlots.GetInts(r, Ids.Data.RackCharge)).ToList();
@@ -52,7 +69,7 @@ internal sealed class PowerService
         var core = loc.ObjectOf(n.Core);
         if (core.modData.TryGetValue(Ids.Data.Powered, out string? flag))
             return flag == "1";
-        return StateOf(loc, n).Available >= DailyUse(n);
+        return StateOf(loc, n).Available >= DailyUse(loc, n);
     }
 
     public void OnDayStarted()
@@ -65,7 +82,7 @@ internal sealed class PowerService
         {
             foreach (var n in loc.Graph.Networks.Where(n => n.Working))
             {
-                int use = DailyUse(n);
+                int use = DailyUse(loc, n);
                 var day = ledger.RunDay(StateOf(loc, n), use);
                 WriteBack(loc, n, day.After);
 
@@ -85,12 +102,24 @@ internal sealed class PowerService
                 if (!day.Powered)
                     Game1.addHUDMessage(new HUDMessage(helper.Translation.Get("power.out", new { location = where })) { noIcon = true });
                 else if (warn)
+                {
                     Game1.addHUDMessage(new HUDMessage(helper.Translation.Get("power.low", new { location = where, days })) { noIcon = true });
+                    SendLowPowerMail();
+                }
 
                 monitor.Log($"{where}: power use {use}, powered={day.Powered}, {day.After.Available} left.", LogLevel.Trace);
             }
             ShowTerminals(loc);
         }
+    }
+
+    /// <summary>Maru's low-power letter, once per drain (the warning itself is already once per drain).</summary>
+    private static void SendLowPowerMail()
+    {
+        string id = StardewEnergistics.Content.ContentInjector.LowPowerMailId;
+        Game1.player.mailReceived.Remove(id);
+        if (!Game1.player.mailbox.Contains(id))
+            Game1.player.mailbox.Add(id);
     }
 
     /// <summary>After adding power mid-day, let the network re-check whether it has enough.</summary>
@@ -161,7 +190,7 @@ internal sealed class PowerService
     public string Describe(LocationNetworks loc, Network n)
     {
         var s = StateOf(loc, n);
-        int use = DailyUse(n);
+        int use = DailyUse(loc, n);
         string powered = helper.Translation.Get(IsPowered(loc, n) ? "network.powered" : "network.unpowered");
         return $"{powered} {s.Available} power, {use}/day ({ledger.DaysRemaining(s, use)} days).";
     }

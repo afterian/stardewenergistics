@@ -49,7 +49,8 @@ internal sealed class ProgressionService
         CopperProcessorsCrafted: (int)player.stats.Get(Ids.StatCopperProcessors),
         HasIridiumBar: player.Items.ContainsId("(O)337"),
         ReachedGingerIsland: player.hasOrWillReceiveMail("Visited_Island"),
-        QiWalnutRoomOpen: false, // T6 gate details land in M6
+        // Qi's Walnut Room opens once the farm has found 100 Golden Walnuts.
+        QiWalnutRoomOpen: Game1.netWorldState.Value.GoldenWalnutsFound >= 100,
         HasPrismaticShard: player.Items.ContainsId("(O)74"),
         TiersBuilt: TiersBuilt());
 
