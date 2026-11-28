@@ -74,6 +74,7 @@ failed checks; the last line is `SE-SELFTEST RESULT: PASS|FAIL (...)`.
 |---|---|
 | coverage | Every item has data, a recipe with real ingredients and a play test; every scenario is on the coverage list |
 | placement | Every block places from the hand and breaks back into exactly one item with a pickaxe |
+| wire-placement | Mouse (cursor within reach) and controller (tile in front): wire on floor, under a chest, both halves of a Furnace, next to an object, flooring, tilled soil; wall, tree and water refused with the reason; the outline shows the tile that gets wire |
 | wire | Mouse lays on the cursor tile (within 5), else the facing tile; controller with hidden cursor uses the facing tile; top half of a big craftable means its base; pickaxe picks wire up |
 | network | Core, racks and Terminal on one powered network; spare wire end removal; two Cores stop it |
 | disks | Insert with mouse and controller; empty hand removes the last disk with its ID and contents; rack holds 4 |

@@ -15,7 +15,7 @@ public static class PlayTestCoverage
     /// <summary>Every scenario id the mod's self-test has (kept in step with Scenarios.All by the `coverage` scenario).</summary>
     public static readonly IReadOnlyList<string> ScenarioIds = new[]
     {
-        "coverage", "placement", "wire", "network", "disks", "terminal", "capacity", "targeting", "break-rack", "chest-link",
+        "coverage", "placement", "wire", "wire-placement", "network", "disks", "terminal", "capacity", "targeting", "break-rack", "chest-link",
         "power", "power-day", "machine-link", "autocraft", "tools", "press", "heavy-cable", "disk-upgrade", "shipping-link",
         "power-feed", "wireless", "keep-stock", "save", "quest", "playthrough", "showcase",
     };
@@ -71,7 +71,8 @@ public static class PlayTestCoverage
         F("letter:chapter", "journal chapter thank-you letters with rewards", "playthrough"),
 
         // Player-facing systems.
-        F("wire.lay", "mouse and controller laying, top halves", "wire", "targeting"),
+        F("wire.lay", "mouse and controller laying, top halves", "wire", "targeting", "wire-placement"),
+        F("wire.where", "which tiles take wire (floor, flooring, soil, under objects) and which refuse it with the reason (walls, trees, water); the outline matches", "wire-placement"),
         F("wire.pickup", "pickaxe picks wire up", "wire", "heavy-cable"),
         F("wire.hide", "wrench hides and shows wire", "heavy-cable", "playthrough"),
         F("network.join", "blocks join one network; two Cores stop it", "network"),

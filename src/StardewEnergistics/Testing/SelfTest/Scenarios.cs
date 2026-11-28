@@ -49,6 +49,7 @@ internal static class Scenarios
         new("coverage", "Every item has data, a recipe and a play test; every scenario is on the coverage list", Coverage),
         new("placement", "Place every block and break it again", Placement),
         new("wire", "Lay wire with mouse and controller; pick it up", Wire),
+        new("wire-placement", "Where wire goes with mouse and controller: floor, chests, machines, flooring, soil; walls, trees, water refused", WirePlacement.Run),
         new("network", "Core, racks and Terminal join one powered network", Network),
         new("disks", "Insert and remove disks in a Storage Rack", Disks),
         new("terminal", "Store and withdraw through the Terminal screen", Terminal),
