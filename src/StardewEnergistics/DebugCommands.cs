@@ -1,10 +1,10 @@
 using System;
 using System.Linq;
-using StardewEnergistics.Content;
 using StardewEnergistics.Core.Progression;
 using StardewEnergistics.Networks;
 using StardewEnergistics.Power;
 using StardewEnergistics.Storage;
+using StardewEnergistics.Testing;
 using StardewEnergistics.World;
 using StardewModdingAPI;
 using StardewValley;
@@ -57,19 +57,9 @@ internal sealed class DebugCommands
     {
         if (!Ready())
             return;
-        var ids = args.Length > 0 && int.TryParse(args[0], out int tier) && tier is >= 1 and <= 6
-            ? ContentInjector.RecipesFor((TierId)tier).ToList()
-            : ContentInjector.AllRecipes.ToList();
-        int added = 0;
-        foreach (string id in ids)
-        {
-            if (!Game1.player.craftingRecipes.ContainsKey(id))
-            {
-                Game1.player.craftingRecipes.Add(id, 0);
-                added++;
-            }
-        }
-        monitor.Log($"Taught {added} new recipes ({string.Join(", ", ids.Select(i => i.Replace(Ids.Prefix, "")))}).", LogLevel.Info);
+        TierId? tier = args.Length > 0 && int.TryParse(args[0], out int t) && t is >= 1 and <= 6 ? (TierId)t : null;
+        var added = TestTools.Unlock(tier);
+        monitor.Log($"Taught {added.Count} new recipes ({string.Join(", ", added.Select(i => i.Replace(Ids.Prefix, "")))}).", LogLevel.Info);
     }
 
     private void Give(string command, string[] args)
@@ -82,19 +72,14 @@ internal sealed class DebugCommands
             return;
         }
 
-        string id = Ids.Prefix + args[0];
         int count = args.Length > 1 && int.TryParse(args[1], out int n) ? n : 1;
-        string qualified = ItemRegistry.GetData("(O)" + id) != null ? "(O)" + id : "(BC)" + id;
-        if (ItemRegistry.GetData(qualified) == null)
+        if (TestTools.QualifiedFromName(args[0]) is not { } qualified)
         {
-            monitor.Log($"No item '{args[0]}' yet (it may arrive in a later milestone).", LogLevel.Warn);
+            monitor.Log($"No item '{args[0]}'.", LogLevel.Warn);
             return;
         }
 
-        // Disks don't stack, so give them one at a time.
-        int each = DiskStore.IsDisk(ItemRegistry.Create(qualified)) ? 1 : count;
-        for (int given = 0; given < count; given += each)
-            Game1.player.addItemByMenuIfNecessary(ItemRegistry.Create(qualified, each));
+        TestTools.Give(qualified, count);
         monitor.Log($"Gave {count} x {ItemRegistry.GetData(qualified)!.DisplayName}.", LogLevel.Info);
     }
 

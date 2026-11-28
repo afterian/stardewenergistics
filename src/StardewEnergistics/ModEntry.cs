@@ -87,6 +87,7 @@ namespace StardewEnergistics
             new WireInput(helper, config, wires, renderer).Register();
             new BlockInteraction(helper, networks, disks, power, terminal, textures).Register();
             new DebugCommands(helper, Monitor, wires, networks, disks, power).Register();
+            new Testing.TestMenu(helper, Monitor, config).Register();
 
             new Multiplayer.VersionCheck(helper, Monitor, ModManifest).Register();
             helper.Events.GameLoop.GameLaunched += (_, _) => Integrations.ConfigMenu.Register(helper, ModManifest, config, () =>
